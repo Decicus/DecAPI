@@ -103,12 +103,12 @@ class TwitchController extends Controller
      */
     public function uptime(Request $request, $channel = null)
     {
-        $channelGet = $request->input('channel')
+        $channelGet = $request->input('channel');
         if (!empty($channel) || !empty($channelGet)) {
             if (empty($channel)) {
                 $channel = $channelGet;
             }
-            
+
             $stream = $this->twitchApi->streams($channel);
             if (!empty($stream['status'])) {
                 return response($stream['error'], $stream['status'])->withHeaders($this->headers);

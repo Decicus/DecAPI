@@ -42,13 +42,33 @@ class TwitchApiController extends Controller
         return json_decode($result->getBody(), true);
     }
 
-    public function streams($channel = '')
+    /**
+     * Returns values from the Kraken channels endpoint.
+     * @param  string $channel Channel name
+     * @return TwitchApiController\get
+     */
+    public function channels($channel = '')
     {
-        return $this->get('/streams/' . $channel);
+        return $this->get('channels/' . $channel);
     }
 
+    /**
+     * Returns values from the Kraken streams endpoint.
+     * @param  string $channel Channel name
+     * @return TwitchApiController\get
+     */
+    public function streams($channel = '')
+    {
+        return $this->get('streams/' . $channel);
+    }
+
+    /**
+     * Returns values from the Kraken teams endpoint
+     * @param  string $team Team identifier
+     * @return TwitchApiController\get
+     */
     public function team($team = '')
     {
-        return $this->get('/teams/' . $team);
+        return $this->get('teams/' . $team);
     }
 }

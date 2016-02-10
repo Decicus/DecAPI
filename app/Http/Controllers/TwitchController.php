@@ -30,13 +30,12 @@ class TwitchController extends Controller
      */
     public function highlight(Request $request, $channel = null)
     {
-        $channelGet = $request->input('channel');
-        if (!empty($channel) || !empty($channelGet)) {
+        if (!empty($channel) || $request->has('channel')) {
             if (empty($channel)) {
-                $channel = $channelGet;
+                $channel = $request->input('channel');
             }
 
-            $fetchHighlight = $this->twitchApi->channels($channel . '/videos?limit=1&offset=0');
+            $fetchHighlight = $this->highlights($request, $channel);
             if (!empty($fetchHighlight['status'])) {
                 return response($fetchHighlight['error'], $fetchHighlight['status'])->withHeaders($this->headers);
             } else {
@@ -55,6 +54,30 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns result of the Kraken API for highlights.
+     * @param  Request $request
+     * @param  [type]  $channel Channel name, can also be specified in the request.
+     * @param  integer $limit   Limit of highlights
+     * @param  integer $offset  Offset
+     * @return array            JSON-decoded result of highlights endpoint           
+     */
+    public function highlights(Request $request, $channel, $limit = 1, $offset = 0)
+    {
+        $input = $request->all();
+        if (!empty($channel) || $request->has('channel')) {
+            if (empty($channel)) {
+                $channel = $input['channel'];
+            }
+
+            $limit = ($request->has('limit') && intval($input['limit']) ? intval($input['limit']) : $limit);
+            $offset = ($request->has('offset') ? intval($input['offset']) : $offset);
+            return $this->twitchApi->channels($channel . '/videos?limit=' . $limit . '&offset=' . $offset);
+        } else {
+            throw new Exception('You have to specify channel');
+        }
+    }
+
+    /**
      * Returns a JSON-array of
      * @param  Request $request
      * @param  string $team Team identifier
@@ -63,10 +86,9 @@ class TwitchController extends Controller
     public function teamMembers(Request $request, $team = null)
     {
         $teamApi = 'https://api.twitch.tv/api/team/{TEAM_NAME}/all_channels.json';
-        $teamGet = $request->input('team');
-        if (!empty($team) || !empty($teamGet)) {
+        if (!empty($team) || !$request->has('team')) {
             if (empty($team)) {
-                $team = $teamGet;
+                $team = $request->input('team');
             }
             $checkTeam = $this->twitchApi->team($team);
             if (!empty($checkTeam['status'])) {
@@ -103,10 +125,9 @@ class TwitchController extends Controller
      */
     public function uptime(Request $request, $channel = null)
     {
-        $channelGet = $request->input('channel');
-        if (!empty($channel) || !empty($channelGet)) {
+        if (!empty($channel) || $request->has('channel')) {
             if (empty($channel)) {
-                $channel = $channelGet;
+                $channel = $request->input('channel');
             }
 
             $stream = $this->twitchApi->streams($channel);

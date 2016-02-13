@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-use PHPHtmlParser\Dom;
+use PHPHtmlParser;
 use Feed;
 use Carbon\Carbon;
 
@@ -28,7 +28,7 @@ class AskfmController extends Controller
             return $feed->render('atom');
         }
 
-        $dom = new Dom;
+        $dom = new PHPHtmlParser\Dom;
         $dom->loadFromUrl('https://ask.fm/' . $user);
         $answers = $dom->find('.item-pager')->find('.streamItem-answer');
         $feed->title = 'Ask.fm - ' . $user;

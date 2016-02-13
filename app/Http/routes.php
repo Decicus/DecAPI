@@ -19,9 +19,12 @@ Route::group(['prefix' => 'twitch'], function() {
     Route::get('highlight', 'TwitchController@highlight');
     Route::get('highlight/{channel}', 'TwitchController@highlight');
 
+    Route::get('hosts', 'TwitchController@hosts');
+    Route::get('hosts/{channel}', 'TwitchController@hosts');
+
     Route::get('team_members', 'TwitchController@teamMembers');
     Route::get('team_members/{team}', 'TwitchController@teamMembers');
-    
+
     Route::get('uptime', 'TwitchController@uptime');
     Route::get('uptime/{channel}', 'TwitchController@uptime');
 });

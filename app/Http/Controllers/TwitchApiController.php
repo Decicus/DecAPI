@@ -52,6 +52,23 @@ class TwitchApiController extends Controller
         return $this->get('channels/' . $channel);
     }
 
+    public function hosts($channel = '')
+    {
+        if (empty($channel)) {
+            throw new Exception('You have to specify a channel');
+        }
+
+        $channelInfo = $this->channels($channel);
+        if (!empty($channelInfo['error'])) {
+            return $channelInfo;
+        }
+
+        $userId = $channelInfo['_id'];
+        $hostUrl = 'https://tmi.twitch.tv/hosts?include_logins=1&target={_id}';
+        $hosts = $this->get(str_replace('{_id}', $userId, $hostUrl), true);
+        return $hosts['hosts'];
+    }
+
     /**
      * Returns values from the Kraken streams endpoint.
      * @param  string $channel Channel name
@@ -70,5 +87,28 @@ class TwitchApiController extends Controller
     public function team($team = '')
     {
         return $this->get('teams/' . $team);
+    }
+
+    /**
+     * Returns result of the Kraken API for videos.
+     * @param  Request $request
+     * @param  string  $channel Channel name, can also be specified in the request.
+     * @param  integer $limit   Limit of highlights
+     * @param  integer $offset  Offset
+     * @param  bool    $broadcasts Returns only past broadcasts on true, highlights on false
+     * @param  bool    $hls     Returns only HLS VODs when true, non-HLS VODs on false
+     * @return array            JSON-decoded result of highlights endpoint
+     */
+    public function videos(Request $request, $channel, $limit = 1, $offset = 0, $broadcasts = false, $hls = false)
+    {
+        $input = $request->all();
+        $channel = $channel ?: $request->input('channel', null);
+        if (empty($channel)) {
+            throw new Exception('You have to specify a channel');
+        }
+
+        $limit = ($request->has('limit') ? intval($input['limit']) : $limit);
+        $offset = ($request->has('offset') ? intval($input['offset']) : $offset);
+        return $this->channels($channel . '/videos?limit=' . $limit . '&offset=' . $offset . '&broadcasts=' . $broadcasts . '&hls=' . $hls);
     }
 }

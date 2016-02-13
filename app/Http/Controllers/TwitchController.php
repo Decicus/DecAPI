@@ -11,7 +11,10 @@ use Carbon\Carbon;
 
 class TwitchController extends Controller
 {
-    private $headers = ['Content-Type' => 'text/plain'];
+    private $headers = [
+        'Content-Type' => 'text/plain',
+        'Access-Control-Allow-Origin' => '*'
+    ];
     private $twitchApi;
 
     /**
@@ -23,6 +26,30 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns an error response
+     * @param  string  $message Error message
+     * @param  integer $code    HTTP error code, default: 404
+     * @return Response
+     */
+    protected function error($message, $code = 404)
+    {
+        return response($message, $code)->withHeaders($this->headers);
+    }
+
+    /**
+     * Returns an error JSON response
+     * @param  Request $request
+     * @param  array  $data
+     * @param  integer $code
+     * @return Response
+     */
+    protected function errorJson(Request $request, $data = [], $code = 404)
+    {
+        $data['code'] = $code;
+        return response()->json($data)->setCallback($request->input('callback'))->header('Access-Control-Allow-Origin', '*');
+    }
+
+    /**
      * Returns the latest highlight of channel.
      * @param  Request $request
      * @param  string  $channel Channel name
@@ -30,55 +57,72 @@ class TwitchController extends Controller
      */
     public function highlight(Request $request, $channel = null)
     {
-        if (!empty($channel) || $request->has('channel')) {
-            if (empty($channel)) {
-                $channel = $request->input('channel');
-            }
+        $channel = $channel ?: $request->input('channel', null);
 
-            $fetchHighlight = $this->highlights($request, $channel);
-            if (!empty($fetchHighlight['status'])) {
-                return response($fetchHighlight['error'], $fetchHighlight['status'])->withHeaders($this->headers);
-            } else {
-                if (empty($fetchHighlight['videos'])) {
-                    return response($channel . ' has no saved highlights')->withHeaders($this->headers);
-                } else {
-                    $highlight = $fetchHighlight['videos'][0];
-                    $title = $highlight['title'];
-                    $url = $highlight['url'];
-                    return response($title . " - " . $url)->withHeaders($this->headers);
-                }
-            }
-        } else {
-            return response('You have to specify a channel', 404)->withHeaders($this->headers);
+        if (empty($channel)) {
+            return $this->error('You have to specify a channel');
         }
+
+        $fetchHighlight = $this->twitchApi->videos($request, $channel);
+
+        if (!empty($fetchHighlight['status'])) {
+            return $this->error($fetchHighlight['message'], $fetchHighlight['status']);
+        }
+
+        if (empty($fetchHighlight['videos'])) {
+            return $this->error($channel . ' has no saved highlights', 200);
+        }
+
+        $highlight = $fetchHighlight['videos'][0];
+        $title = $highlight['title'];
+        $url = $highlight['url'];
+        return response($title . " - " . $url)->withHeaders($this->headers);
     }
 
-    /**
-     * Returns result of the Kraken API for highlights.
-     * @param  Request $request
-     * @param  [type]  $channel Channel name, can also be specified in the request.
-     * @param  integer $limit   Limit of highlights
-     * @param  integer $offset  Offset
-     * @return array            JSON-decoded result of highlights endpoint           
-     */
-    public function highlights(Request $request, $channel, $limit = 1, $offset = 0)
+    public function hosts(Request $request, $channel = null)
     {
-        $input = $request->all();
-        if (!empty($channel) || $request->has('channel')) {
-            if (empty($channel)) {
-                $channel = $input['channel'];
+        $channel = $channel ?: $request->input('channel', null);
+        if (empty($channel)) {
+            $message = 'Channel cannot be empty';
+            if($request->wantsJson()) {
+                return $this->errorJson($request, ['message' => $message]);
             }
-
-            $limit = ($request->has('limit') && intval($input['limit']) ? intval($input['limit']) : $limit);
-            $offset = ($request->has('offset') ? intval($input['offset']) : $offset);
-            return $this->twitchApi->channels($channel . '/videos?limit=' . $limit . '&offset=' . $offset);
-        } else {
-            throw new Exception('You have to specify channel');
+            return $this->error($message);
         }
+
+        $hosts = $this->twitchApi->hosts($channel);
+        if (!empty($hosts['status'])) {
+            $message = $hosts['message'];
+            $code = $hosts['status'];
+            if ($request->wantsJson()) {
+                return $this->errorJson($request, ['message' => $message], $code);
+            }
+            return $this->error($message, $code);
+        }
+
+        if (empty($hosts)) {
+            $message = 'No one is currently hosting ' . $channel;
+            if ($request->wantsJson()) {
+                return $this->errorJson($request, ['message' => $message]);
+            }
+            return $this->error($message);
+        }
+
+        $hostList = [];
+        foreach($hosts as $host) {
+            $hostList[] = $host['host_login'];
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json($hostList)->setCallback($request->input('callback'))->header('Access-Control-Allow-Origin', '*');
+        }
+
+        $implode = $request->exists('implode') ? ', ' : PHP_EOL;
+        return response(implode($implode, $hostList))->withHeaders($this->headers);
     }
 
     /**
-     * Returns a JSON-array of
+     * Returns a list of team members
      * @param  Request $request
      * @param  string $team Team identifier
      * @return Response
@@ -86,34 +130,41 @@ class TwitchController extends Controller
     public function teamMembers(Request $request, $team = null)
     {
         $teamApi = 'https://api.twitch.tv/api/team/{TEAM_NAME}/all_channels.json';
-        if (!empty($team) || !$request->has('team')) {
-            if (empty($team)) {
-                $team = $request->input('team');
-            }
-            $checkTeam = $this->twitchApi->team($team);
-            if (!empty($checkTeam['status'])) {
-                return response($checkTeam['error'], $checkTeam['status'])->withHeaders($this->headers);
-            } else {
-                $data = $this->twitchApi->get(str_replace('{TEAM_NAME}', $team, $teamApi), true);
-                $inputs = $request->all();
-                $members = [];
-                foreach ($data['channels'] as $member) {
-                    $members[] = $member['channel']['name'];
-                }
 
-                if (isset($inputs['sort'])) {
-                    sort($members);
-                }
-
-                if (!$request->wantsJson()) {
-                    return response(implode(PHP_EOL, $members))->withHeaders($this->headers);
-                } else {
-                    return response()->json($members)->setCallback($request->input('callback'));
-                }
+        $team = $team ?: $request->input('team', null);
+        if (empty($team)) {
+            $message = 'Team identifier is empty';
+            if ($request->wantsJson()) {
+                return $this->errorJson($request, ['message' => $message]);
             }
-        } else {
-            return response('Team identifier is empty', 404)->withHeaders($this->headers);
+            return $this->error($message);
         }
+
+        $checkTeam = $this->twitchApi->team($team);
+        if (!empty($checkTeam['status'])) {
+            $message = $checkTeam['message'];
+            $code = $checkTeam['status'];
+            if($request->wantsJson()) {
+                return $this->errorJson($request, ['message' => $message], $code);
+            }
+            return $this->error($message, $code);
+        }
+
+        $data = $this->twitchApi->get(str_replace('{TEAM_NAME}', $team, $teamApi), true);
+        $inputs = $request->all();
+        $members = [];
+        foreach ($data['channels'] as $member) {
+            $members[] = $member['channel']['name'];
+        }
+
+        if (isset($inputs['sort'])) {
+            sort($members);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json($members)->setCallback($request->input('callback'))->header('Access-Control-Allow-Origin', '*');
+        }
+        return response(implode("\r\n", $members))->withHeaders($this->headers);
     }
 
     /**
@@ -125,43 +176,42 @@ class TwitchController extends Controller
      */
     public function uptime(Request $request, $channel = null)
     {
-        if (!empty($channel) || $request->has('channel')) {
-            if (empty($channel)) {
-                $channel = $request->input('channel');
-            }
-
-            $stream = $this->twitchApi->streams($channel);
-            if (!empty($stream['status'])) {
-                return response($stream['error'], $stream['status'])->withHeaders($this->headers);
-            } elseif ($stream['stream']) {
-                $date = Carbon::parse($stream['stream']['created_at']);
-                $uptime = [];
-                $days = $date->diffInDays();
-                $hours = ($date->diffInHours() - 24 * $days);
-                $minutes = ($date->diffInMinutes() - (60 * $hours) - (24 * $days * 60));
-                $seconds = ($date->diffInSeconds() - (60 * $minutes) - (60 * $hours * 60) - (24 * $days * 60 * 60));
-                if ($days > 0) {
-                    $uptime[] = $days . " day" . ($days > 1 ? 's' : '');
-                }
-
-                if ($hours > 0) {
-                    $uptime[] = $hours . " hour" . ($hours > 1 ? 's' : '');
-                }
-
-                if ($minutes > 0) {
-                    $uptime[] = $minutes . " minute" . ($minutes > 1 ? 's' : '');
-                }
-
-                if ($seconds > 0) {
-                    $uptime[] = $seconds . " second" . ($seconds > 1 ? 's' : '');
-                }
-
-                return response(implode(', ', $uptime))->withHeaders($this->headers);
-            } else {
-                return response('Channel is offline')->withHeaders($this->headers);
-            }
-        } else {
-            return response('Channel cannot be empty', 404)->withHeaders($this->headers);
+        $channel = $channel ?: $request->input('channel', null);
+        if (empty($channel)) {
+            return $this->error('Channel cannot be empty');
         }
+
+        $stream = $this->twitchApi->streams($channel);
+        if (!empty($stream['status'])) {
+            return $this->error($stream['message'], $stream['status']);
+        }
+
+        if (empty($stream['stream'])) {
+            return $this->error($channel . ' is offline');
+        }
+
+        $date = Carbon::parse($stream['stream']['created_at']);
+        $uptime = [];
+        $days = $date->diffInDays();
+        $hours = ($date->diffInHours() - 24 * $days);
+        $minutes = ($date->diffInMinutes() - (60 * $hours) - (24 * $days * 60));
+        $seconds = ($date->diffInSeconds() - (60 * $minutes) - (60 * $hours * 60) - (24 * $days * 60 * 60));
+        if ($days > 0) {
+            $uptime[] = $days . " day" . ($days > 1 ? 's' : '');
+        }
+
+        if ($hours > 0) {
+            $uptime[] = $hours . " hour" . ($hours > 1 ? 's' : '');
+        }
+
+        if ($minutes > 0) {
+            $uptime[] = $minutes . " minute" . ($minutes > 1 ? 's' : '');
+        }
+
+        if ($seconds > 0) {
+            $uptime[] = $seconds . " second" . ($seconds > 1 ? 's' : '');
+        }
+
+        return response(implode(', ', $uptime))->withHeaders($this->headers);
     }
 }

@@ -79,6 +79,12 @@ class TwitchController extends Controller
         return response($title . " - " . $url)->withHeaders($this->headers);
     }
 
+    /**
+     * Return list of hosts for a channel
+     * @param  Request $request
+     * @param  string  $channel Channel name
+     * @return Response
+     */
     public function hosts(Request $request, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);

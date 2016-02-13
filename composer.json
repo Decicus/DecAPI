@@ -9,7 +9,8 @@
         "laravel/framework": "5.2.*",
         "guzzlehttp/guzzle": "^6.1",
         "nesbot/carbon": "^1.21",
-        "roumen/feed": "^2.10"
+        "roumen/feed": "^2.10",
+        "paquettg/php-html-parser": "^1.6"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

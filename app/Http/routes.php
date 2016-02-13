@@ -15,6 +15,11 @@ Route::get('/', function () {
     return view('home');
 });
 
+Route::group(['prefix' => 'askfm'], function() {
+    Route::get('rss', 'AskfmController@rss');
+    Route::get('rss/{user}', 'AskfmController@rss');
+});
+
 Route::group(['prefix' => 'twitch'], function() {
     Route::get('highlight', 'TwitchController@highlight');
     Route::get('highlight/{channel}', 'TwitchController@highlight');

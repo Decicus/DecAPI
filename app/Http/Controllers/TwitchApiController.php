@@ -52,6 +52,31 @@ class TwitchApiController extends Controller
         return $this->get('channels/' . $channel);
     }
 
+    /**
+     * Gets channels/:channel/subscriptions data
+     * @param  string $channel     Channel name
+     * @param  string $accessToken Authorization token
+     * @param  int    $limit       Maximum numbers of objects
+     * @param  int    $offset      Object offset for pagination.
+     * @param  string $direction   Creation date sorting direction - Valid values are asc and desc.
+     * @return TwitchApiController\get
+     */
+    public function channelSubscriptions($channel = '', $accessToken = '', $limit = 25, $offset = 0, $direction = 'asc')
+    {
+        $params = [
+            'oauth_token=' . $accessToken,
+            'limit=' . $limit,
+            'offset=' . $offset,
+            'direction=' . $direction
+        ];
+        return $this->get('channels/' . $channel . '/subscriptions?' . implode('&', $params));
+    }
+
+    /**
+     * Returns array of hosts for a specified channel
+     * @param  string $channel Channel name
+     * @return array          List of channels hosting
+     */
     public function hosts($channel = '')
     {
         if (empty($channel)) {

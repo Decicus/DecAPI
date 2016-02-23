@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
+use DB;
 use Carbon\Carbon;
 
 class TwitchController extends Controller
@@ -52,10 +53,11 @@ class TwitchController extends Controller
     /**
      * Returns the latest highlight of channel.
      * @param  Request $request
+     * @param  string  $highlight
      * @param  string  $channel Channel name
      * @return Response           Latest highlight and title of highlight.
      */
-    public function highlight(Request $request, $channel = null)
+    public function highlight(Request $request, $highlight = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
 
@@ -82,10 +84,11 @@ class TwitchController extends Controller
     /**
      * Return list of hosts for a channel
      * @param  Request $request
+     * @param  string  $hosts
      * @param  string  $channel Channel name
      * @return Response
      */
-    public function hosts(Request $request, $channel = null)
+    public function hosts(Request $request, $hosts = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
         if (empty($channel)) {
@@ -128,12 +131,69 @@ class TwitchController extends Controller
     }
 
     /**
+     * Gets the subscriber count of the specified channel
+     * @param  Request $request
+     * @param  string  $subcount
+     * @param  string  $channel  Channel to check subscriber count for
+     * @return mixed
+     */
+    public function subcount(Request $request, $subcount = null, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+
+        if($request->exists('logout')) {
+            session()->flush();
+        }
+
+        if(empty($channel) && !session()->has('subcount_at')) {
+            return response('Use ?channel=CHANNEL_NAME to get subcount.')->withHeaders($this->headers);
+        }
+
+        if(!empty($channel)) {
+            $channel = strtolower($channel);
+            $reAuth = url('/auth/twitch?page=subcount');
+            $token = DB::table('twitch_subcount')->where('username', $channel)->get();
+            if(empty($token)) {
+                return $this->error($channel . ' needs to authenticate to use subcount: ' . $reAuth);
+            }
+
+            $accessToken = $token[0]->access_token;
+            $subscriptionData = $this->twitchApi->channelSubscriptions($channel, $accessToken);
+            if(!empty($subscriptionData['status'])) {
+                if($subscriptionData['status'] === 401) {
+                    return $this->error($channel . ' needs to re-authenticate to use subcount: ' . $reAuth);
+                }
+                return $this->error($subscriptionData['message'], $subscriptionData['status']);
+            }
+            return response($subscriptionData['_total'])->withHeaders($this->headers);
+        }
+
+        if(session()->has('subcount_at')) {
+            $username = session('username');
+            $token = session('subcount_at');
+            $checkToken = DB::table('twitch_subcount')->where('username', $username)->get();
+            if(empty($checkToken)) {
+                DB::table('twitch_subcount')
+                    ->insert(
+                        ['username' => $username, 'access_token' => $token]
+                    );
+            } else {
+                DB::table('twitch_subcount')
+                    ->where('username', $username)
+                    ->update(['access_token' => $token]);
+            }
+            return view('twitch.subcount.index', ['username' => $username]);
+        }
+    }
+
+    /**
      * Returns a list of team members
      * @param  Request $request
+     * @param  string $team_members
      * @param  string $team Team identifier
      * @return Response
      */
-    public function teamMembers(Request $request, $team = null)
+    public function teamMembers(Request $request, $team_members = null, $team = null)
     {
         $teamApi = 'https://api.twitch.tv/api/team/{TEAM_NAME}/all_channels.json';
 
@@ -177,10 +237,11 @@ class TwitchController extends Controller
      * Checks the uptime of the current stream.
      *
      * @param Request $request
+     * @param string $uptime
      * @param string $channel Channel name
      * @return Response
      */
-    public function uptime(Request $request, $channel = null)
+    public function uptime(Request $request, $uptime = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
         if (empty($channel)) {

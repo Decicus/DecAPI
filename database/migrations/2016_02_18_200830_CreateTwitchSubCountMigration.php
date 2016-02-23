@@ -13,7 +13,7 @@ class CreateTwitchSubCountMigration extends Migration
     public function up()
     {
         Schema::create('twitch_subcount', function(Blueprint $table) {
-            $table->integer('id');
+            $table->increments('id');
             $table->string('username', 25);
             $table->string('access_token', 30);
         });

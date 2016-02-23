@@ -21,17 +21,23 @@ Route::group(['prefix' => 'askfm'], function() {
 });
 
 Route::group(['prefix' => 'twitch'], function() {
-    Route::get('highlight', 'TwitchController@highlight');
-    Route::get('highlight/{channel}', 'TwitchController@highlight');
+    $channelRegex = '([A-z0-9]{1,25})';
 
-    Route::get('hosts', 'TwitchController@hosts');
-    Route::get('hosts/{channel}', 'TwitchController@hosts');
+    Route::get('{highlight}/{channel?}', 'TwitchController@highlight')
+        ->where('highlight', '(highlight\.php|highlight)')
+        ->where('channel', $channelRegex);
 
-    Route::get('team_members', 'TwitchController@teamMembers');
-    Route::get('team_members/{team}', 'TwitchController@teamMembers');
+    Route::get('{hosts}/{channel?}', 'TwitchController@hosts')
+        ->where('hosts', '(hosts\.php|hosts)')
+        ->where('channel', $channelRegex);
 
-    Route::get('uptime', 'TwitchController@uptime');
-    Route::get('uptime/{channel}', 'TwitchController@uptime');
+    Route::get('{team_members}/{team?}', 'TwitchController@teamMembers')
+        ->where('team_members', '(team_members\.php|team_members)')
+        ->where('team', '([A-z0-9]{1,40})');
+
+    Route::get('{uptime}/{channel?}', 'TwitchController@uptime')
+        ->where('uptime', '(uptime\.php|uptime)')
+        ->where('channel', $channelRegex);
 });
 
 /*
@@ -46,5 +52,14 @@ Route::group(['prefix' => 'twitch'], function() {
 */
 
 Route::group(['middleware' => ['web']], function () {
-    //
+    Route::group(['prefix' => 'auth'], function() {
+        Route::get('twitch', 'TwitchAuthController@auth');
+    });
+
+    Route::group(['prefix' => 'twitch'], function() {
+        $channelRegex = '([A-z0-9]{1,25})';
+        Route::get('{subcount}/{channel?}', 'TwitchController@subcount')
+            ->where('subcount', '(subcount\.php|subcount)')
+            ->where('channel', $channelRegex);
+    });
 });

@@ -8,7 +8,7 @@ As of right now, the rewrite is in still in the early stages and very few things
 ## Layout
 The layout of the application can be reflected upon by looking at the [routes.php](app/Http/routes.php) file. Each group uses their own controller located in [app/Http/Controllers](app/Http/Controllers), and each sub-route usually has their own method in said controller.
 
-The standard layout will be https://example.com/main-route/sub-route/parameter.
+The standard layout will be https://example.com/main-route/sub-route/parameter - where `parameter` can be something like the channel name.
 
 To keep it backwards compatible, routes also support /main-route/sub-route?channel=decicus or /main-route/sub-route.php?channel=decicus.
 

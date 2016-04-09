@@ -13,6 +13,10 @@ The standard layout will be https://example.com/main-route/sub-route/parameter -
 To keep it backwards compatible, routes also support /main-route/sub-route?channel=decicus or /main-route/sub-route.php?channel=decicus.
 
 ## Current features
+This list of features will contain links to the current version hosted under [decapi.me](https://decapi.me/)
+
+It _should_ function similarly or identical in this rewrite, even if the code hosted under [decapi.me](https://decapi.me/) is still the old code.
+
 - Twitch
     - [Latest highlight](https://decapi.me/twitch/highlight?channel=decicus)
     - [List of hosts](https://decapi.me/twitch/hosts?channel=decicus)

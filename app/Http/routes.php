@@ -11,9 +11,9 @@
 |
 */
 
-Route::get('/', function () {
+Route::get('/', ['as' => 'home', function () {
     return view('home');
-});
+}]);
 
 Route::group(['prefix' => 'askfm'], function() {
     Route::get('rss', 'AskfmController@rss');

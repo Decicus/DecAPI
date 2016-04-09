@@ -26,7 +26,7 @@ class TwitchAuthController extends Controller
      */
     public function __construct()
     {
-        $this->redirectUrl = url('/auth/twitch');
+        $this->redirectUrl = env('TWITCH_REDIRECT_URI', url('/auth/twitch'));
         $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
     }
 
@@ -59,18 +59,21 @@ class TwitchAuthController extends Controller
         if(empty($this->states[$state])) {
             return redirect(url('/?404'));
         }
+
         $redirect = $this->states[$state]['redirect'];
         $accessToken = $this->getAccessToken($code, $state, $this->redirectUrl);
         if(empty($accessToken['access_token'])) {
             return redirect(url('/?404'));
         }
+
         $token = $accessToken['access_token'];
         $checkToken = $this->twitchApi->get('?oauth_token=' . $token);
         if(!$checkToken['token']['valid']) {
             $authUrl = $this->generateAuthUrl($this->states[$page]['scopes'], $state);
             return redirect($authUrl);
         }
-        $request->session()->put('subcount_at', $token);
+
+        $request->session()->put($state . '_at', $token);
         $request->session()->put('username', $checkToken['token']['user_name']);
         return redirect($redirect);
     }
@@ -87,8 +90,7 @@ class TwitchAuthController extends Controller
         $clientSecret = env('TWITCH_CLIENT_SECRET', null);
 
         if(empty($clientId) || empty($clientSecret)) {
-            // TODO: Handle unspecified client ID and secret.
-            return;
+            return response()->route('home', ['error' => 'missing_twitch_settings']);
         }
         $params = [
             'response_type=code',
@@ -114,8 +116,7 @@ class TwitchAuthController extends Controller
         $clientSecret = env('TWITCH_CLIENT_SECRET', null);
 
         if(empty($clientId) || empty($clientSecret)) {
-            // TODO: Handle unspecified client ID and secret.
-            return;
+            return response()->route('home', ['error' => 'missing_twitch_settings']);
         }
         $client = new Client();
         $request = $client->request('POST', self::API_BASE_URL . 'oauth2/token', [

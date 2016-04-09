@@ -17,13 +17,13 @@ class TwitchApiController extends Controller
 
     /**
      * Initiliazes the controller.
-     * @param string $client_id     Twitch client ID
-     * @param string $client_secret Twitch client Secret
+     * @param string $clientId     Twitch client ID
+     * @param string $clientSecret Twitch client Secret
      */
-    public function __construct($client_id, $client_secret)
+    public function __construct($clientId, $clientSecret)
     {
-        $this->twitchClientID = $client_id;
-        $this->twitchClientSecret = $client_secret;
+        $this->twitchClientID = $clientId;
+        $this->twitchClientSecret = $clientSecret;
     }
 
     /**

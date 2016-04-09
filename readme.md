@@ -1,27 +1,39 @@
-# Laravel PHP Framework
+# DecAPI
+[DecAPI](https://decapi.me/) is a personal project I started writing in 2014, which eventually became a big pile of undocumented, and badly written mess.
 
-[![Build Status](https://travis-ci.org/laravel/framework.svg)](https://travis-ci.org/laravel/framework)
-[![Total Downloads](https://poser.pugx.org/laravel/framework/d/total.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Stable Version](https://poser.pugx.org/laravel/framework/v/stable.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Unstable Version](https://poser.pugx.org/laravel/framework/v/unstable.svg)](https://packagist.org/packages/laravel/framework)
-[![License](https://poser.pugx.org/laravel/framework/license.svg)](https://packagist.org/packages/laravel/framework)
+This is essentially an attempt at rewriting everything that DecAPI supports into something more structured and documented, while still keeping backwards compatibility to those applications that still rely on it, using the [Laravel framework](https://laravel.com/)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as authentication, routing, sessions, queueing, and caching.
+As of right now, the rewrite is in still in the early stages and very few things are supported. The list below will be kept up-to-date as to what is currently working.
 
-Laravel is accessible, yet powerful, providing powerful tools needed for large, robust applications. A superb inversion of control container, expressive migration system, and tightly integrated unit testing support give you the tools you need to build any application with which you are tasked.
+## Layout
+The layout of the application can be reflected upon by looking at the [routes.php](app/Http/routes.php) file. Each group uses their own controller located in [app/Http/Controllers](app/Http/Controllers), and each sub-route usually has their own method in said controller.
 
-## Official Documentation
+The standard layout will be https://example.com/main-route/sub-route/parameter.
 
-Documentation for the framework can be found on the [Laravel website](http://laravel.com/docs).
+To keep it backwards compatible, routes also support /main-route/sub-route?channel=decicus or /main-route/sub-route.php?channel=decicus.
 
-## Contributing
+## Current features
+- Twitch
+    - [Latest highlight](https://decapi.me/twitch/highlight?channel=decicus)
+    - [List of hosts](https://decapi.me/twitch/hosts?channel=decicus)
+    - [List of team members](https://decapi.me/twitch/team_members?team=theblacklist)
+    - [Current subcount (requires authentication)](https://decapi.me/twitch/subcount?channel=decicus)
+    - [Current uptime](https://decapi.me/twitch/uptime?channel=decicus)
+- ASKfm
+    - [RSS/Atom feed of user questions/answers](https://decapi.me/askfm/rss?user=xangold)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](http://laravel.com/docs/contributions).
+## Requirements
+The following things are required for setting this up:
+- [Laravel's requirements](https://laravel.com/docs/5.2/installation#server-requirements)
+- [A database system that Laravel supports](https://laravel.com/docs/5.2/database#introduction)
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell at taylor@laravel.com. All security vulnerabilities will be promptly addressed.
+## Setup
+I only recommend setting this up for development reasons;
+- Rename `.env.example` to `.env` and fill in the information. Primarly the database and Twitch information.
+    - You can create a Twitch application here: https://www.twitch.tv/settings/connections. The redirect URL has to be `http://your.url/auth/twitch` and needs to be set the same under `TWITCH_REDIRECT_URI` in the `.env` file.
+- Run `php artisan migrate` from the command line in the base project directory.
+- Point your web server to the `/public` directory of the repo.
+    - I recommend using apache2 and configuring it to set `AllowOverride` to `All` for the specific directory in the vhost, so the `.htaccess` file can set the settings.
 
 ## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
+[MIT License](LICENSE)

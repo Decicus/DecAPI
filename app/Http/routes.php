@@ -23,6 +23,8 @@ Route::group(['prefix' => 'askfm'], function() {
 Route::group(['prefix' => 'twitch'], function() {
     $channelRegex = '([A-z0-9]{1,25})';
 
+    Route::get('/', 'TwitchController@base');
+
     Route::get('{highlight}/{channel?}', 'TwitchController@highlight')
         ->where('highlight', '(highlight\.php|highlight)')
         ->where('channel', $channelRegex);

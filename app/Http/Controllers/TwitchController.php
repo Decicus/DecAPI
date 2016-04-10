@@ -51,6 +51,45 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns a JSON response with set headers
+     * @param  array  $data
+     * @param  integer $code    HTTP status code
+     * @param  array  $headers HTTP headers
+     * @return response
+     */
+    protected function json($data = [], $code = 200, $headers = [])
+    {
+        $headers['Content-Type'] = 'application/json';
+        $headers['Access-Control-Allow-Origin'] = '*';
+        return \Response::json($data, $code)->withHeaders($headers);
+    }
+
+    /**
+     * The base API request
+     * @return response
+     */
+    public function base()
+    {
+        $baseUrl = url('/twitch/');
+        
+        $urls = [
+            'highlight' => 'highlight/{CHANNEL}',
+            'hosts' => 'hosts/{CHANNEL}',
+            'subcount' => 'subcount/{CHANNEL}',
+            'team_members' => 'team_members/{TEAM_ID}',
+            'uptime' => 'uptime/{CHANNEL}'
+        ];
+
+        foreach($urls as $name => $endpoint) {
+            $urls[$name] = $baseUrl . '/' . $endpoint;
+        }
+
+        return $this->json([
+            'endpoints' => $urls
+        ]);
+    }
+
+    /**
      * Returns the latest highlight of channel.
      * @param  Request $request
      * @param  string  $highlight

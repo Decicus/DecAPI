@@ -20,6 +20,7 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
 - Twitch
     - [Latest highlight](https://decapi.me/twitch/highlight?channel=decicus)
     - [List of hosts](https://decapi.me/twitch/hosts?channel=decicus)
+    - [List of ingests](https://decapi.me/twitch/ingests)
     - [List of team members](https://decapi.me/twitch/team_members?team=theblacklist)
     - [Current subcount (requires authentication)](https://decapi.me/twitch/subcount?channel=decicus)
     - [Current uptime](https://decapi.me/twitch/uptime?channel=decicus)

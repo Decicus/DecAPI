@@ -95,6 +95,16 @@ class TwitchApiController extends Controller
     }
 
     /**
+     * Returns values from the ingests endpoint from the API
+     *
+     * @return TwitchApiController\get
+     */
+    public function ingests()
+    {
+        return $this->get('ingests');
+    }
+
+    /**
      * Returns values from the Kraken streams endpoint.
      * @param  string $channel Channel name
      * @return TwitchApiController\get

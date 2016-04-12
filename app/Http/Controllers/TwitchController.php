@@ -71,16 +71,17 @@ class TwitchController extends Controller
     public function base()
     {
         $baseUrl = url('/twitch/');
-        
+
         $urls = [
             'highlight' => 'highlight/{CHANNEL}',
             'hosts' => 'hosts/{CHANNEL}',
+            'ingests' => 'ingests',
             'subcount' => 'subcount/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
             'uptime' => 'uptime/{CHANNEL}'
         ];
 
-        foreach($urls as $name => $endpoint) {
+        foreach ($urls as $name => $endpoint) {
             $urls[$name] = $baseUrl . '/' . $endpoint;
         }
 
@@ -170,6 +171,28 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns list of ingest servers, plus their templates and availabilities.
+     *
+     * @return Response
+     */
+    public function ingests()
+    {
+        $ingests = $this->twitchApi->ingests();
+        if (empty($ingests['ingests'])) {
+            return $this->error('An error occurred attempting to load the data.');
+        }
+
+        $info = "";
+        foreach ($ingests['ingest'] as $server) {
+            $info .= $server['name'] . "\n";
+            $info .= "    " . ($server['availability'] ? "Yes" : "No") . "\n";
+            $info .= "    " . $server['url_template'] . "\n";
+        }
+
+        return response($info)->withHeaders($this->headers);
+    }
+
+    /**
      * Gets the subscriber count of the specified channel
      * @param  Request $request
      * @param  string  $subcount
@@ -180,25 +203,25 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
 
-        if($request->exists('logout')) {
+        if ($request->exists('logout')) {
             session()->flush();
         }
 
-        if(empty($channel) && !session()->has('subcount_at')) {
+        if (empty($channel) && !session()->has('subcount_at')) {
             return response('Use ?channel=CHANNEL_NAME to get subcount.')->withHeaders($this->headers);
         }
 
-        if(!empty($channel)) {
+        if (!empty($channel)) {
             $channel = strtolower($channel);
             $reAuth = url('/auth/twitch?page=subcount');
             $token = DB::table('twitch_subcount')->where('username', $channel)->get();
-            if(empty($token)) {
+            if (empty($token)) {
                 return $this->error($channel . ' needs to authenticate to use subcount: ' . $reAuth);
             }
 
             $accessToken = $token[0]->access_token;
             $subscriptionData = $this->twitchApi->channelSubscriptions($channel, $accessToken);
-            if(!empty($subscriptionData['status'])) {
+            if (!empty($subscriptionData['status'])) {
                 if($subscriptionData['status'] === 401) {
                     return $this->error($channel . ' needs to re-authenticate to use subcount: ' . $reAuth);
                 }
@@ -207,11 +230,11 @@ class TwitchController extends Controller
             return response($subscriptionData['_total'])->withHeaders($this->headers);
         }
 
-        if(session()->has('subcount_at')) {
+        if (session()->has('subcount_at')) {
             $username = session('username');
             $token = session('subcount_at');
             $checkToken = DB::table('twitch_subcount')->where('username', $username)->get();
-            if(empty($checkToken)) {
+            if (empty($checkToken)) {
                 DB::table('twitch_subcount')
                     ->insert(
                         ['username' => $username, 'access_token' => $token]

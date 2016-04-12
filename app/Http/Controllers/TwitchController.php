@@ -73,6 +73,7 @@ class TwitchController extends Controller
         $baseUrl = url('/twitch/');
 
         $urls = [
+            'followed' => 'followed/{USER}/{CHANNEL}',
             'highlight' => 'highlight/{CHANNEL}',
             'hosts' => 'hosts/{CHANNEL}',
             'ingests' => 'ingests',
@@ -118,7 +119,7 @@ class TwitchController extends Controller
         if (!empty($getFollow['status'])) {
             return response($getFollow['message'])->withHeaders($this->headers);
         }
-        
+
         $time = strtotime($getFollow['created_at']);
         $format = 'M j. Y - h:i:s A (e)';
         return response(date($format, $time))->withHeaders($this->headers);

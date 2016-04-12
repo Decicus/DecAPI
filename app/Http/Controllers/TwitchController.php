@@ -218,10 +218,11 @@ class TwitchController extends Controller
         }
 
         $info = "";
-        foreach ($ingests['ingest'] as $server) {
-            $info .= $server['name'] . "\n";
-            $info .= "    " . ($server['availability'] ? "Yes" : "No") . "\n";
-            $info .= "    " . $server['url_template'] . "\n";
+        $pad = "    ";
+        foreach ($ingests['ingests'] as $server) {
+            $info .= "Name: " . $server['name'] . PHP_EOL;
+            $info .= $pad . "Template: " . $server['url_template'] . PHP_EOL;
+            $info .= $pad . "Availability: " . ($server['availability'] ? "Yes" : "No") . PHP_EOL . PHP_EOL;
         }
 
         return response($info)->withHeaders($this->headers);

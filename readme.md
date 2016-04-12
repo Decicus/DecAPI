@@ -32,11 +32,13 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
 The following things are required for setting this up:
 - [Laravel's requirements](https://laravel.com/docs/5.2/installation#server-requirements)
 - [A database system that Laravel supports](https://laravel.com/docs/5.2/database#introduction)
+- [Composer](https://getcomposer.org/)
 
 ## Setup
 I only recommend setting this up for development reasons;
 - Rename `.env.example` to `.env` and fill in the information. Primarly the database and Twitch information.
     - You can create a Twitch application here: https://www.twitch.tv/settings/connections. The redirect URL has to be `http://your.url/auth/twitch` and needs to be set the same under `TWITCH_REDIRECT_URI` in the `.env` file.
+- Run `composer install` in the project directory.
 - Run `php artisan migrate` from the command line in the base project directory.
 - Point your web server to the `/public` directory of the repo.
     - I recommend using apache2 and configuring it to set `AllowOverride` to `All` for the specific directory in the vhost, so the `.htaccess` file can set the settings.

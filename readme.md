@@ -18,6 +18,7 @@ This list of features will contain links to the current version hosted under [de
 It _should_ function similarly or identical in this rewrite, even if the code hosted under [decapi.me](https://decapi.me/) is still the old code.
 
 - Twitch
+    - [Follow date and time](https://decapi.me/twitch/followed?user=decicus&channel=twitch)
     - [Latest highlight](https://decapi.me/twitch/highlight?channel=decicus)
     - [List of hosts](https://decapi.me/twitch/hosts?channel=decicus)
     - [List of ingests](https://decapi.me/twitch/ingests)

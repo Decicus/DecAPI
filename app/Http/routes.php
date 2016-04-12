@@ -25,6 +25,11 @@ Route::group(['prefix' => 'twitch'], function() {
 
     Route::get('/', 'TwitchController@base');
 
+    Route::get('{followed}/{user?}/{channel?}', 'TwitchController@followed')
+        ->where('followed', '(followed\.php|followed)')
+        ->where('user', $channelRegex)
+        ->where('channel', $channelRegex);
+
     Route::get('{highlight}/{channel?}', 'TwitchController@highlight')
         ->where('highlight', '(highlight\.php|highlight)')
         ->where('channel', $channelRegex);

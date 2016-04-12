@@ -91,6 +91,40 @@ class TwitchController extends Controller
     }
 
     /**
+     * Shows the date and time of when a user followed a channel.
+     *
+     * @param  Request $request
+     * @param  string  $followed
+     * @param  string  $user
+     * @param  string  $channel
+     * @return Response
+     */
+    public function followed(Request $request, $followed = null, $user = null, $channel = null)
+    {
+        $user = $user ?: $request->input('user', null);
+        $channel = $channel ?: $request->input('channel', null);
+
+        if (empty($user) || empty($channel)) {
+            return $this->error('You have to specify both user and channel name');
+        }
+
+        $getFollow = $this->twitchApi->followRelationship($user, $channel);
+
+        if (strtolower($user) === strtolower($channel)) {
+            return response('A user cannot follow themself.')->withHeaders($this->headers0);
+        }
+
+        // If $user isn't following $channel, a 404 is returned.
+        if (!empty($getFollow['status'])) {
+            return response($getFollow['message'])->withHeaders($this->headers);
+        }
+        
+        $time = strtotime($getFollow['created_at']);
+        $format = 'M j. Y - h:i:s A (e)';
+        return response(date($format, $time))->withHeaders($this->headers);
+    }
+
+    /**
      * Returns the latest highlight of channel.
      * @param  Request $request
      * @param  string  $highlight

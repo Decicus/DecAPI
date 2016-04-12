@@ -33,12 +33,13 @@ class TwitchApiController extends Controller
      * @param  array  $header Array of HTTP headers to send with the request. Client ID is already included in each request.
      * @return array          JSON-decoded object of the result
      */
-    public function get($url, $override = false, $header = [])
+    public function get($url = '', $override = false, $headers = [])
     {
-        $header['Client-ID'] = $this->twitchClientID;
-        $header['http_errors'] = false;
+        $settings['headers'] = $headers;
+        $settings['headers']['Client-ID'] = $this->twitchClientID;
+        $settings['http_errors'] = false;
         $client = new Client();
-        $result = $client->request('GET', ( !$override ? self::API_BASE_URL : '' ) . $url, $header);
+        $result = $client->request('GET', ( !$override ? self::API_BASE_URL : '' ) . $url, $settings);
         return json_decode($result->getBody(), true);
     }
 
@@ -92,6 +93,26 @@ class TwitchApiController extends Controller
         $hostUrl = 'https://tmi.twitch.tv/hosts?include_logins=1&target={_id}';
         $hosts = $this->get(str_replace('{_id}', $userId, $hostUrl), true);
         return $hosts['hosts'];
+    }
+
+    /**
+     * Checks the API for the 'follow' relationship between a user and a channel.
+     *
+     * @param  string $user
+     * @param  string $channel
+     * @return TwitchApiController\get
+     */
+    public function followRelationship($user = '', $channel = '')
+    {
+        if (empty($user)) {
+            throw new Exception('You have to specify a user');
+        }
+
+        if (empty($channel)) {
+            throw new Exception('You have to specify a channel');
+        }
+
+        return $this->get('users/' . $user . '/follows/channels/' . $channel);
     }
 
     /**

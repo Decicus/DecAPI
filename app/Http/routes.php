@@ -33,7 +33,8 @@ Route::group(['prefix' => 'twitch'], function() {
         ->where('hosts', '(hosts\.php|hosts)')
         ->where('channel', $channelRegex);
 
-    Route::get('ingests', 'TwitchController@ingests');
+    Route::get('ingests', 'TwitchController@ingests')
+        ->where('ingests', '(ingests\.php|ingests)');
 
     Route::get('{team_members}/{team?}', 'TwitchController@teamMembers')
         ->where('team_members', '(team_members\.php|team_members)')

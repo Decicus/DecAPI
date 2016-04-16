@@ -10,6 +10,10 @@ use App\Http\Controllers\Controller;
 use DB;
 use Carbon\Carbon;
 
+use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\CssSelector;
+use GuzzleHttp\Client;
+
 class TwitchController extends Controller
 {
     private $headers = [
@@ -295,10 +299,12 @@ class TwitchController extends Controller
     {
         $teamApi = 'https://api.twitch.tv/api/team/{TEAM_NAME}/all_channels.json';
 
+        $wantsJson = (($request->wantsJson() || $request->exists('json')) ? true : false);
+
         $team = $team ?: $request->input('team', null);
         if (empty($team)) {
             $message = 'Team identifier is empty';
-            if ($request->wantsJson()) {
+            if ($wantsJson) {
                 return $this->errorJson($request, ['message' => $message]);
             }
             return $this->error($message);
@@ -308,27 +314,50 @@ class TwitchController extends Controller
         if (!empty($checkTeam['status'])) {
             $message = $checkTeam['message'];
             $code = $checkTeam['status'];
-            if($request->wantsJson()) {
+            if($wantsJson) {
                 return $this->errorJson($request, ['message' => $message], $code);
             }
             return $this->error($message, $code);
         }
 
-        $data = $this->twitchApi->get(str_replace('{TEAM_NAME}', $team, $teamApi), true);
-        $inputs = $request->all();
-        $members = [];
-        foreach ($data['channels'] as $member) {
-            $members[] = $member['channel']['name'];
+        function getPage($team, $page = '1')
+        {
+            $url = 'https://www.twitch.tv/team/' . $team .'/live_member_list?page=' . $page;
+            $client = new Client;
+            return $client->request('GET', $url, ['http_errors' => false]);
         }
 
-        if (isset($inputs['sort'])) {
+        function getMembers($crawler)
+        {
+            return $crawler->filter('.member')->each(function (Crawler $node, $i) {
+                return str_replace('channel_', null, $node->extract(['id'])[0]);
+            });
+        }
+
+        $page = getPage($team);
+
+        $body = (string) $page->getBody();
+        $crawler = new Crawler($body);
+        $members = getMembers($crawler);
+        $checkPages = $crawler->filter('.page_data');
+        if (!empty(trim($checkPages->text()))) {
+            $pageCount = (int) $crawler->filter('.page_links')->filter('a')->eq(2)->text();
+            for ($page = 2; $page <= $pageCount; $page++) {
+                $req = getPage($team, $page);
+                $body = (string) $req->getBody();
+                $crawler = new Crawler($body);
+                $members = array_merge($members, getMembers($crawler));
+            }
+        }
+
+        if ($request->exists('sort')) {
             sort($members);
         }
 
-        if ($request->wantsJson()) {
+        if ($wantsJson) {
             return response()->json($members)->setCallback($request->input('callback'))->header('Access-Control-Allow-Origin', '*');
         }
-        return response(implode("\r\n", $members))->withHeaders($this->headers);
+        return response(implode(PHP_EOL, $members))->withHeaders($this->headers);
     }
 
     /**

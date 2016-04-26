@@ -51,7 +51,7 @@ class TwitchController extends Controller
     protected function errorJson(Request $request, $data = [], $code = 404)
     {
         $data['code'] = $code;
-        return response()->json($data)->setCallback($request->input('callback'))->header('Access-Control-Allow-Origin', '*');
+        return response()->json($data)->header('Access-Control-Allow-Origin', '*');
     }
 
     /**
@@ -202,7 +202,7 @@ class TwitchController extends Controller
         }
 
         if ($request->wantsJson()) {
-            return response()->json($hostList)->setCallback($request->input('callback'))->header('Access-Control-Allow-Origin', '*');
+            return response()->json($hostList)->header('Access-Control-Allow-Origin', '*');
         }
 
         $implode = $request->exists('implode') ? ', ' : PHP_EOL;
@@ -284,7 +284,7 @@ class TwitchController extends Controller
                     ->where('username', $username)
                     ->update(['access_token' => $token]);
             }
-            return view('twitch.subcount.index', ['username' => $username]);
+            return view('twitch.subcount', ['username' => $username]);
         }
     }
 
@@ -355,7 +355,7 @@ class TwitchController extends Controller
         }
 
         if ($wantsJson) {
-            return response()->json($members)->setCallback($request->input('callback'))->header('Access-Control-Allow-Origin', '*');
+            return response()->json($members)->header('Access-Control-Allow-Origin', '*');
         }
         return response(implode(PHP_EOL, $members))->withHeaders($this->headers);
     }

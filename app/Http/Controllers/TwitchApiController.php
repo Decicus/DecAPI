@@ -17,6 +17,7 @@ class TwitchApiController extends Controller
 
     /**
      * Initiliazes the controller.
+     *
      * @param string $clientId     Twitch client ID
      * @param string $clientSecret Twitch client Secret
      */
@@ -28,6 +29,7 @@ class TwitchApiController extends Controller
 
     /**
      * Sends a standard GET request to the Twitch Kraken API, unless overridden.
+     *
      * @param  string $url    Endpoint URL, such as '/streams/channel-name';
      * @param  bool   $override Overrides the call to call the $url parameter directly instead of appending the $url parameter to the Kraken API
      * @param  array  $header Array of HTTP headers to send with the request. Client ID is already included in each request.
@@ -45,6 +47,7 @@ class TwitchApiController extends Controller
 
     /**
      * Returns values from the Kraken channels endpoint.
+     *
      * @param  string $channel Channel name
      * @return TwitchApiController\get
      */
@@ -55,6 +58,7 @@ class TwitchApiController extends Controller
 
     /**
      * Gets channels/:channel/subscriptions data
+     *
      * @param  string $channel     Channel name
      * @param  string $accessToken Authorization token
      * @param  int    $limit       Maximum numbers of objects
@@ -74,7 +78,19 @@ class TwitchApiController extends Controller
     }
 
     /**
+     * Gets chat/:channel/emoticons data
+     *
+     * @param  string $channel Channel name
+     * @return TwitchApiController\get
+     */
+    public function emoticons($channel = '')
+    {
+        return $this->get('chat/' . $channel . '/emoticons');
+    }
+
+    /**
      * Returns array of hosts for a specified channel
+     *
      * @param  string $channel Channel name
      * @return array          List of channels hosting
      */
@@ -127,6 +143,7 @@ class TwitchApiController extends Controller
 
     /**
      * Returns values from the Kraken streams endpoint.
+     *
      * @param  string $channel Channel name
      * @return TwitchApiController\get
      */
@@ -137,6 +154,7 @@ class TwitchApiController extends Controller
 
     /**
      * Returns values from the Kraken teams endpoint
+     *
      * @param  string $team Team identifier
      * @return TwitchApiController\get
      */
@@ -147,6 +165,7 @@ class TwitchApiController extends Controller
 
     /**
      * Returns result of the Kraken API for videos.
+     * 
      * @param  Request $request
      * @param  string  $channel Channel name, can also be specified in the request.
      * @param  integer $limit   Limit of highlights

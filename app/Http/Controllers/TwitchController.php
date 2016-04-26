@@ -51,7 +51,7 @@ class TwitchController extends Controller
     protected function errorJson(Request $request, $data = [], $code = 404)
     {
         $data['code'] = $code;
-        return response()->json($data)->header('Access-Control-Allow-Origin', '*');
+        return $this->json($data, $code);
     }
 
     /**
@@ -65,6 +65,10 @@ class TwitchController extends Controller
     {
         $headers['Content-Type'] = 'application/json';
         $headers['Access-Control-Allow-Origin'] = '*';
+
+        if (empty($data['code'])) {
+            $data['code'] = $code;
+        }
         return \Response::json($data, $code)->withHeaders($headers);
     }
 
@@ -82,6 +86,7 @@ class TwitchController extends Controller
             'hosts' => 'hosts/{CHANNEL}',
             'ingests' => 'ingests',
             'subcount' => 'subcount/{CHANNEL}',
+            'subscriber_emotes' => 'subscriber_emotes/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
             'uptime' => 'uptime/{CHANNEL}'
         ];
@@ -286,6 +291,53 @@ class TwitchController extends Controller
             }
             return view('twitch.subcount', ['username' => $username]);
         }
+    }
+
+    public function subEmotes(Request $request, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $wantsJson = $request->wantsJson();
+
+        if (empty($channel)) {
+            $message = 'Channel name is not specified';
+            if ($wantsJson) {
+                return $this->errorJson($request, ['message' => $message]);
+            }
+            return $this->error($message);
+        }
+
+        $emoticons = $this->twitchApi->emoticons($channel);
+
+        if (!empty($emoticons['error'])) {
+            $status = $emoticons['status'];
+            $message = $emoticons['message'];
+            if ($wantsJson) {
+                return $this->errorJson($request, ['error' => $emoticons['error'], 'message' => $message, 'status' => $status]);
+            }
+            return $this->error($message, $status);
+        }
+
+        $emotes = [];
+        foreach ($emoticons['emoticons'] as $emote) {
+            if ($emote['subscriber_only']) {
+                $emotes[] = $emote['regex'];
+            } else {
+                break; // Subscriber emotes are always listed first.
+            }
+        }
+
+        if (empty($emotes)) {
+            $message = 'This channel does not have any subscriber emotes.';
+            if ($wantsJson) {
+                return $this->errorJson($request, ['message' => $message]);
+            }
+            return $this->error($message);
+        }
+
+        if ($wantsJson) {
+            return $this->json($emotes);
+        }
+        return response(implode(' ', $emotes))->withHeaders($this->headers);
     }
 
     /**

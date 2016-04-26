@@ -41,6 +41,9 @@ Route::group(['prefix' => 'twitch'], function() {
     Route::get('ingests', 'TwitchController@ingests')
         ->where('ingests', '(ingests\.php|ingests)');
 
+    Route::get('subscriber_emotes/{channel?}', 'TwitchController@subEmotes')
+        ->where('channel', $channelRegex);
+
     Route::get('{team_members}/{team?}', 'TwitchController@teamMembers')
         ->where('team_members', '(team_members\.php|team_members)')
         ->where('team', '([A-z0-9]{1,40})');

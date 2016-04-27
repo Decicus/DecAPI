@@ -50,8 +50,7 @@ class TwitchController extends Controller
      */
     protected function errorJson(Request $request, $data = [], $code = 404)
     {
-        $data['code'] = $code;
-        return $this->json($data, $code);
+        return response()->json($data)->header('Access-Control-Allow-Origin', '*');
     }
 
     /**
@@ -66,9 +65,6 @@ class TwitchController extends Controller
         $headers['Content-Type'] = 'application/json';
         $headers['Access-Control-Allow-Origin'] = '*';
 
-        if (empty($data['code'])) {
-            $data['code'] = $code;
-        }
         return \Response::json($data, $code)->withHeaders($headers);
     }
 
@@ -188,7 +184,7 @@ class TwitchController extends Controller
             $message = $hosts['message'];
             $code = $hosts['status'];
             if ($request->wantsJson()) {
-                return $this->errorJson($request, ['message' => $message], $code);
+                return $this->errorJson($request, ['message' => $message, 'status' => $code], $code);
             }
             return $this->error($message, $code);
         }
@@ -296,12 +292,12 @@ class TwitchController extends Controller
     public function subEmotes(Request $request, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        $wantsJson = $request->wantsJson();
+        $wantsJson = (($request->wantsJson() || $request->exists('json')) ? true : false);
 
         if (empty($channel)) {
             $message = 'Channel name is not specified';
             if ($wantsJson) {
-                return $this->errorJson($request, ['message' => $message]);
+                return $this->errorJson($request, ['message' => $message, 'status' => 404]);
             }
             return $this->error($message);
         }
@@ -335,7 +331,9 @@ class TwitchController extends Controller
         }
 
         if ($wantsJson) {
-            return $this->json($emotes);
+            return $this->json([
+                'emotes' => $emotes
+            ]);
         }
         return response(implode(' ', $emotes))->withHeaders($this->headers);
     }
@@ -349,15 +347,13 @@ class TwitchController extends Controller
      */
     public function teamMembers(Request $request, $team_members = null, $team = null)
     {
-        $teamApi = 'https://api.twitch.tv/api/team/{TEAM_NAME}/all_channels.json';
-
         $wantsJson = (($request->wantsJson() || $request->exists('json')) ? true : false);
 
         $team = $team ?: $request->input('team', null);
         if (empty($team)) {
             $message = 'Team identifier is empty';
             if ($wantsJson) {
-                return $this->errorJson($request, ['message' => $message]);
+                return $this->errorJson($request, ['message' => $message, 'status' => 404]);
             }
             return $this->error($message);
         }
@@ -367,7 +363,7 @@ class TwitchController extends Controller
             $message = $checkTeam['message'];
             $code = $checkTeam['status'];
             if($wantsJson) {
-                return $this->errorJson($request, ['message' => $message], $code);
+                return $this->errorJson($request, ['message' => $message, 'status' => $code], $code);
             }
             return $this->error($message, $code);
         }
@@ -407,7 +403,9 @@ class TwitchController extends Controller
         }
 
         if ($wantsJson) {
-            return response()->json($members)->header('Access-Control-Allow-Origin', '*');
+            return response()->json([
+                'members' => $members
+            ])->header('Access-Control-Allow-Origin', '*');
         }
         return response(implode(PHP_EOL, $members))->withHeaders($this->headers);
     }

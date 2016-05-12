@@ -97,6 +97,40 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns the length a user has followed a channel
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @param  string  $user
+     * @return Response
+     */
+    public function followAge(Request $request, $channel = null, $user = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $user = $user ?: $request->input('user', null);
+
+        if (empty($channel) || empty($user)) {
+            $message = 'You need to specify both user and channel name';
+            return $this->error($message);
+        }
+
+        if (strtolower($channel) === strtolower($user)) {
+            return response('A user cannot follow themself.')->withHeaders($this->headers);
+        }
+
+        $getFollow = $this->twitchApi->followRelationship($user, $channel);
+
+        if (!empty($getFollow['status'])) {
+            return response($getFollow['message'])->withHeaders($this->headers);
+        }
+
+        // TODO: Return a more specific time in response
+        $time = $getFollow['created_at'];
+        $diff = Carbon::parse($time)->diffForHumans(null, true);
+        return response($diff)->withHeaders($this->headers);
+    }
+
+    /**
      * Shows the date and time of when a user followed a channel.
      *
      * @param  Request $request
@@ -117,7 +151,7 @@ class TwitchController extends Controller
         $getFollow = $this->twitchApi->followRelationship($user, $channel);
 
         if (strtolower($user) === strtolower($channel)) {
-            return response('A user cannot follow themself.')->withHeaders($this->headers0);
+            return response('A user cannot follow themself.')->withHeaders($this->headers);
         }
 
         // If $user isn't following $channel, a 404 is returned.

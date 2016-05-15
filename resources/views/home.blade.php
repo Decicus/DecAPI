@@ -19,7 +19,11 @@
                 </div>
 
                 <div class="container">
-                    <p class="text text-muted">Made with <i class="fa fa-heart fa-1x" style="color: #D10000;"></i> by <a href="https://www.thomassen.xyz/" target="_blank">Alex Thomassen</a></p>
+                    <p class="text-muted">Made with <i class="fa fa-heart fa-1x" style="color: #D10000;"></i> by <a href="https://www.thomassen.xyz/" target="_blank">Alex Thomassen</a></p>
+
+                    <p class="text-info">
+                        Project repository on <a href="https://github.com/Decicus/DecAPI" target="_blank"><i class="fa fa-github fa-1x"></i> GitHub</a>
+                    </p>
                 </div>
             </div>
         </div>

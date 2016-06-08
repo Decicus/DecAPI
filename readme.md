@@ -5,7 +5,7 @@ This is essentially an attempt at rewriting everything that DecAPI supports into
 
 As of right now, the rewrite is in still in the early stages and very few things are supported. The list below will be kept up-to-date as to what is currently working.
 
-If you're interested, a beta version is available under [beta.decapi.me/](https://beta.decapi.me).
+If you're interested, a beta version is available under [beta.decapi.me](https://beta.decapi.me).
 
 ## Layout
 The layout of the application can be reflected upon by looking at the [routes.php](app/Http/routes.php) file. Each group uses their own controller located in [app/Http/Controllers](app/Http/Controllers), and each sub-route usually has their own method in said controller.

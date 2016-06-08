@@ -8,7 +8,7 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use DB;
-use Carbon\Carbon;
+use App\Helpers\Helper;
 
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector;
@@ -77,6 +77,7 @@ class TwitchController extends Controller
         $baseUrl = url('/twitch/');
 
         $urls = [
+            'followage' => 'followage/{CHANNEL}/{USER}',
             'followed' => 'followed/{USER}/{CHANNEL}',
             'highlight' => 'highlight/{CHANNEL}',
             'hosts' => 'hosts/{CHANNEL}',
@@ -126,7 +127,7 @@ class TwitchController extends Controller
 
         // TODO: Return a more specific time in response
         $time = $getFollow['created_at'];
-        $diff = Carbon::parse($time)->diffForHumans(null, true);
+        $diff = Helper::getDateDiff($time, time(), 6);
         return response($diff)->withHeaders($this->headers);
     }
 
@@ -468,28 +469,8 @@ class TwitchController extends Controller
             return $this->error($channel . ' is offline');
         }
 
-        $date = Carbon::parse($stream['stream']['created_at']);
-        $uptime = [];
-        $days = $date->diffInDays();
-        $hours = ($date->diffInHours() - 24 * $days);
-        $minutes = ($date->diffInMinutes() - (60 * $hours) - (24 * $days * 60));
-        $seconds = ($date->diffInSeconds() - (60 * $minutes) - (60 * $hours * 60) - (24 * $days * 60 * 60));
-        if ($days > 0) {
-            $uptime[] = $days . " day" . ($days > 1 ? 's' : '');
-        }
-
-        if ($hours > 0) {
-            $uptime[] = $hours . " hour" . ($hours > 1 ? 's' : '');
-        }
-
-        if ($minutes > 0) {
-            $uptime[] = $minutes . " minute" . ($minutes > 1 ? 's' : '');
-        }
-
-        if ($seconds > 0) {
-            $uptime[] = $seconds . " second" . ($seconds > 1 ? 's' : '');
-        }
-
-        return response(implode(', ', $uptime))->withHeaders($this->headers);
+        $start = $stream['stream']['created_at'];
+        $diff = Helper::getDateDiff($start, time(), 4);
+        return response($diff)->withHeaders($this->headers);
     }
 }

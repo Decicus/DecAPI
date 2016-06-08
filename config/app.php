@@ -1,5 +1,7 @@
 <?php
 
+use App\Helpers\Helper;
+
 return [
 
     /*
@@ -205,7 +207,7 @@ return [
         'View'      => Illuminate\Support\Facades\View::class,
 
         'Feed'      => Roumen\Feed\Feed::class,
-        
+        'Helper'    => App\Helpers\Helper::class,
     ],
 
 ];

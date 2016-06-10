@@ -128,25 +128,31 @@ class SteamController extends Controller
             $error = 'Invalid currency code specified';
         }
 
-        $search = urlencode($search);
-        $cc = strtoupper($cc); // Apparently the storefront API returns LESS data with lowercase currency code... not sure why
-        $requestUrl = 'http://store.steampowered.com/api/storesearch/?term=' . $search . '&cc=' . $cc;
-        $data = Helper::get($requestUrl);
-        if (!isset($data['total']) || $data['total'] === 0) {
-            $error = 'No results found';
-
-            $data = Helper::get($requestUrl); // Re-request the information, as the storefront API is sometimes 'hit or miss'.
-            if (isset($data['total']) && $data['total'] > 0) {
-                $error = null; // If it succeeds on the second request, make sure that the proper response is sent back.
-            }
-        }
-
+        // Pass error back before making a request to API with no parameters specified
         if (!empty($error)) {
             if ($json) {
                 return $this->json(['error' => $error], 404);
             }
 
             return $this->text($error, 404);
+        }
+
+        $search = urlencode($search);
+        $cc = strtoupper($cc); // Apparently the storefront API returns LESS data with lowercase currency code... not sure why
+        $requestUrl = 'http://store.steampowered.com/api/storesearch/?term=' . $search . '&cc=' . $cc;
+        $data = Helper::get($requestUrl);
+        if (!isset($data['total']) || $data['total'] === 0) {
+
+
+            $data = Helper::get($requestUrl); // Re-request the information, as the storefront API is sometimes 'hit or miss'.
+            if (isset($data['total']) && $data['total'] > 0) {
+                $error = 'No results found';
+                if ($json) {
+                    return $this->json(['error' => $error], 404);
+                }
+
+                return $this->text($error, 404);
+            }
         }
 
         $game = $data['items'][0]; // Pick first result

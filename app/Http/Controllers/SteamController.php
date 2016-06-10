@@ -145,7 +145,7 @@ class SteamController extends Controller
 
 
             $data = Helper::get($requestUrl); // Re-request the information, as the storefront API is sometimes 'hit or miss'.
-            if (isset($data['total']) && $data['total'] > 0) {
+            if (!isset($data['total']) || $data['total'] === 0) {
                 $error = 'No results found';
                 if ($json) {
                     return $this->json(['error' => $error], 404);

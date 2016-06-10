@@ -20,6 +20,14 @@ Route::group(['prefix' => 'askfm'], function() {
     Route::get('rss/{user}', 'AskfmController@rss');
 });
 
+Route::group(['prefix' => 'steam'], function() {
+    Route::get('/', 'SteamController@base');
+
+    Route::get('currencies', 'SteamController@listCurrencies');
+
+    Route::get('gamesearch', 'SteamController@gameInfoBySearch');
+});
+
 Route::group(['prefix' => 'twitch'], function() {
     $channelRegex = '([A-z0-9]{1,25})';
 

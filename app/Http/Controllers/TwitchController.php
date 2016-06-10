@@ -125,7 +125,6 @@ class TwitchController extends Controller
             return response($getFollow['message'])->withHeaders($this->headers);
         }
 
-        // TODO: Return a more specific time in response
         $time = $getFollow['created_at'];
         $diff = Helper::getDateDiff($time, time(), 6);
         return response($diff)->withHeaders($this->headers);

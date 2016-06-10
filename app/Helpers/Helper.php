@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use GuzzleHttp\Client;
+
 class Helper
 {
     /**
@@ -73,5 +75,24 @@ class Helper
         }
         // Return string with times
         return implode(", ", $times);
+    }
+
+    /**
+     * Retrieves information from the specified URL and converts it from JSON.
+     *
+     * @param  string   $url        The request url
+     * @param  array    $headers    HTTP headers to send with the request
+     * @param  boolean  $isJson     Set to 'true' if the expected request result should be JSON
+     * @return array
+     */
+    public static function get($url = '', $headers = [], $isJson = true)
+    {
+        $settings = [];
+        $settings['http_errors'] = false;
+        $settings['headers'] = $headers;
+
+        $client = new Client();
+        $result = $client->request('GET', $url, $settings);
+        return ($isJson ? json_decode($result->getBody(), true) : $result->getBody());
     }
 }

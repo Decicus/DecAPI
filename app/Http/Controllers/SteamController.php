@@ -69,7 +69,7 @@ class SteamController extends Controller
     private function json($data = [], $code = 200, $headers = [])
     {
         $headers = array_merge($this->headers, $headers);
-        return Response::json($data, $code)->withHeaders($headers);
+        return \Response::json($data, $code)->withHeaders($headers);
     }
 
     /**
@@ -80,7 +80,7 @@ class SteamController extends Controller
      * @param  array   $headers HTTP headers
      * @return Response
      */
-    public function text($result = '', $code = 200, $headers = [])
+    private function text($result = '', $code = 200, $headers = [])
     {
         $headers = array_merge($this->headers, $headers);
         $headers['Content-Type'] = 'text/plain';

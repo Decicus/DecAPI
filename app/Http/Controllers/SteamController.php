@@ -119,6 +119,7 @@ class SteamController extends Controller
         $search = trim($request->input('search', ''));
         $cc = strtolower($request->input('cc', 'us'));
         $strict = $request->input('strict', false);
+        $emptySpace = $request->input('empty', false);
         $error = null;
 
         if (empty($search)) {
@@ -151,7 +152,8 @@ class SteamController extends Controller
                     return $this->json(['error' => $error], 404);
                 }
 
-                return $this->text($error);
+                // $emptySpace is specifically for Nightbot and others, where it will just send something 'empty' instead of an error.
+                return $this->text(($emptySpace ? PHP_EOL : $error));
             }
         }
 
@@ -184,10 +186,7 @@ class SteamController extends Controller
             return $this->json($game);
         }
 
-        $values = [
-            $game['name'],
-            $url
-        ];
+        $values = [$game['name'], $url];
 
         if (isset($game['price'])) {
             $price = $game['price'];

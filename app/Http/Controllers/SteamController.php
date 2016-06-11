@@ -118,6 +118,7 @@ class SteamController extends Controller
         $json = $request->wantsJson();
         $search = trim($request->input('search', ''));
         $cc = strtolower($request->input('cc', 'us'));
+        $strict = $request->input('strict', false);
         $error = null;
 
         if (empty($search)) {
@@ -128,13 +129,13 @@ class SteamController extends Controller
             $error = 'Invalid currency code specified';
         }
 
-        // Pass error back before making a request to API with no parameters specified
+        // Pass error back before making a request to API, if it's set
         if (!empty($error)) {
             if ($json) {
                 return $this->json(['error' => $error], 404);
             }
 
-            return $this->text($error, 404);
+            return $this->text($error);
         }
 
         $search = urlencode($search);
@@ -143,7 +144,6 @@ class SteamController extends Controller
         $data = Helper::get($requestUrl);
         if (!isset($data['total']) || $data['total'] === 0) {
 
-
             $data = Helper::get($requestUrl); // Re-request the information, as the storefront API is sometimes 'hit or miss'.
             if (!isset($data['total']) || $data['total'] === 0) {
                 $error = 'No results found';
@@ -151,16 +151,49 @@ class SteamController extends Controller
                     return $this->json(['error' => $error], 404);
                 }
 
-                return $this->text($error, 404);
+                return $this->text($error);
             }
         }
 
-        $game = $data['items'][0]; // Pick first result
+        $game = null;
+        foreach ($data['items'] as $g) {
+            if (strtolower($search) === strtolower($g['name'])) {
+                $game = $g;
+                break;
+            }
+        }
+
+        if (empty($game)) {
+            $game = $data['items'][0]; // fall back to first item
+        }
+
+        if ($strict) {
+            if (strtolower($search) !== strtolower($game['name'])) {
+                $error = '[Strict] No matching games found';
+                if ($json) {
+                    return $this->json(['error' => $error], 404);
+                }
+
+                return $this->text($error);
+            }
+        }
+
         $url = 'http://store.steampowered.com/app/' . $game['id'] . '/';
         if ($json) {
             $game['url'] = $url;
             return $this->json($game);
         }
-        return $this->text($game['name'] . " - " . $game['price']['final'] / 100 . " " . $game['price']['currency'] . " - " . $url);
+
+        $values = [
+            $game['name'],
+            $url
+        ];
+
+        if (isset($game['price'])) {
+            $price = $game['price'];
+            $values[] = ($price['final'] / 100) . " " . $price['currency'];
+        }
+
+        return $this->text(implode($values, " - "));
     }
 }

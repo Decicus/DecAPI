@@ -465,7 +465,12 @@ class TwitchController extends Controller
         }
 
         if (empty($stream['stream'])) {
-            return $this->error($channel . ' is offline');
+            $offline = $channel . ' is offline';
+            if (!empty($request->input('offline_msg', null))) {
+                $offline = $request->input('offline_msg');
+            }
+
+            return $this->error($offline);
         }
 
         $start = $stream['stream']['created_at'];

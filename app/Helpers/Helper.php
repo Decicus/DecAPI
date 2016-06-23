@@ -82,7 +82,7 @@ class Helper
      *
      * @param  string   $url        The request url
      * @param  array    $headers    HTTP headers to send with the request
-     * @param  boolean  $isJson     Set to 'true' if the expected request result should be JSON
+     * @param  boolean  $isJson     Set to 'false' if the expected request result is not JSON (the raw result will be returned)
      * @return array
      */
     public static function get($url = '', $headers = [], $isJson = true)

@@ -20,6 +20,11 @@ Route::group(['prefix' => 'askfm'], function() {
     Route::get('rss/{user}', 'AskfmController@rss');
 });
 
+Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
+    Route::get('/', ['as' => 'home', 'uses' => 'BttvController@home']);
+    Route::get('emotes', ['as' => 'emotes', 'uses' => 'BttvController@emotes']);
+});
+
 Route::group(['prefix' => 'steam'], function() {
     Route::get('/', 'SteamController@base');
 

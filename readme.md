@@ -29,6 +29,9 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
     - [Current uptime](https://decapi.me/twitch/uptime?channel=decicus)
 - ASKfm
     - [RSS/Atom feed of user questions/answers](https://decapi.me/askfm/rss?user=xangold)
+- BetterTTV
+    - [Look up channel emotes](https://decapi.me/bttv/?channel=decicus)
+    - [Custom API for displaying emotes in chat](https://decapi.me/bttv/emotes?channel=decicus)
 
 ## Requirements
 The following things are required for setting this up:

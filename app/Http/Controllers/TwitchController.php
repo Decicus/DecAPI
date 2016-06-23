@@ -110,6 +110,8 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $user = $user ?: $request->input('user', null);
 
+        $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
+
         if (empty($channel) || empty($user)) {
             $message = 'You need to specify both user and channel name';
             return $this->error($message);
@@ -126,7 +128,7 @@ class TwitchController extends Controller
         }
 
         $time = $getFollow['created_at'];
-        $diff = Helper::getDateDiff($time, time(), 6);
+        $diff = Helper::getDateDiff($time, time(), $precision);
         return response($diff)->withHeaders($this->headers);
     }
 

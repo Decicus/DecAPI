@@ -22,7 +22,8 @@ Route::group(['prefix' => 'askfm'], function() {
 
 Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
     Route::get('/', ['as' => 'home', 'uses' => 'BttvController@home']);
-    Route::get('emotes', ['as' => 'emotes', 'uses' => 'BttvController@emotes']);
+    Route::get('{emotes}', ['as' => 'emotes', 'uses' => 'BttvController@emotes'])
+        ->where('emotes', '(emotes\.php|emotes)');
 });
 
 Route::group(['prefix' => 'steam'], function() {

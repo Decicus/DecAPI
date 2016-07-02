@@ -38,19 +38,18 @@ class TwitchController extends Controller
      */
     protected function error($message, $code = 404)
     {
-        return response($message, $code)->withHeaders($this->headers);
+        return Helper::text($message, $code, $this->headers);
     }
 
     /**
      * Returns an error JSON response
-     * @param  Request $request
      * @param  array  $data
      * @param  integer $code
      * @return Response
      */
-    protected function errorJson(Request $request, $data = [], $code = 404)
+    protected function errorJson($data = [], $code = 404)
     {
-        return response()->json($data)->header('Access-Control-Allow-Origin', '*');
+        return Helper::json($data, $code);
     }
 
     /**
@@ -164,6 +163,113 @@ class TwitchController extends Controller
         $time = strtotime($getFollow['created_at']);
         $format = 'M j. Y - h:i:s A (e)';
         return response(date($format, $time))->withHeaders($this->headers);
+    }
+
+    public function help(Request $request, $search = null)
+    {
+        $articles = [
+            'About Site Suspensions, DMCA Suspensions, and Chat Bans' => 1727973,
+            'Android Subscriptions FAQ' => 2297883,
+            'Authy FAQ' => 2186821,
+            'Channel Banned Words' => 2100263,
+            'Chat Commands' => 659095,
+            'Chat Replay FAQ' => 2337148,
+            'Cheering/Bits' => 2449458,
+            'Creative FAQ' => 2176641,
+            'Creative Commissions' => 2337107,
+            'Guide to Broadcast Health and Using Twitch Inspector' => 2420572,
+            'Guide to Custom Resub Messages' => 2457351,
+            'How to Edit Info Panels' => 2416760,
+            'How to File a User Report' => 725568,
+            'How to File a Whisper Report' => 2329782,
+            'How to Handle Viewbots/Followbots' => 2435640,
+            'How to Redeem Coupon Codes' => 2392092,
+            'How to use Channel Feed' => 2377877,
+            'How to Use Clips' => 2442508,
+            'How to use the Friends Feature' => 2418761,
+            'How To Use VOD Thumbnails' => 2218412,
+            'List of Prohibited/Banned Games' => 1992676,
+            'Moderation Team Building FAQ' => 1360598,
+            'Partner Emoticon and Badge Guide' => 2348985,
+            'Partner Help and Contact Information' => 735178,
+            'Partner Payment FAQ' => 735169,
+            'Partner Program Overview' => 735069,
+            'Partner Revenue Guide' => 2347894,
+            'Partner Settings Guide' => 2401004,
+            'Purchase Support FAQ' => 2341636,
+            'Social Eating FAQ' => 2483343,
+            'Subscription Program FAQ' => 735176,
+            'Terms of Service (ToS)' => 735191,
+            'Tips for Applying to the Partner Program' => 735127,
+            'Twitch Chat Badges Guide' => 659115,
+            'Twitch Music FAQ' => 1824967,
+            'Twitch Rules of Conduct (RoC)' => 983016,
+            'Twitch Turbo' => 973896,
+            'Twitch Twitter "@TwitchSupport" FAQ' => 1210307,
+            'Two Factor Authentication (2FA) with Authy' => 2186271,
+            'Username Rename (Name Changes) and Recycling Policies' => 1015624,
+            'Whispers FAQ' => 2215236
+        ];
+
+        $prefix = 'https://help.twitch.tv/customer/en/portal/articles/';
+
+        $json = $request->wantsJson();
+        if ($request->exists('list')) {
+            if ($json) {
+                $data = [
+                    'url_template' => $prefix . '{id}',
+                    'articles' => $articles
+                ];
+                return $this->json($data);
+            }
+
+            $list = '';
+            foreach ($articles as $title => $id) {
+                $list .= $title . ": " . $prefix . $id . PHP_EOL;
+            }
+
+            return Helper::text($list);
+        }
+
+        $msg = null;
+        $code = null;
+
+        $search = trim($search);
+        if (empty($search)) {
+            $msg = 'Search cannot be empty.';
+            $code = 404;
+        }
+
+        $results = preg_grep('/(' . $search . ')/i', array_keys($articles));
+        if (empty($results)) {
+            $msg = 'No results found.';
+            $code = 404;
+        }
+
+        if ($code !== null) {
+            if ($json) {
+                $data = [
+                    'error' => $msg,
+                    'code' => $code
+                ];
+                return $this->errorJson($data, $code);
+            }
+
+            return $this->error($msg, $code);
+        }
+
+        $title = array_values($results)[0];
+        $url = $prefix . $articles[$title];
+        if ($json) {
+            $data = [
+                'code' => 200,
+                'title' => $title,
+                'url' => $url
+            ];
+            return Helper::json($data);
+        }
+
+        return Helper::text($title . " - " . $url);
     }
 
     /**

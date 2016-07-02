@@ -125,6 +125,6 @@ class Helper
         $headers['Content-Type'] = 'text/plain';
         $headers['Access-Control-Allow-Origin'] = '*';
 
-        return response($text)->withHeaders($headers);
+        return response($text, $code)->withHeaders($headers);
     }
 }

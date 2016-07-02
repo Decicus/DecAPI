@@ -35,7 +35,8 @@ Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {
 
 Route::group(['prefix' => 'lever', 'as' => 'lever.'], function() {
     Route::get('/', ['as' => 'base', 'uses' => 'LeverController@base']);
-    Route::get('twitch', ['as' => 'twitch', 'uses' => 'LeverController@twitch']);
+    Route::get('{twitch}', ['as' => 'twitch', 'uses' => 'LeverController@twitch'])
+        ->where('twitch', '(twitch\.php|twitch)');
 });
 
 Route::group(['prefix' => 'steam'], function() {
@@ -59,6 +60,9 @@ Route::group(['prefix' => 'twitch'], function() {
         ->where('followed', '(followed\.php|followed)')
         ->where('user', $channelRegex)
         ->where('channel', $channelRegex);
+
+    Route::get('help/{search?}', 'TwitchController@help')
+        ->where('search', '.*');
 
     Route::get('{highlight}/{channel?}', 'TwitchController@highlight')
         ->where('highlight', '(highlight\.php|highlight)')

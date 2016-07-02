@@ -62,6 +62,12 @@ class DayZController extends Controller
         return $this->json($urls);
     }
 
+    /**
+     * Maps location names/searches to their izurvive.com locations
+     *
+     * @param  Request $request
+     * @return Response
+     */
     public function izurvive(Request $request)
     {
         // Location names => coordinates + zoom level

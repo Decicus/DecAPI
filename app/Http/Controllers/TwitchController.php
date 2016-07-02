@@ -169,19 +169,16 @@ class TwitchController extends Controller
     {
         $articles = [
             'About Site Suspensions, DMCA Suspensions, and Chat Bans' => 1727973,
-            'Android Subscriptions FAQ' => 2297883,
             'Authy FAQ' => 2186821,
             'Channel Banned Words' => 2100263,
             'Chat Commands' => 659095,
             'Chat Replay FAQ' => 2337148,
             'Cheering/Bits' => 2449458,
             'Creative FAQ' => 2176641,
-            'Creative Commissions' => 2337107,
             'Guide to Broadcast Health and Using Twitch Inspector' => 2420572,
             'Guide to Custom Resub Messages' => 2457351,
             'How to Edit Info Panels' => 2416760,
             'How to File a User Report' => 725568,
-            'How to File a Whisper Report' => 2329782,
             'How to Handle Viewbots/Followbots' => 2435640,
             'How to Redeem Coupon Codes' => 2392092,
             'How to use Channel Feed' => 2377877,
@@ -208,7 +205,11 @@ class TwitchController extends Controller
             'Twitch Twitter "@TwitchSupport" FAQ' => 1210307,
             'Two Factor Authentication (2FA) with Authy' => 2186271,
             'Username Rename (Name Changes) and Recycling Policies' => 1015624,
-            'Whispers FAQ' => 2215236
+            'Whispers FAQ' => 2215236,
+            // Sorted at the bottom for lower priority
+            'Android Subscriptions FAQ' => 2297883,
+            'Creative Commissions' => 2337107,
+            'How to File a Whisper Report' => 2329782,
         ];
 
         $prefix = 'https://help.twitch.tv/customer/en/portal/articles/';
@@ -240,6 +241,10 @@ class TwitchController extends Controller
             $code = 404;
         }
 
+        if (strtolower($search) === 'list') {
+            return Helper::text('List of available help articles with titles: ' . route('twitch.help') . '?list');
+        }
+
         $results = preg_grep('/(' . $search . ')/i', array_keys($articles));
         if (empty($results)) {
             $msg = 'No results found.';
@@ -255,7 +260,8 @@ class TwitchController extends Controller
                 return $this->errorJson($data, $code);
             }
 
-            return $this->error($msg, $code);
+            // Send with code 200, so Nightbot picks up the returned message
+            return Helper::text($msg);
         }
 
         $title = array_values($results)[0];

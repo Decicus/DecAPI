@@ -47,7 +47,7 @@ Route::group(['prefix' => 'steam'], function() {
     Route::get('gamesearch', 'SteamController@gameInfoBySearch');
 });
 
-Route::group(['prefix' => 'twitch'], function() {
+Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
     $channelRegex = '([A-z0-9]{1,25})';
 
     Route::get('/', 'TwitchController@base');
@@ -61,7 +61,7 @@ Route::group(['prefix' => 'twitch'], function() {
         ->where('user', $channelRegex)
         ->where('channel', $channelRegex);
 
-    Route::get('help/{search?}', 'TwitchController@help')
+    Route::get('help/{search?}', ['as' => 'help', 'uses' => 'TwitchController@help'])
         ->where('search', '.*');
 
     Route::get('{highlight}/{channel?}', 'TwitchController@highlight')

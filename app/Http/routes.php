@@ -33,6 +33,11 @@ Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {
     Route::get('steam-status-report', ['as' => 'steamStatusReport', 'uses' => 'DayZController@steamStatusReport']);
 });
 
+Route::group(['prefix' => 'lever', 'as' => 'lever.'], function() {
+    Route::get('/', ['as' => 'base', 'uses' => 'LeverController@base']);
+    Route::get('twitch', ['as' => 'twitch', 'uses' => 'LeverController@twitch']);
+});
+
 Route::group(['prefix' => 'steam'], function() {
     Route::get('/', 'SteamController@base');
 

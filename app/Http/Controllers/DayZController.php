@@ -9,41 +9,10 @@ use App\Http\Controllers\Controller;
 
 use GuzzleHttp\Client;
 use Vinelab\Rss\Rss;
+use App\Helpers\Helper;
 
 class DayZController extends Controller
 {
-    /**
-     * Returns a JSON response with set headers
-     *
-     * @param  array  $data
-     * @param  integer $code    HTTP status code
-     * @param  array  $headers HTTP headers
-     * @return response
-     */
-    protected function json($data = [], $code = 200, $headers = [])
-    {
-        $headers['Content-Type'] = 'application/json';
-        $headers['Access-Control-Allow-Origin'] = '*';
-
-        return \Response::json($data, $code)->withHeaders($headers);
-    }
-
-    /**
-     * Returns a plaintext response with set headers
-     *
-     * @param  string  $text    Text to send
-     * @param  integer $code    HTTP status code
-     * @param  array   $headers HTTP headers
-     * @return response
-     */
-    protected function text($text = '', $code = 200, $headers = [])
-    {
-        $headers['Content-Type'] = 'text/plain';
-        $headers['Access-Control-Allow-Origin'] = '*';
-
-        return response($text)->withHeaders($headers);
-    }
-
     /**
      * The base API endpoint
      *
@@ -217,7 +186,7 @@ class DayZController extends Controller
 
         $search = $request->input('search', null);
         if (empty($search)) {
-            return $this->text('Please specify ?search=');
+            return Helper::text('Please specify ?search=');
         }
 
         $search = urldecode(trim($search));
@@ -226,11 +195,11 @@ class DayZController extends Controller
         $check = preg_grep('/(' . $search . ')/i', $names);
 
         if (empty($check)) {
-            return $this->text('No results found.');
+            return Helper::text('No results found.');
         }
 
         $name = array_values($check)[0];
-        return $name . ' - https://www.izurvive.com/' . str_replace(';', '%3B', $locations[$name]);
+        return Helper::text($name . ' - https://www.izurvive.com/' . str_replace(';', '%3B', $locations[$name]));
     }
 
     /**
@@ -250,11 +219,11 @@ class DayZController extends Controller
         foreach ($data as $post) {
             $title = $post['title'];
             if (strpos(strtolower($title), 'status report') !== false) {
-                return $this->text($title . ' - https://dayz.com/blog/' . $post['slug']);
+                return Helper::text($title . ' - https://dayz.com/blog/' . $post['slug']);
             }
         }
 
-        return $this->text('No status reports found.');
+        return Helper::text('No status reports found.');
     }
 
     /**
@@ -272,10 +241,10 @@ class DayZController extends Controller
         foreach ($articles as $article) {
             $title = $article->title;
             if (strpos(strtolower($title), 'status report') !== false) {
-                return $this->text($title . ' - ' . $article->link);
+                return Helper::text($title . ' - ' . $article->link);
             }
         }
 
-        return $this->text('No status reports found.');
+        return Helper::text('No status reports found.');
     }
 }

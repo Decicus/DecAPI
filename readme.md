@@ -14,7 +14,7 @@ The standard layout will be https://example.com/main-route/sub-route/parameter -
 
 To keep it backwards compatible, routes also support /main-route/sub-route?channel=decicus or /main-route/sub-route.php?channel=decicus.
 
-## Current features
+## Current re-implemented features
 This list of features will contain links to the current version hosted under [decapi.me](https://decapi.me/)
 
 It _should_ function similarly or identical in this rewrite, even if the code hosted under [decapi.me](https://decapi.me/) is still the old code.
@@ -32,6 +32,11 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
 - BetterTTV
     - [Look up channel emotes](https://decapi.me/bttv/?channel=decicus)
     - [Custom API for displaying emotes in chat](https://decapi.me/bttv/emotes?channel=decicus)
+- DayZ
+    - [Latest "status report" from their blog](https://decapi.me/dayz/status-report)
+    - [Latest "status report" from their Steam 'news' section](https://decapi.me/dayz/status-report)
+    - [Maps location names/searches to their respective coordinates/location on izurvive.com](https://decapi.me/dayz/izurvive)
+        - Special thanks to [WastedUser](https://www.twitch.tv/wasteduser) for the `location name -> coordinates` data.
 
 ## Requirements
 The following things are required for setting this up:

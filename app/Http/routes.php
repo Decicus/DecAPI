@@ -26,6 +26,13 @@ Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
         ->where('emotes', '(emotes\.php|emotes)');
 });
 
+Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {
+    Route::get('/', ['as' => 'base', 'uses' => 'DayZController@base']);
+    Route::get('status-report', ['as' => 'statusReport', 'uses' => 'DayZController@statusReport']);
+    Route::get('izurvive', ['as' => 'izurvive', 'uses' => 'DayZController@izurvive']);
+    Route::get('steam-status-report', ['as' => 'steamStatusReport', 'uses' => 'DayZController@steamStatusReport']);
+});
+
 Route::group(['prefix' => 'steam'], function() {
     Route::get('/', 'SteamController@base');
 

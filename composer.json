@@ -12,7 +12,8 @@
         "roumen/feed": "^2.10",
         "paquettg/php-html-parser": "^1.6",
         "symfony/dom-crawler": "^3.0",
-        "symfony/css-selector": "^3.0"
+        "symfony/css-selector": "^3.0",
+        "vinelab/rss": "^1.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

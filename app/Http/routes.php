@@ -39,6 +39,11 @@ Route::group(['prefix' => 'lever', 'as' => 'lever.'], function() {
         ->where('twitch', '(twitch\.php|twitch)');
 });
 
+Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
+    Route::get('{currency}', ['as' => 'currency', 'uses' => 'MiscController@currency'])
+        ->where('currency', '(currency\.php|currency)');
+});
+
 Route::group(['prefix' => 'steam'], function() {
     Route::get('/', 'SteamController@base');
 

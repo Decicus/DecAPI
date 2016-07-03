@@ -39,6 +39,8 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
         - Special thanks to [WastedUser](https://www.twitch.tv/wasteduser) for the `location name -> coordinates` data.
 - Lever
     - [RSS feed of the available Twitch jobs](https://decapi.me/lever/twitch)
+- Misc
+    - [Currency converter](https://decapi.me/misc/currency)
 
 ## Requirements
 The following things are required for setting this up:

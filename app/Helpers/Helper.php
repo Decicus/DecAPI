@@ -38,7 +38,7 @@ class Helper
             list($time1, $time2) = array($time2, $time1);
         }
         // Set up intervals and diffs arrays
-        $intervals = array('year', 'month', 'day', 'hour', 'minute', 'second');
+        $intervals = array('year', 'month', 'week', 'day', 'hour', 'minute', 'second');
         $diffs = array();
         foreach($intervals as $interval) {
             // Create temp time from time1 and interval

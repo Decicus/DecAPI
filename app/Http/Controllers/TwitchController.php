@@ -184,6 +184,7 @@ class TwitchController extends Controller
             'How to use Channel Feed' => 2377877,
             'How to Use Clips' => 2442508,
             'How to use the Friends Feature' => 2418761,
+            'How to Use Host Mode' => 2508329,
             'How To Use VOD Thumbnails' => 2218412,
             'HTML5 Video Player Beta' => 2477288,
             'List of Prohibited/Banned Games' => 1992676,

@@ -28,8 +28,9 @@ Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
 
 Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {
     Route::get('/', ['as' => 'base', 'uses' => 'DayZController@base']);
-    Route::get('status-report', ['as' => 'statusReport', 'uses' => 'DayZController@statusReport']);
+    Route::get('players', ['as' => 'players', 'uses' => 'DayZController@players']);
     Route::get('izurvive', ['as' => 'izurvive', 'uses' => 'DayZController@izurvive']);
+    Route::get('status-report', ['as' => 'statusReport', 'uses' => 'DayZController@statusReport']);
     Route::get('steam-status-report', ['as' => 'steamStatusReport', 'uses' => 'DayZController@steamStatusReport']);
 });
 

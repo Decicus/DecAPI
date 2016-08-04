@@ -34,9 +34,10 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
     - [Custom API for displaying emotes in chat](https://decapi.me/bttv/emotes?channel=decicus)
 - DayZ
     - [Latest "status report" from their blog](https://decapi.me/dayz/status-report)
-    - [Latest "status report" from their Steam 'news' section](https://decapi.me/dayz/status-report)
+    - [Latest "status report" from their Steam 'news' section](https://decapi.me/dayz/steam-status-report)
     - [Maps location names/searches to their respective coordinates/location on izurvive.com](https://decapi.me/dayz/izurvive)
         - Special thanks to [WastedUser](https://www.twitch.tv/wasteduser) for the `location name -> coordinates` data.
+    - [Queries DayZ servers for their current player count](https://decapi.me/dayz/players)
 - Lever
     - [RSS feed of the available Twitch jobs](https://decapi.me/lever/twitch)
 - Misc

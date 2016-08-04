@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use GuzzleHttp\Client;
 use Vinelab\Rss\Rss;
 use App\Helpers\Helper;
+use GameQ\GameQ;
 
 class DayZController extends Controller
 {
@@ -200,6 +201,48 @@ class DayZController extends Controller
 
         $name = array_values($check)[0];
         return Helper::text($name . ' - https://www.izurvive.com/' . str_replace(';', '%3B', $locations[$name]));
+    }
+
+    /**
+     * Queries DayZ servers and returns their current player count
+     *
+     * @param  Request $request
+     * @return Response
+     */
+    public function players(Request $request)
+    {
+        $ip = $request->input('ip', null);
+        $port = $request->input('port', null);
+        $query_port = $request->input('query', null);
+
+        if (empty($ip) || empty($port)) {
+            return Helper::text('[Error: Please specify "ip" AND "port".]');
+        }
+
+        $query_port = (empty($query_port) ? intval($port) : intval($query_port));
+        $address = $ip . ':' . $port;
+
+        $query = new GameQ();
+        $query->addServer([
+            'type' => 'dayz',
+            'host' => $address,
+            'options' => [
+                'query_port' => $query_port
+            ]
+        ]);
+        $query->setOption('timeout', 30);
+
+        $result = $query->process();
+        if (empty($result[$address])) {
+            return Helper::text('[Error: Unable to query server.]');
+        }
+
+        $result = $result[$address];
+        if (empty($result['num_players']) || empty($result['max_players'])) {
+            return Helper::text('[Error: Unable to retrieve player count.]');
+        }
+
+        return Helper::text($result['num_players'] . '/' . $result['max_players']);
     }
 
     /**

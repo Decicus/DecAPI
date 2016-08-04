@@ -4,9 +4,89 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "07509acd6c66ea733bd8df7ca1ae834e",
-    "content-hash": "e818c92c17e342b0514348d097d1e767",
+    "hash": "6ba1df8a68e660f6d7f6b2555323f08e",
+    "content-hash": "d2c5c2dc2f9e653510bd4fc541e49d9c",
     "packages": [
+        {
+            "name": "austinb/gameq",
+            "version": "v3.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Austinb/GameQ.git",
+                "reference": "7afe0b4ba7974f8bc83b4216d32ecf05064b3588"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Austinb/GameQ/zipball/7afe0b4ba7974f8bc83b4216d32ecf05064b3588",
+                "reference": "7afe0b4ba7974f8bc83b4216d32ecf05064b3588",
+                "shasum": ""
+            },
+            "require": {
+                "ext-bz2": "*",
+                "ext-xml": "*",
+                "php": ">=5.4.14"
+            },
+            "require-dev": {
+                "corneltek/getoptionkit": "~2",
+                "ext-curl": "*",
+                "phpmd/phpmd": "@stable",
+                "phpunit/php-invoker": "*",
+                "phpunit/phpunit": "@stable",
+                "satooshi/php-coveralls": "~1.0",
+                "squizlabs/php_codesniffer": "2.5.*@stable"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GameQ\\": "src/GameQ/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0+"
+            ],
+            "authors": [
+                {
+                    "name": "Christoph Kretzschmar",
+                    "email": "blackskyliner@googlemail.com",
+                    "homepage": "https://github.com/Blackskyliner",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Austin Bischoff",
+                    "email": "austin.bischoff@gmail.com",
+                    "homepage": "https://github.com/Austinb",
+                    "role": "Packagist/Composer Maintainer, Developer"
+                },
+                {
+                    "name": "Alexander Hambalgo",
+                    "homepage": "http://balgo.users.sourceforge.net/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Holger",
+                    "homepage": "http://icet33.users.sourceforge.net/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Sebastian Weidenbach",
+                    "homepage": "http://sebastianwe.users.sourceforge.net/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Marcel Bößendörfer",
+                    "email": "m.boessendoerfer@marbis.net",
+                    "homepage": "https://github.com/nitrado",
+                    "role": "Developer"
+                }
+            ],
+            "description": "GameQ Gameserver Library",
+            "keywords": [
+                "gameq",
+                "serverstatus"
+            ],
+            "time": "2016-08-03 16:20:18"
+        },
         {
             "name": "classpreloader/classpreloader",
             "version": "3.0.0",
@@ -3611,7 +3691,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "austinb/gameq": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

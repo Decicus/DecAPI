@@ -76,8 +76,10 @@ class TwitchController extends Controller
         $baseUrl = url('/twitch/');
 
         $urls = [
+            'clusters' => 'clusters/{CHANNEL}',
             'followage' => 'followage/{CHANNEL}/{USER}',
             'followed' => 'followed/{USER}/{CHANNEL}',
+            'help' => 'help/{SEARCH}',
             'highlight' => 'highlight/{CHANNEL}',
             'hosts' => 'hosts/{CHANNEL}',
             'ingests' => 'ingests',
@@ -94,6 +96,32 @@ class TwitchController extends Controller
         return $this->json([
             'endpoints' => $urls
         ]);
+    }
+
+    /**
+     * Returns the Twitch chat cluster for the specified channel. Added purely for backwards compatibility as it's not necessary as of March 23rd 2016.
+     *
+     * @param  Request $request
+     * @param  string  $channel Channel name
+     * @return Response
+     */
+    public function clusters(Request $request, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+
+        if (empty($channel)) {
+            return $this->error('A channel has to be specified');
+        }
+
+        $cluster = Helper::get('https://tmi.twitch.tv/servers?channel=' . $channel, [
+            'Client-ID' => env('TWITCH_CLIENT_ID')
+        ]);
+
+        if (empty($cluster)) {
+            return $this->error('An error occurred retrieving cluster.');
+        }
+
+        return Helper::text($cluster['cluster']);
     }
 
     /**

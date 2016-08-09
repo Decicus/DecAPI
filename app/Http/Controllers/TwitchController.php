@@ -169,6 +169,7 @@ class TwitchController extends Controller
     {
         $articles = [
             'About Site Suspensions, DMCA Suspensions, and Chat Bans' => 1727973,
+            'Adding a Game and Box Art to the Directory' => 2348988,
             'Authy FAQ' => 2186821,
             'Channel Banned Words' => 2100263,
             'Chat Commands' => 659095,

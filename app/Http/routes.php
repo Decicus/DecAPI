@@ -12,7 +12,7 @@
 */
 
 Route::get('/', ['as' => 'home', function () {
-    return view('home');
+    return view('home', ['page' => 'Home']);
 }]);
 
 Route::group(['prefix' => 'askfm'], function() {

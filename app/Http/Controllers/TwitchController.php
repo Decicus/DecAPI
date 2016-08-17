@@ -259,7 +259,8 @@ class TwitchController extends Controller
 
             $data = [
                 'list' => $articles,
-                'prefix' => $prefix
+                'prefix' => $prefix,
+                'page' => 'Help Articles'
             ];
             return view('twitch.help', $data);
         }
@@ -460,7 +461,7 @@ class TwitchController extends Controller
                     ->where('username', $username)
                     ->update(['access_token' => $token]);
             }
-            return view('twitch.subcount', ['username' => $username]);
+            return view('twitch.subcount', ['username' => $username, 'page' => 'Subcount']);
         }
     }
 

@@ -257,24 +257,18 @@ class TwitchController extends Controller
                 return $this->json($data);
             }
 
-            $list = '';
-            foreach ($articles as $title => $id) {
-                $list .= $title . ": " . $prefix . $id . PHP_EOL;
-            }
-
-            return Helper::text($list);
+            $data = [
+                'list' => $articles,
+                'prefix' => $prefix
+            ];
+            return view('twitch.help', $data);
         }
 
         $msg = null;
         $code = null;
 
         $search = trim($search);
-        if (empty($search)) {
-            $msg = 'Search cannot be empty.';
-            $code = 404;
-        }
-
-        if (strtolower($search) === 'list') {
+        if (empty($search) || strtolower($search) === 'list') {
             return Helper::text('List of available help articles with titles: ' . route('twitch.help') . '?list');
         }
 

@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="/css/darkly.css" type="text/css" />
         <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css" />
         <link rel="stylesheet" href="/css/custom.css" type="text/css" />
-        <title>DecAPI</title>
+        <title>{{ env('SITE_TITLE', 'DecAPI') }}</title>
     </head>
     <body>
         @yield('main')

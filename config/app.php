@@ -159,7 +159,7 @@ return [
         App\Providers\RouteServiceProvider::class,
 
         Roumen\Feed\FeedServiceProvider::class,
-
+        Thujohn\Twitter\TwitterServiceProvider::class,
     ],
 
     /*
@@ -208,6 +208,7 @@ return [
 
         'Feed'      => Roumen\Feed\Feed::class,
         'Helper'    => App\Helpers\Helper::class,
+        'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
     ],
 
 ];

@@ -26,6 +26,10 @@ class Helper
      */
     public static function getDateDiff($time1, $time2, $precision = 2)
     {
+        if ($precision === 0) {
+            $precision = 2;
+        }
+
         // If not numeric then convert timestamps
         if(!is_int($time1)) {
             $time1 = strtotime($time1);

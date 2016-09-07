@@ -9,6 +9,7 @@ use App\Http\Requests;
 use Twitter;
 use App\Helpers\Helper;
 use Exception;
+
 class TwitterController extends Controller
 {
     /**

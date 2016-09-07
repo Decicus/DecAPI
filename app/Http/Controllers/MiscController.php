@@ -8,6 +8,7 @@ use App\Http\Requests;
 
 use App\Helpers\Helper;
 use Carbon\Carbon;
+
 class MiscController extends Controller
 {
     /**

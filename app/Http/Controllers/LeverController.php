@@ -9,6 +9,7 @@ use App\Http\Requests;
 use Feed;
 use App\Helpers\Helper;
 use GuzzleHttp\Client;
+
 class LeverController extends Controller
 {
     /**

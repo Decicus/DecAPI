@@ -1,9 +1,11 @@
 # DecAPI
 [DecAPI](https://decapi.me/) is a personal project I started writing in 2014, which eventually became a big pile of undocumented, and badly written mess.
 
-This is essentially an attempt at rewriting everything that DecAPI supports into something more structured and documented, while still keeping backwards compatibility to those applications that still rely on it, using the [Laravel framework](https://laravel.com/)
+This is essentially an attempt at rewriting everything that DecAPI supports into something more structured and documented, while still keeping backwards compatibility to those applications that still rely on it, using the [Laravel framework](https://laravel.com/).
 
-As of right now, the rewrite is in still in the early stages and very few things are supported. The list below will be kept up-to-date as to what is currently working.
+As of right now, there is no ETA when this will be "complete". The idea is to keep adding features until I feel like it's time for another rewrite.  
+Pull requests are generally welcome for new features, but generally features that are implemented to support backwards compatibility I would prefer to implement myself.  
+This is only because certain features have never been documented (not even in my [blog post covering my custom APIs](https://blog.thomassen.xyz/custom-apis/)).
 
 If you're interested, a beta version is available under [beta.decapi.me](https://beta.decapi.me).
 
@@ -47,7 +49,7 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
     - [Latest tweet URL](https://decapi.me/twitter/latest_url?name=decicus)
     - [Latest tweet ID](https://decapi.me/twitter/latest_id?name=decicus)
 - YouTube
-    - [Latest public video](https://decapi.me/youtube/latest_video?user=decicus)
+    - [Latest public video for a specified channel](https://decapi.me/youtube/latest_video?user=decicus)
 
 ## Requirements
 The following things are required for setting this up:
@@ -63,6 +65,9 @@ The following things are required for setting this up:
 - Run `php artisan migrate` from the command line in the base project directory.
 - Point your web server to the `/public` directory of the repo.
     - I recommend using apache2 and configuring it to set `AllowOverride` to `All` for the specific directory in the vhost, so the `.htaccess` file can set the settings.
+
+## Documentation
+Documentation covering all the endpoints will be available at some point in the future, probably closer to the "full release" of this project.
 
 ## License
 [MIT License](LICENSE)

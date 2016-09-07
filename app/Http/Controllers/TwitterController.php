@@ -49,7 +49,19 @@ class TwitterController extends Controller
             return Helper::text('You have to specify a (user)name.');
         }
 
+        /**
+         * Route: /twitter/latest_url
+         *
+         * @var boolean
+         */
         $onlyUrl = (strpos($latest, 'latest_url') === false ? false : true);
+
+        /**
+         * Route: /twitter/latest_id
+         *
+         * @var boolean
+         */
+        $onlyId = (strpos($latest, 'latest_id') === false ? false : true);
 
         try {
             $tweets = $this->getTweets($name, $request->exists('no_rts'));
@@ -60,7 +72,7 @@ class TwitterController extends Controller
 
             $first = $tweets[0];
             $text = [];
-            if (!$onlyUrl) {
+            if ($onlyUrl === false) {
                 $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($first->text));
             }
 
@@ -83,6 +95,10 @@ class TwitterController extends Controller
                 }
 
                 $text[] = Helper::getDateDiff($first->created_at, time(), $precision) . " ago";
+            }
+
+            if ($onlyId === true) {
+                $text = [$first->id];
             }
 
             return Helper::text(implode(' - ', $text));

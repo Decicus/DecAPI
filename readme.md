@@ -42,6 +42,10 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
     - [RSS feed of the available Twitch jobs](https://decapi.me/lever/twitch)
 - Misc
     - [Currency converter](https://decapi.me/misc/currency)
+- Twitter
+    - [Latest tweet](https://decapi.me/twitter/latest?name=decicus)
+    - [Latest tweet URL](https://decapi.me/twitter/latest_url?name=decicus)
+    - [Latest tweet ID](https://decapi.me/twitter/latest_id?name=decicus)
 
 ## Requirements
 The following things are required for setting this up:

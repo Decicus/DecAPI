@@ -98,7 +98,7 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
 
 Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {
     Route::get('{latest}/{name?}', ['as' => 'latest', 'uses' => 'TwitterController@latest'])
-        ->where('latest', '(latest\.php|latest|latest_url\.php|latest_url)')
+        ->where('latest', '(latest\.php|latest|latest_url\.php|latest_url|latest_id\.php|latest_id)')
         ->where('name', '([A-z0-9]+)');
 });
 

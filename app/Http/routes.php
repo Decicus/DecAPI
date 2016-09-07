@@ -102,6 +102,11 @@ Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {
         ->where('name', '([A-z0-9]+)');
 });
 
+Route::group(['prefix' => 'youtube', 'as' => 'youtube'], function() {
+    Route::get('{latest_video}', ['as' => 'latest_video', 'uses' => 'YouTubeController@latestVideo'])
+        ->where('latest_video', '(latest_video\.php|latest_video)');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes

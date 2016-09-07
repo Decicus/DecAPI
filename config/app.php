@@ -160,6 +160,7 @@ return [
 
         Roumen\Feed\FeedServiceProvider::class,
         Thujohn\Twitter\TwitterServiceProvider::class,
+        Alaouy\Youtube\YoutubeServiceProvider::class,
     ],
 
     /*
@@ -209,6 +210,7 @@ return [
         'Feed'      => Roumen\Feed\Feed::class,
         'Helper'    => App\Helpers\Helper::class,
         'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
+        'YouTube'   => Alaouy\Youtube\Facades\Youtube::class,
     ],
 
 ];

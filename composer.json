@@ -15,7 +15,8 @@
         "symfony/css-selector": "^3.0",
         "vinelab/rss": "^1.0",
         "austinb/gameq": "3.*@dev",
-        "thujohn/twitter": "^2.2"
+        "thujohn/twitter": "^2.2",
+        "alaouy/youtube": "^1.2"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

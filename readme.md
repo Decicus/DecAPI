@@ -46,6 +46,8 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
     - [Latest tweet](https://decapi.me/twitter/latest?name=decicus)
     - [Latest tweet URL](https://decapi.me/twitter/latest_url?name=decicus)
     - [Latest tweet ID](https://decapi.me/twitter/latest_id?name=decicus)
+- YouTube
+    - [Latest public video](https://decapi.me/youtube/latest_video?user=decicus)
 
 ## Requirements
 The following things are required for setting this up:

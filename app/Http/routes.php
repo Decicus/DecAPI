@@ -105,6 +105,10 @@ Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {
 Route::group(['prefix' => 'youtube', 'as' => 'youtube'], function() {
     Route::get('{latest_video}', ['as' => 'latest_video', 'uses' => 'YouTubeController@latestVideo'])
         ->where('latest_video', '(latest_video\.php|latest_video)');
+
+    Route::get('{videoid}/{search?}', ['as' => 'videoid', 'uses' => 'YouTubeController@videoId'])
+        ->where('videoid', '(videoid\.php|videoid)')
+        ->where('search', '(.*+)');
 });
 
 /*

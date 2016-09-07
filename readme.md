@@ -50,6 +50,7 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
     - [Latest tweet ID](https://decapi.me/twitter/latest_id?name=decicus)
 - YouTube
     - [Latest public video for a specified channel](https://decapi.me/youtube/latest_video?user=decicus)
+    - [Video ID by search](https://decapi.me/youtube/videoid?search=barbie%20girl)
 
 ## Requirements
 The following things are required for setting this up:

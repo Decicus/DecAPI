@@ -59,35 +59,6 @@ class SteamController extends Controller
     ];
 
     /**
-     * Returns a JSON response
-     *
-     * @param  array  $data     The array to convert to JSON and return to the client
-     * @param  integer $code    HTTP status code
-     * @param  array  $headers  HTTP headers
-     * @return Response
-     */
-    private function json($data = [], $code = 200, $headers = [])
-    {
-        $headers = array_merge($this->headers, $headers);
-        return \Response::json($data, $code)->withHeaders($headers);
-    }
-
-    /**
-     * Returns a plaintext response
-     *
-     * @param  string  $result  The text result
-     * @param  integer $code    HTTP status code
-     * @param  array   $headers HTTP headers
-     * @return Response
-     */
-    private function text($result = '', $code = 200, $headers = [])
-    {
-        $headers = array_merge($this->headers, $headers);
-        $headers['Content-Type'] = 'text/plain';
-        return (new Response($result, $code))->withHeaders($headers);
-    }
-
-    /**
      * Returns a JSON object with "currency code" => "currency name" for available Steam currencies.
      *
      * @param  Request $request
@@ -97,14 +68,14 @@ class SteamController extends Controller
     {
         $currencies = $this->currencies;
         if ($request->wantsJson()) {
-            return $this->json($currencies);
+            return Helper::json($currencies);
         }
 
         $list = "# Currency code - Currency name" . PHP_EOL;
         foreach($currencies as $code => $name) {
             $list .= $code . " - " . $name . PHP_EOL;
         }
-        return $this->text($list);
+        return Helper::text($list);
     }
 
     /**
@@ -133,10 +104,10 @@ class SteamController extends Controller
         // Pass error back before making a request to API, if it's set
         if (!empty($error)) {
             if ($json) {
-                return $this->json(['error' => $error], 404);
+                return Helper::json(['error' => $error], 404);
             }
 
-            return $this->text($error);
+            return Helper::text($error);
         }
 
         $search = urlencode($search);
@@ -149,11 +120,11 @@ class SteamController extends Controller
             if (!isset($data['total']) || $data['total'] === 0) {
                 $error = 'No results found';
                 if ($json) {
-                    return $this->json(['error' => $error], 404);
+                    return Helper::json(['error' => $error], 404);
                 }
 
                 // $emptySpace is specifically for Nightbot and others, where it will just send something 'empty' instead of an error.
-                return $this->text(($emptySpace ? PHP_EOL : $error));
+                return Helper::text(($emptySpace ? PHP_EOL : $error));
             }
         }
 
@@ -173,17 +144,17 @@ class SteamController extends Controller
             if (strtolower($search) !== strtolower($game['name'])) {
                 $error = '[Strict] No matching games found';
                 if ($json) {
-                    return $this->json(['error' => $error], 404);
+                    return Helper::json(['error' => $error], 404);
                 }
 
-                return $this->text($error);
+                return Helper::text($error);
             }
         }
 
         $url = 'http://store.steampowered.com/app/' . $game['id'] . '/';
         if ($json) {
             $game['url'] = $url;
-            return $this->json($game);
+            return Helper::json($game);
         }
 
         $values = [$game['name'], $url];
@@ -193,6 +164,6 @@ class SteamController extends Controller
             $values[] = ($price['final'] / 100) . " " . $price['currency'];
         }
 
-        return $this->text(implode($values, " - "));
+        return Helper::text(implode($values, " - "));
     }
 }

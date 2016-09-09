@@ -23,7 +23,7 @@ Route::group(['prefix' => 'askfm'], function() {
 Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
     Route::get('/', ['as' => 'home', 'uses' => 'BttvController@home']);
     Route::get('{emotes}', ['as' => 'emotes', 'uses' => 'BttvController@emotes'])
-        ->where('emotes', '(emotes\.php|emotes)');
+        ->where('emotes', '(emotes(\.php)?)');
 });
 
 Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {
@@ -37,12 +37,12 @@ Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {
 Route::group(['prefix' => 'lever', 'as' => 'lever.'], function() {
     Route::get('/', ['as' => 'base', 'uses' => 'LeverController@base']);
     Route::get('{twitch}', ['as' => 'twitch', 'uses' => 'LeverController@twitch'])
-        ->where('twitch', '(twitch\.php|twitch)');
+        ->where('twitch', '(twitch(\.php)?)');
 });
 
 Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
     Route::get('{currency}', ['as' => 'currency', 'uses' => 'MiscController@currency'])
-        ->where('currency', '(currency\.php|currency)');
+        ->where('currency', '(currency(\.php)?)');
 });
 
 Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
@@ -88,11 +88,11 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
         ->where('channel', $channelRegex);
 
     Route::get('{hosts}/{channel?}', 'TwitchController@hosts')
-        ->where('hosts', '(hosts\.php|hosts)')
+        ->where('hosts', '(hosts(\.php)?)')
         ->where('channel', $channelRegex);
 
     Route::get('{ingests}', 'TwitchController@ingests')
-        ->where('ingests', '(ingests\.php|ingests)');
+        ->where('ingests', '(ingests(\.php)?)');
 
     Route::get('subscriber_emotes/{channel?}', 'TwitchController@subEmotes')
         ->where('channel', $channelRegex);
@@ -102,22 +102,22 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
         ->where('team', '([A-z0-9]{1,40})');
 
     Route::get('{uptime}/{channel?}', 'TwitchController@uptime')
-        ->where('uptime', '(uptime\.php|uptime)')
+        ->where('uptime', '(uptime(\.php)?)')
         ->where('channel', $channelRegex);
 });
 
 Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {
     Route::get('{latest}/{name?}', ['as' => 'latest', 'uses' => 'TwitterController@latest'])
-        ->where('latest', '(latest\.php|latest|latest_url\.php|latest_url|latest_id\.php|latest_id)')
+        ->where('latest', '(latest(\.php)?|latest_url(\.php)?|latest_id(\.php)?)')
         ->where('name', '([A-z0-9]+)');
 });
 
 Route::group(['prefix' => 'youtube', 'as' => 'youtube'], function() {
     Route::get('{latest_video}', ['as' => 'latest_video', 'uses' => 'YouTubeController@latestVideo'])
-        ->where('latest_video', '(latest_video\.php|latest_video)');
+        ->where('latest_video', '(latest_video(\.php)?)');
 
     Route::get('{videoid}/{search?}', ['as' => 'videoid', 'uses' => 'YouTubeController@videoId'])
-        ->where('videoid', '(videoid\.php|videoid)')
+        ->where('videoid', '(videoid(\.php)?)')
         ->where('search', '(.*+)');
 });
 

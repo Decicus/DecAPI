@@ -215,6 +215,10 @@ class SteamController extends Controller
 
             $game = $games->first();
 
+            if (empty($game)) {
+                return Helper::text('The player does not seem to own the specified game.');
+            }
+
             if ($readable === true) {
                 return Helper::text($game->playtimeForeverReadable);
             }

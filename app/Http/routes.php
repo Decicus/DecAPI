@@ -51,6 +51,12 @@ Route::group(['prefix' => 'steam'], function() {
     Route::get('currencies', 'SteamController@listCurrencies');
 
     Route::get('gamesearch', 'SteamController@gameInfoBySearch');
+
+    Route::get('{hours}/{player_id?}/{app_id?}/{readable?}', 'SteamController@hours')
+        ->where('hours', '(hours(\.php)?)')
+        ->where('player_id', '([0-9]+)')
+        ->where('app_id', '([0-9]+)')
+        ->where('readable', 'readable');
 });
 
 Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {

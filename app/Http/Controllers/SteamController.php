@@ -9,6 +9,8 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use App\Helpers\Helper;
+use Steam;
+use Exception;
 
 class SteamController extends Controller
 {
@@ -165,5 +167,58 @@ class SteamController extends Controller
         }
 
         return Helper::text(implode($values, " - "));
+    }
+
+    /**
+     * Checks the specified Steam player's hours in the specified app/game ID
+     *
+     * @param  Request $request
+     * @param  string  $hours
+     * @param  int     $playerId Player's Steam ID
+     * @param  int     $appId    App/game ID
+     * @param  string  $readable If the return format should be in hours (default), or a human-readable one.
+     * @return Response
+     */
+    public function hours(Request $request, $hours = null, $playerId = null, $appId = null, $readable = null)
+    {
+        $playerId = $playerId ?: $request->input('id', null);
+        $appId = $appId ?: $request->input('appid', null);
+        $readable = ($readable === 'readable' ? true : false);
+        $round = intval($request->input('round', 2));
+
+        if (empty($playerId)) {
+            return Helper::text('A Steam ID has to be specified.');
+        }
+
+        if (empty($appId)) {
+            return Helper::text('An app/game ID has to be specified.');
+        }
+
+        try {
+            $user = Steam::user($playerId);
+            $player = Steam::Player($playerId);
+            if ($user->GetPlayerSummaries()[0]->communityVisibilityState === 1) {
+                return Helper::text('Cannot retrieve player information from a private/friends-only profile.');
+            }
+
+            $games = $player->GetOwnedGames(true, false, [
+                $appId
+            ]);
+
+            if (empty($games)) {
+                return Helper::text('Invalid app/game ID specified.');
+            }
+
+            $game = $games->first();
+
+            if ($readable === true) {
+                return Helper::text($game->playtimeForeverReadable);
+            }
+
+            $hours = round($game->playtimeForever / 60, $round);
+            return Helper::text($hours . ' hours');
+        } catch (Exception $e) {
+            return Helper::text($e->getMessage());
+        }
     }
 }

@@ -186,6 +186,10 @@ class SteamController extends Controller
         $readable = ($readable === 'readable' ? true : false);
         $round = intval($request->input('round', 2));
 
+        if ($request->has('key')) {
+            config(['steam-api.steamApiKey' => $request->input('key')]);
+        }
+
         if (empty($playerId)) {
             return Helper::text('A Steam ID has to be specified.');
         }

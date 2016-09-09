@@ -45,12 +45,22 @@ Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
         ->where('currency', '(currency\.php|currency)');
 });
 
-Route::group(['prefix' => 'steam'], function() {
-    Route::get('/', 'SteamController@base');
+Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
+    Route::get('/', ['as' => 'base', 'uses' => 'SteamController@base']);
 
-    Route::get('currencies', 'SteamController@listCurrencies');
+    Route::get('currencies', ['as' => 'currencies', 'uses' => 'SteamController@listCurrencies']);
 
-    Route::get('gamesearch', 'SteamController@gameInfoBySearch');
+    Route::get('gamesearch', ['as' => 'gamesearch', 'uses' => 'SteamController@gameInfoBySearch']);
+
+    Route::get('{hours}/{player_id?}/{app_id?}/{readable?}', ['as' => 'hours', 'uses' => 'SteamController@hours'])
+        ->where('hours', '(hours(\.php)?)')
+        ->where('player_id', '([0-9]+)')
+        ->where('app_id', '([0-9]+)')
+        ->where('readable', 'readable');
+
+    Route::get('{server_ip}/{id?}', ['as' => 'server_ip', 'uses' => 'SteamController@serverIp'])
+        ->where('server_ip', '(server_ip(.php)?)')
+        ->where('id', '([0-9]+)');
 });
 
 Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {

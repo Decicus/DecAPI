@@ -16,7 +16,8 @@
         "vinelab/rss": "^1.0",
         "austinb/gameq": "3.*@dev",
         "thujohn/twitter": "^2.2",
-        "alaouy/youtube": "^1.2"
+        "alaouy/youtube": "^1.2",
+        "syntax/steam-api": "^2.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

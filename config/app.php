@@ -161,6 +161,7 @@ return [
         Roumen\Feed\FeedServiceProvider::class,
         Thujohn\Twitter\TwitterServiceProvider::class,
         Alaouy\Youtube\YoutubeServiceProvider::class,
+        Syntax\SteamApi\SteamApiServiceProvider::class,
     ],
 
     /*

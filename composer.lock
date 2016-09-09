@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "4a4c571ca86814d3d46e72d790c7fa11",
-    "content-hash": "1b68100a1ff5718e7f23632f708cc89e",
+    "hash": "7eadcc8dad042d875c5bc218823da917",
+    "content-hash": "9d9379b4835b105fc843d79cdb6bcebf",
     "packages": [
         {
             "name": "alaouy/youtube",
@@ -1035,6 +1035,54 @@
                 "php"
             ],
             "time": "2016-04-19 13:41:41"
+        },
+        {
+            "name": "nukacode/database",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/NukaCode/database.git",
+                "reference": "f1ed3a188c617afeebcf8c70b38baead1302492c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/NukaCode/database/zipball/f1ed3a188c617afeebcf8c70b38baead1302492c",
+                "reference": "f1ed3a188c617afeebcf8c70b38baead1302492c",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^5.0"
+            },
+            "require-dev": {
+                "benconstable/phpspec-laravel": "~2.0",
+                "fzaninotto/faker": "~1.4",
+                "henrikbjorn/phpspec-code-coverage": "~0.2",
+                "mockery/mockery": "0.9.*",
+                "phpspec/phpspec": "~2.1",
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "NukaCode\\Database\\": "src/NukaCode/Database"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stygian",
+                    "email": "stygian.warlock.v2@gmail.com"
+                },
+                {
+                    "name": "Riddles",
+                    "email": "riddles@dev-toolbox.com"
+                }
+            ],
+            "description": "Database helpers for Laravel sites.",
+            "time": "2016-08-24 14:04:32"
         },
         {
             "name": "paquettg/php-html-parser",
@@ -2330,6 +2378,50 @@
                 "dump"
             ],
             "time": "2016-07-26 08:03:56"
+        },
+        {
+            "name": "syntax/steam-api",
+            "version": "2.0.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/syntaxerrors/Steam.git",
+                "reference": "e67a4f7ca1911677bc4fae3058c3f28fe69ed90b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/syntaxerrors/Steam/zipball/e67a4f7ca1911677bc4fae3058c3f28fe69ed90b",
+                "reference": "e67a4f7ca1911677bc4fae3058c3f28fe69ed90b",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.0",
+                "laravel/framework": "^5.0",
+                "nukacode/database": "^1.0",
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "0.9.3",
+                "orchestra/testbench": "~3.0",
+                "phpunit/phpunit": "~3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Syntax\\SteamApi\\": "src/Syntax/SteamApi"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stygian",
+                    "email": "stygian.warlock.v2@gmail.com"
+                }
+            ],
+            "description": "A steam-api client for Laravel 5.",
+            "time": "2016-08-29 13:18:09"
         },
         {
             "name": "themattharris/tmhoauth",

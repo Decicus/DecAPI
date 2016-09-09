@@ -225,4 +225,52 @@ class SteamController extends Controller
             return Helper::text($e->getMessage());
         }
     }
+
+    /**
+     * Retrieves the current gameserver IP for the specified user.
+     *
+     * @param  Request $request
+     * @param  string  $serverIp
+     * @param  int     $id       The player's Steam ID
+     * @return Response
+     */
+    public function serverIp(Request $request, $serverIp = null, $id = null)
+    {
+        $id = $id ?: $request->input('id', null);
+
+        if (empty($id)) {
+            return Helper::text('You have to specify a Steam ID.');
+        }
+
+        if ($request->has('key')) {
+            config(['steam-api.steamApiKey' => $request->input('key')]);
+        }
+
+        $key = config('steam-api.steamApiKey');
+        $url = sprintf('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=%s&steamids=%s', $key, $id);
+
+        try {
+            // For whatever reason, the library used for hours() does not support retrieving the gameserverip
+            // value from the player array. Which is why I have to make my own requests for this.
+            $data = Helper::get($url);
+            if ($data === null) {
+                return Helper::text('An invalid API key was specified.');
+            }
+            $response = $data['response'];
+
+            if (empty($response['players'])) {
+                return Helper::text('An invalid Steam ID was specified.');
+            }
+
+            $player = $response['players'][0];
+
+            if (empty($player['gameserverip'])) {
+                return Helper::text('The specified player is currently not connected to any valid gameserver, or this data is not public.');
+            }
+
+            return Helper::text($player['gameserverip']);
+        } catch (Exception $e) {
+            return Helper::text($e->getMessage());
+        }
+    }
 }

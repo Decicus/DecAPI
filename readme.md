@@ -51,6 +51,9 @@ It _should_ function similarly or identical in this rewrite, even if the code ho
 - YouTube
     - [Latest public video for a specified channel](https://decapi.me/youtube/latest_video?user=decicus)
     - [Video ID by search](https://decapi.me/youtube/videoid?search=barbie%20girl)
+- Steam
+    - [Amount of hours in a specified game](https://decapi.me/steam/hours?id=76561197997719567&appid=221100)
+    - [Current gameserver (supported games are limited)](https://decapi.me/steam/server_ip?id=76561197997719567)
 
 ## Requirements
 The following things are required for setting this up:

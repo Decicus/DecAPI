@@ -57,6 +57,10 @@ Route::group(['prefix' => 'steam'], function() {
         ->where('player_id', '([0-9]+)')
         ->where('app_id', '([0-9]+)')
         ->where('readable', 'readable');
+
+    Route::get('{server_ip}/{id?}', ['as' => 'server_ip', 'uses' => 'SteamController@serverIp'])
+        ->where('server_ip', '(server_ip(.php)?)')
+        ->where('id', '([0-9]+)');
 });
 
 Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {

@@ -75,6 +75,10 @@ class BattleRoyaleController extends Controller
             return Helper::text($data['message']);
         }
 
+        if (empty($data[$type . '_summary'])) {
+            return Helper::text('No data available for this player.');
+        }
+
         $summary['name'] = $data['name'];
         $summary['URL'] = $data['profile_url'];
         $summary['type'] = ucfirst($type);

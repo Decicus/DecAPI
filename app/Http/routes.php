@@ -76,7 +76,7 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
         ->where('user', $channelRegex);
 
     Route::get('{followed}/{user?}/{channel?}', 'TwitchController@followed')
-        ->where('followed', '(followed\.php|followed)')
+        ->where('followed', '(followed(\.php)?)')
         ->where('user', $channelRegex)
         ->where('channel', $channelRegex);
 
@@ -84,7 +84,7 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
         ->where('search', '.*');
 
     Route::get('{highlight}/{channel?}', 'TwitchController@highlight')
-        ->where('highlight', '(highlight\.php|highlight)')
+        ->where('highlight', '(highlight(\.php)?)')
         ->where('channel', $channelRegex);
 
     Route::get('{hosts}/{channel?}', 'TwitchController@hosts')
@@ -98,7 +98,7 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
         ->where('channel', $channelRegex);
 
     Route::get('{team_members}/{team?}', 'TwitchController@teamMembers')
-        ->where('team_members', '(team_members\.php|team_members)')
+        ->where('team_members', '(team_members(\.php)?)')
         ->where('team', '([A-z0-9]{1,40})');
 
     Route::get('{uptime}/{channel?}', 'TwitchController@uptime')

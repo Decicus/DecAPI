@@ -24,7 +24,7 @@ Route::group(['prefix' => 'br', 'as' => 'br.'], function() {
     Route::group(['prefix' => 'player', 'as' => 'player.'], function() {
         Route::get('{id}/{type?}', ['as' => 'summary', 'uses' => 'BattleRoyaleController@player'])
             ->where('id', '([A-z0-9]+)')
-            ->where('type', '(regular|hardcore)');
+            ->where('type', '(.*+)');
     });
 });
 

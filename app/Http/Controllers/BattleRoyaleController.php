@@ -42,6 +42,15 @@ class BattleRoyaleController extends Controller
         }
 
         /**
+         * Fallback to regular if it's not a valid type.
+         */
+        $type = strtolower($type);
+        $types = ['regular', 'hardcore'];
+        if (!in_array($type, $types)) {
+            $type = 'regular';
+        }
+
+        /**
          * Default values to retrieve from the player summary
          *
          * @var array

@@ -20,6 +20,14 @@ Route::group(['prefix' => 'askfm'], function() {
     Route::get('rss/{user}', 'AskfmController@rss');
 });
 
+Route::group(['prefix' => 'br', 'as' => 'br.'], function() {
+    Route::group(['prefix' => 'player', 'as' => 'player.'], function() {
+        Route::get('{id}/{type?}', ['as' => 'summary', 'uses' => 'BattleRoyaleController@player'])
+            ->where('id', '([A-z0-9]+)')
+            ->where('type', '(regular|hardcore)');
+    });
+});
+
 Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
     Route::get('/', ['as' => 'home', 'uses' => 'BttvController@home']);
     Route::get('{emotes}', ['as' => 'emotes', 'uses' => 'BttvController@emotes'])

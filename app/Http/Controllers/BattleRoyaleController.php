@@ -67,6 +67,8 @@ class BattleRoyaleController extends Controller
             $options = $default;
         }
 
+        $separator = ' ' . $request->input('separator', '|') . ' ';
+
         $data = $this->get('/player/' . $id);
 
         if (!empty($data['message'])) {
@@ -109,6 +111,6 @@ class BattleRoyaleController extends Controller
             return Helper::text('No valid options where specified. Visit '. route('br.player.summary', [$id, $type]) . '?options=list');
         }
 
-        return Helper::text(implode(' | ', $output));
+        return Helper::text(implode($separator, $output));
     }
 }

@@ -184,10 +184,30 @@ class DayZController extends Controller
             'Zelenogorsk' => '#c=-51;-117;7',
             'Zub' => '#c=-47;-31;7'
         ];
+        $prefix = 'https://www.izurvive.com/';
+
+        if ($request->exists('list')) {
+            if ($request->wantsJson()) {
+                $data = [
+                    'url_template' => $prefix . '{location}',
+                    'locations' => $locations
+                ];
+
+                return Helper::json($data);
+            }
+
+            $data = [
+                'list' => $locations,
+                'prefix' => $prefix,
+                'page' => 'Available Search Locations'
+            ];
+
+            return view('dayz.izurvive', $data);
+        }
 
         $search = $request->input('search', null);
         if (empty($search)) {
-            return Helper::text('Please specify ?search=');
+            return Helper::text('Please specify ?search= or see a list of available locations: ' . route('dayz.izurvive') . '?list');
         }
 
         $search = urldecode(trim($search));
@@ -200,7 +220,7 @@ class DayZController extends Controller
         }
 
         $name = array_values($check)[0];
-        return Helper::text($name . ' - https://www.izurvive.com/' . str_replace(';', '%3B', $locations[$name]));
+        return Helper::text($name . ' - ' . $prefix . str_replace(';', '%3B', $locations[$name]));
     }
 
     /**

@@ -262,7 +262,7 @@ class TwitchController extends Controller
                 'prefix' => $prefix,
                 'page' => 'Help Articles'
             ];
-            return view('twitch.help', $data);
+            return view('shared.list', $data);
         }
 
         $msg = null;

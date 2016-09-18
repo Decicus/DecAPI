@@ -202,7 +202,7 @@ class DayZController extends Controller
                 'page' => 'Available Search Locations'
             ];
 
-            return view('dayz.izurvive', $data);
+            return view('shared.list', $data);
         }
 
         $search = $request->input('search', null);

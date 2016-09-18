@@ -109,9 +109,11 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
         ->where('team_members', '(team_members(\.php)?)')
         ->where('team', '([A-z0-9]{1,40})');
 
-    Route::get('{uptime}/{channel?}', 'TwitchController@uptime')
-        ->where('uptime', '(uptime(\.php)?)')
-        ->where('channel', $channelRegex);
+    Route::group(['middleware' => 'throttle:100'], function() {
+        Route::get('{uptime}/{channel?}', 'TwitchController@uptime')
+            ->where('uptime', '(uptime(\.php)?)')
+            ->where('channel', '([A-z0-9]){1,25}');
+    });
 });
 
 Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {

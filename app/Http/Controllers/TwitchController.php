@@ -245,7 +245,9 @@ class TwitchController extends Controller
             'How to File a Whisper Report' => 2329782,
         ];
 
-        $prefix = 'https://help.twitch.tv/customer/en/portal/articles/';
+        $lang = $request->input('lang', 'en');
+
+        $prefix = 'https://help.twitch.tv/customer/' . $lang . '/portal/articles/';
 
         $json = $request->wantsJson();
         if ($request->exists('list')) {

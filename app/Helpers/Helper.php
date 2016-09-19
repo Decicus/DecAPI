@@ -131,4 +131,15 @@ class Helper
 
         return response($text, $code)->withHeaders($headers);
     }
+
+    /**
+     * Redirects the user back to the home view with a message ID.
+     *
+     * @param  string $id The message ID to redirect back with.
+     * @return Response
+     */
+    public static function message($id = '')
+    {
+        return redirect()->route('home', ['message' => $id]);
+    }
 }

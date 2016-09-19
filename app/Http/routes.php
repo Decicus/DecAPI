@@ -13,7 +13,22 @@
 
 Route::group(['middleware' => 'web'], function() {
     Route::get('/', ['as' => 'home', function () {
-        return view('home', ['page' => 'Home']);
+        $messages = [
+            'missing_scopes' => [
+                'type' => 'warning',
+                'text' => 'Authentication scopes have to be specified when authenticating.'
+            ],
+            'invalid_scope' => [
+                'type' => 'warning',
+                'text' => 'One of the authentication scopes specified are invalid.'
+            ],
+            'logged_out' => [
+                'type' => 'success',
+                'text' => 'You have been successfully logged out.'
+            ]
+        ];
+
+        return view('home', ['page' => 'Home', 'messages' => $messages]);
     }]);
 
     Route::group(['prefix' => 'askfm'], function() {

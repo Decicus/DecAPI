@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Socialite;
 use App\User;
+use App\Helpers\Helper;
 
 class TwitchAuthController extends Controller
 {
@@ -57,13 +58,17 @@ class TwitchAuthController extends Controller
     public function redirect(Request $request)
     {
         $scopes = $request->input('scopes', null);
-        $redirect = $request->redirect('redirect', 'home');
+        $redirect = $request->input('redirect', 'home');
+
+        if (empty($scopes)) {
+            return Helper::message('missing_scopes');
+        }
 
         if (!empty(trim($scopes))) {
-            $scopes = explode(',', trim($scopes));
+            $scopes = explode(' ', trim($scopes));
             foreach ($scopes as $scope) {
                 if (!in_array($scope, $this->scopes)) {
-                    return redirect()->route('home', ['error' => 'invalid_scope']);
+                    return Helper::message('invalid_scope');
                 }
             }
         }
@@ -106,12 +111,12 @@ class TwitchAuthController extends Controller
 
     /**
      * Logs the user out.
-     * 
+     *
      * @return Response
      */
     public function logout()
     {
         Auth::logout();
-        return redirect()->route('home');
+        return Helper::message('logged_out');
     }
 }

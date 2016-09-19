@@ -12,24 +12,10 @@
 */
 
 Route::group(['middleware' => 'web'], function() {
-    Route::get('/', ['as' => 'home', function () {
-        $messages = [
-            'missing_scopes' => [
-                'type' => 'warning',
-                'text' => 'Authentication scopes have to be specified when authenticating.'
-            ],
-            'invalid_scope' => [
-                'type' => 'warning',
-                'text' => 'One of the authentication scopes specified are invalid.'
-            ],
-            'logged_out' => [
-                'type' => 'success',
-                'text' => 'You have been successfully logged out.'
-            ]
-        ];
-
-        return view('home', ['page' => 'Home', 'messages' => $messages]);
-    }]);
+    Route::get('/{index?}', ['as' => 'home', 'uses' => 'GeneralController@home'])
+        ->where('index', '(index(.php)?|home)');
+    Route::get('/{maja}', ['as' => 'maja', 'uses' => 'GeneralController@maja'])
+        ->where('maja', '(maja(.php)?)');
 
     Route::group(['prefix' => 'askfm'], function() {
         Route::get('rss', 'AskfmController@rss');

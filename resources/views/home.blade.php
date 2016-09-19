@@ -8,10 +8,10 @@
                     <div class="container"><div class="alert alert-danger">404 &mdash; Page not found</div></div>
                 @endif
 
-                @if (isset($_GET['message']) && isset($messages[$_GET['message']]))
+                @if (!empty($message))
                     <div class="container">
-                        <div class="alert alert-{{ $messages[$_GET['message']]['type'] }}">
-                            {{ $messages[$_GET['message']]['text'] }}
+                        <div class="alert alert-{{ $message['type'] }}">
+                            {{ $message['text'] }}
                         </div>
                     </div>
                 @endif

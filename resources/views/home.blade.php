@@ -7,6 +7,15 @@
                 @if (isset($_GET['404']))
                     <div class="container"><div class="alert alert-danger">404 &mdash; Page not found</div></div>
                 @endif
+
+                @if (isset($_GET['message']) && isset($messages[$_GET['message']]))
+                    <div class="container">
+                        <div class="alert alert-{{ $messages[$_GET['message']]['type'] }}">
+                            {{ $messages[$_GET['message']]['text'] }}
+                        </div>
+                    </div>
+                @endif
+
                 <h1 class="text-success">DecAPI</h1>
                 <div class="container">
                     <div class="list-group">

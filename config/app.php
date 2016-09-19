@@ -162,6 +162,7 @@ return [
         Thujohn\Twitter\TwitterServiceProvider::class,
         Alaouy\Youtube\YoutubeServiceProvider::class,
         Syntax\SteamApi\SteamApiServiceProvider::class,
+        SocialiteProviders\Manager\ServiceProvider::class,
     ],
 
     /*
@@ -210,6 +211,7 @@ return [
 
         'Feed'      => Roumen\Feed\Feed::class,
         'Helper'    => App\Helpers\Helper::class,
+        'Socialite' => Laravel\Socialite\Facades\Socialite::class,
         'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
         'YouTube'   => Alaouy\Youtube\Facades\Youtube::class,
     ],

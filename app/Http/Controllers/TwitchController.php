@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-use DB;
+use App\User;
+use Auth;
 use App\Helpers\Helper;
 
 use Symfony\Component\DomCrawler\Crawler;
@@ -423,48 +424,44 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
 
         if ($request->exists('logout')) {
-            session()->flush();
+            return redirect()->route('auth.twitch.logout');
         }
 
-        if (empty($channel) && !session()->has('subcount_at')) {
-            return response('Use ?channel=CHANNEL_NAME to get subcount.')->withHeaders($this->headers);
+        if (empty($channel) && !Auth::check()) {
+            return Helper::text('Use ?channel=CHANNEL_NAME to get subcount.');
         }
 
         if (!empty($channel)) {
             $channel = strtolower($channel);
-            $reAuth = url('/auth/twitch?page=subcount');
-            $token = DB::table('twitch_subcount')->where('username', $channel)->get();
+            $reAuth = route('auth.twitch') . '?redirect=subcount';
+            $user = User::where('username', $channel)->first();
+            $needToReAuth = sprintf('%s needs to authenticate to use subcount: %s', $channel, $reAuth);
+
+            if (empty($user)) {
+                return Helper::text($needToReAuth);
+            }
+
+            $token = $user->access_token;
+
             if (empty($token)) {
-                return $this->error($channel . ' needs to authenticate to use subcount: ' . $reAuth);
+                return Helper::text($needToReAuth);
             }
 
-            $accessToken = $token[0]->access_token;
-            $subscriptionData = $this->twitchApi->channelSubscriptions($channel, $accessToken);
-            if (!empty($subscriptionData['status'])) {
-                if($subscriptionData['status'] === 401) {
-                    return $this->error($channel . ' needs to re-authenticate to use subcount: ' . $reAuth);
+            $data = $this->twitchApi->channelSubscriptions($channel, $token);
+
+            if (!empty($data['status'])) {
+                if ($data['status'] === 401) {
+                    return Helper::text($needToReAuth);
                 }
-                return $this->error($subscriptionData['message'], $subscriptionData['status']);
+
+                return Helper::text($data['message']);
             }
-            return response($subscriptionData['_total'])->withHeaders($this->headers);
+
+            return Helper::text($data['_total']);
         }
 
-        if (session()->has('subcount_at')) {
-            $username = session('username');
-            $token = session('subcount_at');
-            $checkToken = DB::table('twitch_subcount')->where('username', $username)->get();
-            if (empty($checkToken)) {
-                DB::table('twitch_subcount')
-                    ->insert(
-                        ['username' => $username, 'access_token' => $token]
-                    );
-            } else {
-                DB::table('twitch_subcount')
-                    ->where('username', $username)
-                    ->update(['access_token' => $token]);
-            }
-            return view('twitch.subcount', ['username' => $username, 'page' => 'Subcount']);
-        }
+        $user = Auth::user();
+        return view('twitch.subcount', ['username' => $user->username, 'page' => 'Subcount']);
     }
 
     public function subEmotes(Request $request, $channel = null)

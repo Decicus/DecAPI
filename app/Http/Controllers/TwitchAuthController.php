@@ -6,131 +6,112 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
+use Socialite;
+use App\User;
 
 class TwitchAuthController extends Controller
 {
-    const API_BASE_URL = 'https://api.twitch.tv/kraken/';
-    const AUTH_BASE_URL = 'https://api.twitch.tv/kraken/oauth2/authorize';
-    private $states = [
-        'subcount' => [
-            'redirect' => '/twitch/subcount',
-            'scopes' => ['user_read', 'channel_subscriptions']
-        ]
+    use AuthenticatesAndRegistersUsers, ThrottlesLogins;
+
+    /**
+     * Array of available redirect targets
+     *
+     * @var array
+     */
+    private $redirects = [
+        'home' => '/',
+        'subcount' => '/twitch/subcount'
     ];
-    private $redirectUrl;
-    private $twitchApi;
 
     /**
-     * Initializes the controller
+     * Array of available Twitch authentication scopes.
+     *
+     * @var array
      */
-    public function __construct()
-    {
-        $this->redirectUrl = env('TWITCH_REDIRECT_URI', url('/auth/twitch'));
-        $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
-    }
+    private $scopes = [
+        'user_read',
+        'user_blocks_edit',
+        'user_blocks_read',
+        'user_follows_edit',
+        'channel_read',
+        'channel_editor',
+        'channel_commercial',
+        'channel_stream',
+        'channel_subscriptions',
+        'user_subscriptions',
+        'channel_check_subscription',
+        'chat_login',
+        'channel_feed_read',
+        'channel_feed_edit'
+    ];
 
     /**
-     * Handle Twitch authentication
+     * Redirect the user to the Twitch authentication page.
+     *
      * @param  Request $request
-     * @return Redirect
+     * @return Response
      */
-    public function auth(Request $request)
+    public function redirect(Request $request)
     {
-        // TODO: Handle invalid inputs somehow (move redirect to 404s).
-        $inputs = $request->all();
+        $scopes = $request->input('scopes', null);
+        $redirect = $request->redirect('redirect', 'home');
 
-        if(empty($inputs['code']) || empty($inputs['state'])) {
-            if(empty($inputs['page'])) {
-                return redirect(url('/?404'));
+        if (!empty(trim($scopes))) {
+            $scopes = explode(',', trim($scopes));
+            foreach ($scopes as $scope) {
+                if (!in_array($scope, $this->scopes)) {
+                    return redirect()->route('home', ['error' => 'invalid_scope']);
+                }
             }
-            $page = $inputs['page'];
-
-            if(empty($this->states[$page])) {
-                return redirect(url('/?404'));
-            }
-
-            $authUrl = $this->generateAuthUrl($this->states[$page]['scopes'], $page);
-            return redirect($authUrl);
         }
 
-        $code = $inputs['code'];
-        $state = $inputs['state'];
-        if(empty($this->states[$state])) {
-            return redirect(url('/?404'));
+        if (!isset($this->redirects[$redirect])) {
+            $redirect = 'home';
         }
 
-        $redirect = $this->states[$state]['redirect'];
-        $accessToken = $this->getAccessToken($code, $state, $this->redirectUrl);
-        if(empty($accessToken['access_token'])) {
-            return redirect(url('/?404'));
-        }
+        session()->put('redirect', $redirect);
 
-        $token = $accessToken['access_token'];
-        $checkToken = $this->twitchApi->get('?oauth_token=' . $token);
-        if(!$checkToken['token']['valid']) {
-            $authUrl = $this->generateAuthUrl($this->states[$page]['scopes'], $state);
-            return redirect($authUrl);
-        }
-
-        $request->session()->put($state . '_at', $token);
-        $request->session()->put('username', $checkToken['token']['user_name']);
-        return redirect($redirect);
+        return Socialite::with('twitch')->scopes($scopes)->redirect();
     }
 
     /**
-     * Generates Twitch authentication URL
-     * @param  array $scopes Array of authentication scopes
-     * @param  string $state  State to redirect back to
-     * @return string
+     * Handles return back from Twitch and takes care of authentication.
+     *
+     * @return Response
      */
-    protected function generateAuthUrl($scopes = [], $state = '')
+    public function callback()
     {
-        $clientId = env('TWITCH_CLIENT_ID', null);
-        $clientSecret = env('TWITCH_CLIENT_SECRET', null);
+        $redirect = session()->get('redirect', 'home');
 
-        if(empty($clientId) || empty($clientSecret)) {
-            return response()->route('home', ['error' => 'missing_twitch_settings']);
+        try {
+            $user = Socialite::with('twitch')->user();
+        } catch (Exception $e) {
+            return redirect()->route('home');
         }
-        $params = [
-            'response_type=code',
-            'client_id=' . $clientId,
-            'redirect_uri=' . $this->redirectUrl,
-            'scope=' . implode('+', $scopes),
-            'state=' . $state,
-            'force_verify=true'
-        ];
 
-        return self::AUTH_BASE_URL . '?' . implode('&', $params);
-    }
-
-    /**
-     * Retrieves the access token using the authorization code and state parameter passed after authenticating with Twitch.
-     * @param  string $code  Authorization code
-     * @param  string $state State
-     * @return array
-     */
-    public function getAccessToken($code, $state)
-    {
-        $clientId = env('TWITCH_CLIENT_ID', null);
-        $clientSecret = env('TWITCH_CLIENT_SECRET', null);
-
-        if(empty($clientId) || empty($clientSecret)) {
-            return response()->route('home', ['error' => 'missing_twitch_settings']);
-        }
-        $client = new Client();
-        $request = $client->request('POST', self::API_BASE_URL . 'oauth2/token', [
-            'form_params' => [
-                'client_id' => $clientId,
-                'client_secret' => $clientSecret,
-                'grant_type' => 'authorization_code',
-                'redirect_uri' => $this->redirectUrl,
-                'code' => $code,
-                'state' => $state
-            ],
-            'http_errors' => false
+        $auth = User::firstOrCreate([
+            'id' => $user->id,
+            'username' => $user->name
         ]);
-        $response = json_decode($request->getBody(), true);
-        return $response;
+        $auth->access_token = $user->token;
+        $auth->scopes = implode('+', $user->accessTokenResponseBody['scope']);
+        $auth->save();
+
+        Auth::login($auth, true);
+        return redirect($this->redirects[$redirect]);
+    }
+
+    /**
+     * Logs the user out.
+     * 
+     * @return Response
+     */
+    public function logout()
+    {
+        Auth::logout();
+        return redirect()->route('home');
     }
 }

@@ -98,6 +98,10 @@ Route::group(['middleware' => 'web'], function() {
             ->where('user', $channelRegex)
             ->where('channel', $channelRegex);
 
+        Route::get('{gameOrStatus}/{channel?}', 'TwitchController@gameOrStatus')
+            ->where('gameOrStatus', '(game|status|title)')
+            ->where('channel', $channelRegex);
+
         Route::get('help/{search?}', ['as' => 'help', 'uses' => 'TwitchController@help'])
             ->where('search', '.*');
 

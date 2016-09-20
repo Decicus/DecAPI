@@ -194,6 +194,41 @@ class TwitchController extends Controller
         return response(date($format, $time))->withHeaders($this->headers);
     }
 
+    /**
+     * Gets the game of the specified channel
+     *
+     * @param  Request $request
+     * @param  string  $route   Route: game/status/title
+     * @param  string  $channel Channel name
+     * @return Response
+     */
+    public function gameOrStatus(Request $request, $route, $channel = null)
+    {
+        if ($route !== 'game') {
+            $route = 'status';
+        }
+
+        if (empty($channel)) {
+            return Helper::text('Channel name has to be specified.');
+        }
+
+        $getGame = $this->twitchApi->channels($channel);
+
+        if (!empty($getGame['message'])) {
+            return Helper::text($getGame['message']);
+        }
+
+        $text = $getGame[$route];
+        return Helper::text($text ?: 'Not set');
+    }
+
+    /**
+     * Attempts to find a help page that is related to the search query.
+     *
+     * @param  Request $request
+     * @param  string  $search  Search query
+     * @return Response
+     */
     public function help(Request $request, $search = null)
     {
         $articles = [

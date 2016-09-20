@@ -23,6 +23,12 @@ class RandomController extends Controller
         $min = intval($min);
         $max = intval($max);
 
-        return Helper::text(rand($min, $max));
+        $rand = rand($min, $max);
+
+        if ($request->exists('format')) {
+            $rand = number_format($rand);
+        }
+
+        return Helper::text($rand);
     }
 }

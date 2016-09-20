@@ -63,6 +63,13 @@ Route::group(['middleware' => 'web'], function() {
             ->where('currency', '(currency(\.php)?)');
     });
 
+    Route::group(['prefix' => 'random', 'as' => 'random.'], function() {
+        Route::get('{number}/{min?}/{max?}', ['as' => 'number', 'uses' => 'RandomController@number'])
+            ->where('number', '(num(ber)?)')
+            ->where('min', '((-)?[\d]+)')
+            ->where('max', '((-)?[\d]+)');
+    });
+
     Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
         Route::get('/', ['as' => 'base', 'uses' => 'SteamController@base']);
 

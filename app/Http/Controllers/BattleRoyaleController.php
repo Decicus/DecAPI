@@ -76,7 +76,12 @@ class BattleRoyaleController extends Controller
             $options = $default;
         }
 
-        $separator = ' ' . $request->input('separator', '|') . ' ';
+        /**
+         * The separator between stats.
+         *
+         * @var string
+         */
+        $separator = sprintf(' %s ', $request->input('separator', '|'));
 
         $data = $this->get('/player/' . $id);
 

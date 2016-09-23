@@ -13,7 +13,7 @@
 
 Route::group(['middleware' => 'web'], function() {
     Route::get('/{index?}', ['as' => 'home', 'uses' => 'GeneralController@home'])
-        ->where('index', '(index(.php)?|home)');
+        ->where('index', '(.*)+');
     Route::get('/{maja}', ['as' => 'maja', 'uses' => 'GeneralController@maja'])
         ->where('maja', '(maja(.php)?)');
 

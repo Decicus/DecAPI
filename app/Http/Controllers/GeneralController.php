@@ -12,10 +12,9 @@ class GeneralController extends Controller
      * Returns the home view for the homepage.
      *
      * @param  Request $request
-     * @param  string  $message
      * @return Response
      */
-    public function home(Request $request, $message = null)
+    public function home(Request $request)
     {
         $data = ['page' => 'Home'];
 
@@ -34,7 +33,7 @@ class GeneralController extends Controller
             ]
         ];
 
-        $message = $message ?: $request->input('message', null);
+        $message = $request->input('message', null);
 
         if (!empty($messages[$message])) {
             $data['message'] = $messages[$message];

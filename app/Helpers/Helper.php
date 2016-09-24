@@ -140,6 +140,6 @@ class Helper
      */
     public static function message($id = '')
     {
-        return redirect()->route('home', ['message' => $id]);
+        return redirect('/?message=' . $id);
     }
 }

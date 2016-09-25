@@ -114,6 +114,11 @@ class TwitchController extends Controller
 
         $url = sprintf('https://api.twitch.tv/api/channels/%s/chat_properties', $channel);
         $data = $this->twitchApi->get($url, true);
+
+        if (isset($data['error'])) {
+            return Helper::text($data['message']);
+        }
+
         $rules = $data['chat_rules'];
 
         if (empty($rules)) {

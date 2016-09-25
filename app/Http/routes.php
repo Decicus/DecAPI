@@ -93,6 +93,9 @@ Route::group(['middleware' => 'web'], function() {
 
         Route::get('/', 'TwitchController@base');
 
+        Route::get('chat_rules/{channel?}', ['as' => 'chat_rules', 'uses' => 'TwitchController@chatRules'])
+            ->where('channel', $channelRegex);
+
         Route::get('clusters/{channel?}', 'TwitchController@clusters')
             ->where('channel', $channelRegex);
 

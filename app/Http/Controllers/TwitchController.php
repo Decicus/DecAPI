@@ -100,6 +100,31 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns a text list with chat rules of the specified channel.
+     * 
+     * @param  Request $request
+     * @param  string  $channel Channel name
+     * @return Response
+     */
+    public function chatRules(Request $request, $channel = null)
+    {
+        if (empty($channel)) {
+            return Helper::text('Channel name has to be specified.');
+        }
+
+        $url = sprintf('https://api.twitch.tv/api/channels/%s/chat_properties', $channel);
+        $data = $this->twitchApi->get($url, true);
+        $rules = $data['chat_rules'];
+
+        if (empty($rules)) {
+            return Helper::text($channel . ' does not have any rules set.');
+        }
+
+        $rules = implode(PHP_EOL, $rules);
+        return Helper::text($rules);
+    }
+
+    /**
      * Returns the Twitch chat cluster for the specified channel. Added purely for backwards compatibility as it's not necessary as of March 23rd 2016.
      *
      * @param  Request $request

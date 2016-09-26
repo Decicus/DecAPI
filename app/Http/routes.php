@@ -123,6 +123,9 @@ Route::group(['middleware' => 'web'], function() {
             ->where('hosts', '(hosts(\.php)?)')
             ->where('channel', $channelRegex);
 
+        Route::get('id/{user?}', ['as' => 'id', 'uses' => 'TwitchController@id'])
+            ->where('user', $channelRegex);
+
         Route::get('{ingests}', 'TwitchController@ingests')
             ->where('ingests', '(ingests(\.php)?)');
 

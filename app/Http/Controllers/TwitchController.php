@@ -77,15 +77,20 @@ class TwitchController extends Controller
         $baseUrl = url('/twitch/');
 
         $urls = [
+            'chat_rules' => 'chat_rules/{CHANNEL}',
             'clusters' => 'clusters/{CHANNEL}',
             'followage' => 'followage/{CHANNEL}/{USER}',
             'followed' => 'followed/{USER}/{CHANNEL}',
+            'game' => 'game/{CHANNEL}',
             'help' => 'help/{SEARCH}',
             'highlight' => 'highlight/{CHANNEL}',
             'hosts' => 'hosts/{CHANNEL}',
+            'id' => 'id/{USER}',
             'ingests' => 'ingests',
             'subcount' => 'subcount/{CHANNEL}',
             'subscriber_emotes' => 'subscriber_emotes/{CHANNEL}',
+            'status' => 'status/{CHANNEL}',
+            'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
             'uptime' => 'uptime/{CHANNEL}'
         ];
@@ -101,13 +106,15 @@ class TwitchController extends Controller
 
     /**
      * Returns a text list with chat rules of the specified channel.
-     * 
+     *
      * @param  Request $request
      * @param  string  $channel Channel name
      * @return Response
      */
     public function chatRules(Request $request, $channel = null)
     {
+        $channel = $channel ?: $request->input('channel', null);
+
         if (empty($channel)) {
             return Helper::text('Channel name has to be specified.');
         }
@@ -237,6 +244,8 @@ class TwitchController extends Controller
         if ($route !== 'game') {
             $route = 'status';
         }
+
+        $channel = $channel ?: $request->input('channel', null);
 
         if (empty($channel)) {
             return Helper::text('Channel name has to be specified.');
@@ -452,6 +461,30 @@ class TwitchController extends Controller
 
         $implode = $request->exists('implode') ? ', ' : PHP_EOL;
         return response(implode($implode, $hostList))->withHeaders($this->headers);
+    }
+
+    /**
+     * Returns the user's unique ID.
+     *
+     * @param  Request $request
+     * @param  string  $user    Username of user
+     * @return Response
+     */
+    public function id(Request $request, $user = null)
+    {
+        $user = $user ?: $request->input('user', null);
+
+        if (empty($user)) {
+            return Helper::text('Username has to be specified.');
+        }
+
+        $data = $this->twitchApi->users($user);
+
+        if (isset($data['error'])) {
+            return Helper::text($data['message']);
+        }
+
+        return Helper::text($data['_id']);
     }
 
     /**

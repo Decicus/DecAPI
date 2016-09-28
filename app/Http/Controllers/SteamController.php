@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\Helper;
 use Steam;
 use Exception;
+use Redirect;
 
 class SteamController extends Controller
 {
@@ -78,6 +79,28 @@ class SteamController extends Controller
             $list .= $code . " - " . $name . PHP_EOL;
         }
         return Helper::text($list);
+    }
+
+    /**
+     * Redirects the user to connect to the specified options on the specified game's app ID
+     *
+     * @param  Request $request
+     * @param  int     $appId      The app ID of the game
+     * @param  string  $parameters The parameters to connect with
+     * @return Response
+     */
+    public function connect(Request $request, $appId = null, $parameters = null)
+    {
+        if (empty($appId)) {
+            return Helper::text('App ID has to be specified.');
+        }
+
+        if (empty($parameters)) {
+            return Helper::text('Parameters have to be specified.');
+        }
+
+        $format = "steam://run/%d/connect/%s";
+        return Redirect::away(sprintf($format, $appId, $parameters));
     }
 
     /**

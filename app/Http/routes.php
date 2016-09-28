@@ -73,6 +73,10 @@ Route::group(['middleware' => 'web'], function() {
     Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
         Route::get('/', ['as' => 'base', 'uses' => 'SteamController@base']);
 
+        Route::get('connect/{appId?}/{parameters?}', ['as' => 'connect', 'uses' => 'SteamController@connect'])
+            ->where('appId', '[\d]{1,8}')
+            ->where('parameters', '.*');
+
         Route::get('currencies', ['as' => 'currencies', 'uses' => 'SteamController@listCurrencies']);
 
         Route::get('gamesearch', ['as' => 'gamesearch', 'uses' => 'SteamController@gameInfoBySearch']);

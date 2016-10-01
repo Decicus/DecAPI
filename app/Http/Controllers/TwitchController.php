@@ -284,6 +284,7 @@ class TwitchController extends Controller
             'How to Edit Info Panels' => 2416760,
             'How to File a User Report' => 725568,
             'How to Handle Viewbots/Followbots' => 2435640,
+            'How to Link Your Amazon Account' => 2574978,
             'How to Redeem Coupon Codes' => 2392092,
             'How to use Channel Feed' => 2377877,
             'How to Use Clips' => 2442508,
@@ -308,6 +309,7 @@ class TwitchController extends Controller
             'Twitch Chat Badges Guide' => 659115,
             'Twitch IRC' => 1302780,
             'Twitch Music FAQ' => 1824967,
+            'Twitch Prime Guide' => 2572060,
             'Twitch Rules of Conduct (RoC)' => 983016,
             'Twitch Turbo' => 973896,
             'Twitch Twitter "@TwitchSupport" FAQ' => 1210307,
@@ -318,6 +320,8 @@ class TwitchController extends Controller
             'Android Subscriptions FAQ' => 2297883,
             'Creative Commissions' => 2337107,
             'How to File a Whisper Report' => 2329782,
+            'How to Use Twitch Prime Subscriptions (Free)' => 2574674,
+            'Twitch Prime Game Code Redemption and Installation' => 2574721
         ];
 
         $lang = $request->input('lang', 'en');

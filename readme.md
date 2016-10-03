@@ -21,6 +21,9 @@ This list of features will contain links to the current version hosted under [de
 
 It _should_ function similarly or identical in this rewrite, even if the code hosted under [decapi.me](https://decapi.me/) is still the old code.
 
+Anything that for some reason did not get included in this rewrite, will still be hosted under [old.decapi.me](https://old.decapi.me/).  
+There is also a fallback route setup to redirect all requests to the [old.decapi.me](https://old.decapi.me/) URL, if it cannot find a valid route in the rewrite.
+
 - Twitch
     - [Follow date and time](https://decapi.me/twitch/followed?user=decicus&channel=twitch)
     - [Latest highlight](https://decapi.me/twitch/highlight?channel=decicus)
@@ -72,6 +75,16 @@ The following things are required for setting this up:
 
 ## Documentation
 Documentation covering all the endpoints will be available at some point in the future, probably closer to the "full release" of this project.
+
+## Rate limits
+Certain routes may have rate limiting applied to them to prevent abuse.  
+I do not plan on applying rate limits on many routes, only those I notice are used a lot by one user.  
+The rate limits will also be set to something I consider "fair". Which primarily means they will be set to something that should not hinder the normal user, but also should not allow them to go spam requests for no good reason.
+
+Below is an overview over what routes are currently rate limited. If the route is not specified, it does not have a rate limit.
+
+- `/twitch/uptime`
+    - Limit: 100 requests per 60 seconds.
 
 ## License
 [MIT License](LICENSE)

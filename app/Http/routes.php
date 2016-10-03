@@ -14,8 +14,6 @@
 Route::group(['middleware' => 'web'], function() {
     Route::get('/{index?}', ['as' => 'home', 'uses' => 'GeneralController@home'])
         ->where('index', '(index(.php)?|home)');
-    Route::get('/{maja}', ['as' => 'maja', 'uses' => 'GeneralController@maja'])
-        ->where('maja', '(maja(.php)?)');
 
     Route::group(['prefix' => 'askfm'], function() {
         Route::get('rss', 'AskfmController@rss');
@@ -166,3 +164,6 @@ Route::group(['middleware' => 'web'], function() {
             ->where('search', '(.*+)');
     });
 });
+
+Route::any('{fallback}', ['as' => 'fallback', 'uses' => 'GeneralController@fallback'])
+    ->where('fallback', '.*');

@@ -43,23 +43,17 @@ class GeneralController extends Controller
     }
 
     /**
-     * Redirects Maja quotes to the old endpoint.
+     * Redirects all routes that have not been added
+     * to the new DecAPI, back to the old one.
      *
      * @param  Request $request
      * @return Response
      */
-    public function maja(Request $request)
+    public function fallback(Request $request)
     {
-        $inputs = $request->all();
-
-        $url = 'https://old.decapi.me/maja';
-
-        $i = 0;
-        foreach ($inputs as $name => $value) {
-            $url .= ($i === 0 ? '?' : '&') . $name . '=' . $value;
-            $i++;
-        }
-
-        return redirect($url);
+        $format = 'https://old.decapi.me/%s%s';
+        $path = $request->path();
+        $query = str_replace($request->url(), "", $request->fullUrl());
+        return redirect(sprintf($format, $path, $query));
     }
 }

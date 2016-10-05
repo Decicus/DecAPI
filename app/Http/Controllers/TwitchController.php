@@ -281,6 +281,7 @@ class TwitchController extends Controller
             'Guide to Broadcast Health and Using Twitch Inspector' => 2420572,
             'Guide to Cheering (Bits)' => 2449458,
             'Guide to Custom Resub Messages' => 2457351,
+            'Guide to Earning Bounty from Game Sales' => 2582870,
             'How to Edit Info Panels' => 2416760,
             'How to File a User Report' => 725568,
             'How to Handle Viewbots/Followbots' => 2435640,

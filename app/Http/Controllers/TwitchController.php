@@ -270,60 +270,8 @@ class TwitchController extends Controller
      */
     public function help(Request $request, $search = null)
     {
-        $articles = [
-            'About Site Suspensions, DMCA Suspensions, and Chat Bans' => 1727973,
-            'Adding a Game and Box Art to the Directory' => 2348988,
-            'Authy FAQ' => 2186821,
-            'Channel Banned Words' => 2100263,
-            'Chat Commands' => 659095,
-            'Chat Replay FAQ' => 2337148,
-            'Creative FAQ' => 2176641,
-            'Guide to Broadcast Health and Using Twitch Inspector' => 2420572,
-            'Guide to Cheering (Bits)' => 2449458,
-            'Guide to Custom Resub Messages' => 2457351,
-            'Guide to Earning Bounty from Game Sales' => 2582870,
-            'How to Edit Info Panels' => 2416760,
-            'How to File a User Report' => 725568,
-            'How to Handle Viewbots/Followbots' => 2435640,
-            'How to Link Your Amazon Account' => 2574978,
-            'How to Redeem Coupon Codes' => 2392092,
-            'How to use Channel Feed' => 2377877,
-            'How to Use Clips' => 2442508,
-            'How to use the Friends Feature' => 2418761,
-            'How to Use Host Mode' => 2508329,
-            'How To Use VOD Thumbnails' => 2218412,
-            'HTML5 Video Player Beta' => 2477288,
-            'List of Prohibited/Banned Games' => 1992676,
-            'Missed Email Responses' => 1626286,
-            'Moderation Team Building FAQ' => 1360598,
-            'Partner Program Overview' => 735069,
-            'Partner Emoticon and Badge Guide' => 2348985,
-            'Partner Help and Contact Information' => 735178,
-            'Partner Payment FAQ' => 735169,
-            'Partner Revenue Guide' => 2347894,
-            'Partner Settings Guide' => 2401004,
-            'Purchase Support FAQ' => 2341636,
-            'Social Eating FAQ' => 2483343,
-            'Subscription Program FAQ' => 735176,
-            'Terms of Service (ToS)' => 735191,
-            'Tips for Applying to the Partner Program' => 735127,
-            'Twitch Chat Badges Guide' => 659115,
-            'Twitch IRC' => 1302780,
-            'Twitch Music FAQ' => 1824967,
-            'Twitch Prime Guide' => 2572060,
-            'Twitch Rules of Conduct (RoC)' => 983016,
-            'Twitch Turbo' => 973896,
-            'Twitch Twitter "@TwitchSupport" FAQ' => 1210307,
-            'Two Factor Authentication (2FA) with Authy' => 2186271,
-            'Username Rename (Name Changes) and Recycling Policies' => 1015624,
-            'Whispers FAQ' => 2215236,
-            // Sorted at the bottom for lower priority
-            'Android Subscriptions FAQ' => 2297883,
-            'Creative Commissions' => 2337107,
-            'How to File a Whisper Report' => 2329782,
-            'How to Use Twitch Prime Subscriptions (Free)' => 2574674,
-            'Twitch Prime Game Code Redemption and Installation' => 2574721
-        ];
+        // config/twitch.php
+        $articles = config('twitch.help.articles');
 
         $lang = $request->input('lang', 'en');
 

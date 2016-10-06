@@ -81,6 +81,13 @@ Certain routes may have rate limiting applied to them to prevent abuse.
 I do not plan on applying rate limits on many routes, only those I notice are used a lot by one user.  
 The rate limits will also be set to something I consider "fair". Which primarily means they will be set to something that should not hinder the normal user, but also should not allow them to go spam requests for no good reason.
 
+Rate limiting is done by using Laravel's `throttle` middleware. This means you can check headers sent with the request to figure out information about your rate-limit:
+
+- `X-RateLimit-Limit` - How many requests per 1 minute (60 seconds) is allowed.
+- `X-RateLimit-Remaining` - How many requests you have left for this time period.
+- `Retry-After` - How many seconds until you can make requests again (Only when you have actually hit your rate limit).
+    - Another note: If you have hit your rate limit, you will receive a `429 Too many requests` HTTP status code.
+
 Below is an overview over what routes are currently rate limited. If the route is not specified, it does not have a rate limit.
 
 - `/twitch/uptime`

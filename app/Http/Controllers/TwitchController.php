@@ -482,12 +482,12 @@ class TwitchController extends Controller
         }
 
         if (empty($channel) && !Auth::check()) {
-            return Helper::text('Use ?channel=CHANNEL_NAME to get subcount.');
+            return Helper::text('Use ?channel=CHANNEL_NAME or /twitch/subcount/CHANNEL_NAME to get subcount.');
         }
 
         if (!empty($channel)) {
             $channel = strtolower($channel);
-            $reAuth = route('auth.twitch') . '?redirect=subcount&scopes=user_read+channel_subscriptions';
+            $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=user_read+channel_subscriptions';
             $user = User::where('username', $channel)->first();
             $needToReAuth = sprintf('%s needs to authenticate to use subcount: %s', $channel, $reAuth);
 
@@ -521,7 +521,11 @@ class TwitchController extends Controller
         }
 
         $user = Auth::user();
-        return view('twitch.subcount', ['username' => $user->username, 'page' => 'Subcount']);
+        $data = [
+            'page' => 'Subcount',
+            'route' => route('twitch.subcount', ['subcount', $user->username])
+        ];
+        return view('twitch.subcount', $data);
     }
 
     public function subEmotes(Request $request, $channel = null)

@@ -21,10 +21,10 @@ Route::group(['middleware' => 'web'], function() {
     });
 
     Route::group(['prefix' => 'auth', 'as' => 'auth.'], function() {
-        Route::group(['prefix' => 'twitch'], function() {
-            Route::get('/', ['as' => 'twitch', 'uses' => 'TwitchAuthController@redirect']);
-            Route::get('callback', ['as' => 'twitch.callback', 'uses' => 'TwitchAuthController@callback']);
-            Route::get('logout', ['as' => 'twitch.logout', 'uses' => 'TwitchAuthController@logout']);
+        Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
+            Route::get('/', ['as' => 'base', 'uses' => 'TwitchAuthController@redirect']);
+            Route::get('callback', ['as' => 'callback', 'uses' => 'TwitchAuthController@callback']);
+            Route::get('logout', ['as' => 'logout', 'uses' => 'TwitchAuthController@logout']);
         });
     });
 

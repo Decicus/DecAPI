@@ -16,7 +16,7 @@
                     </div>
                 @endif
 
-                <h1 class="text-success">DecAPI</h1>
+                <h1 class="text-success">{{ env('SITE_TITLE', 'DecAPI') }}</h1>
                 <div class="container">
                     <div class="list-group">
                         <a href="mailto:alex@thomassen.xyz" class="list-group-item"><i class="fa fa-envelope fa-1x"></i> E-mail (alex@thomassen.xyz)</a>

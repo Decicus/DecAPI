@@ -15,6 +15,9 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector;
 use GuzzleHttp\Client;
 
+use Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
+
 class TwitchController extends Controller
 {
     private $headers = [
@@ -492,7 +495,13 @@ class TwitchController extends Controller
                 return Helper::text($needToReAuth);
             }
 
-            $token = $user->access_token;
+            try {
+                $token = Crypt::decrypt($user->access_token);
+            } catch (DecryptException $e) {
+                // Something weird happened with the encrypted token
+                // request channel owner to re-auth so it's encrypted properly
+                return Helper::text($needToReAuth);
+            }
 
             if (empty($token)) {
                 return Helper::text($needToReAuth);

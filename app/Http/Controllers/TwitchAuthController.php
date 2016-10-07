@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Socialite;
 use App\User;
 use App\Helpers\Helper;
+use Crypt;
 
 class TwitchAuthController extends Controller
 {
@@ -101,7 +102,7 @@ class TwitchAuthController extends Controller
             'id' => $user->id,
             'username' => $user->name
         ]);
-        $auth->access_token = $user->token;
+        $auth->access_token = Crypt::encrypt($user->token);
         $auth->scopes = implode('+', $user->accessTokenResponseBody['scope']);
         $auth->save();
 

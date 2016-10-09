@@ -142,6 +142,9 @@ Route::group(['middleware' => 'web'], function() {
             ->where('team_members', '(team_members(\.php)?)')
             ->where('team', '([A-z0-9]{1,40})');
 
+        Route::get('upload/{channel?}', 'TwitchController@upload')
+            ->where('channel', $channelRegex);
+
         Route::group(['middleware' => 'throttle:100'], function() {
             Route::get('{uptime}/{channel?}', 'TwitchController@uptime')
                 ->where('uptime', '(uptime(\.php)?)')

@@ -354,7 +354,7 @@ class TwitchController extends Controller
             return $this->error('You have to specify a channel');
         }
 
-        $fetchHighlight = $this->twitchApi->videos($request, $channel);
+        $fetchHighlight = $this->twitchApi->videos($request, $channel, ['highlight']);
 
         if (!empty($fetchHighlight['status'])) {
             return $this->error($fetchHighlight['message'], $fetchHighlight['status']);
@@ -647,6 +647,34 @@ class TwitchController extends Controller
             ])->header('Access-Control-Allow-Origin', '*');
         }
         return response(implode(PHP_EOL, $members))->withHeaders($this->headers);
+    }
+
+    /**
+     * Finds the specified channel's latest video upload.
+     *
+     * @param  Request $request
+     * @param  String  $channel Channel name
+     * @return Response
+     */
+    public function upload(Request $request, $channel = null)
+    {
+        if (empty($channel)) {
+            return Helper::text('A channel has to be specified.');
+        }
+
+        $video = $this->twitchApi->videos($request, $channel, ['upload']);
+
+        if (!empty($video['status'])) {
+            return Helper::text($video['message']);
+        }
+
+        if (empty($video['videos'])) {
+            return Helper::text($channel . ' has no uploaded videos.');
+        }
+
+        $upload = $video['videos'][0];
+        $text = sprintf('%s - %s', $upload['title'], $upload['url']);
+        return Helper::text($text);
     }
 
     /**

@@ -178,14 +178,15 @@ class TwitchApiController extends Controller
      * Returns result of the Kraken API for videos.
      *
      * @param  Request $request
-     * @param  string  $channel Channel name, can also be specified in the request.
-     * @param  integer $limit   Limit of highlights
-     * @param  integer $offset  Offset
-     * @param  bool    $broadcasts Returns only past broadcasts on true, highlights on false
-     * @param  bool    $hls     Returns only HLS VODs when true, non-HLS VODs on false
-     * @return array            JSON-decoded result of highlights endpoint
+     * @param  string  $channel         Channel name, can also be specified in the request.
+     * @param  array   $broadcastTypes  Array of broadcast types
+     * @param  integer $limit           Limit of highlights
+     * @param  integer $offset          Offset
+     * @param  bool    $broadcasts      Returns only past broadcasts on true, highlights on false
+     * @param  bool    $hls             Returns only HLS VODs when true, non-HLS VODs on false
+     * @return array                    JSON-decoded result of highlights endpoint
      */
-    public function videos(Request $request, $channel, $limit = 1, $offset = 0, $broadcasts = false, $hls = false)
+    public function videos(Request $request, $channel, $broadcastType = ['all'], $limit = 1, $offset = 0, $broadcasts = false, $hls = false)
     {
         $input = $request->all();
         $channel = $channel ?: $request->input('channel', null);
@@ -195,6 +196,8 @@ class TwitchApiController extends Controller
 
         $limit = ($request->has('limit') ? intval($input['limit']) : $limit);
         $offset = ($request->has('offset') ? intval($input['offset']) : $offset);
-        return $this->channels($channel . '/videos?limit=' . $limit . '&offset=' . $offset . '&broadcasts=' . $broadcasts . '&hls=' . $hls);
+        $format = '%s/videos?limit=%d&offset=%d&broadcasts=%s&hls=%s&broadcast_type=%s';
+        $url = sprintf($format, $channel, $limit, $offset, $broadcasts, $hls, implode(',', $broadcastType));
+        return $this->channels($url);
     }
 }

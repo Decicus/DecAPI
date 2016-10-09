@@ -95,6 +95,7 @@ class TwitchController extends Controller
             'status' => 'status/{CHANNEL}',
             'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
+            'upload' => 'upload/{CHANNEL}',
             'uptime' => 'uptime/{CHANNEL}'
         ];
 

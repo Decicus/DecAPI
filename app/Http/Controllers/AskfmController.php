@@ -42,7 +42,7 @@ class AskfmController extends Controller
             $question = trim($a->find('.streamItemContent-question')->firstChild()->text);
             $answer = trim($a->find('.streamItemContent-answer')->firstChild()->text);
             $link = "https://ask.fm" . $a->find('.streamItemsAge')->getAttribute('href');
-            $date = $a->find('.streamItemsAge')->getAttribute('data-hint');
+            $date = $a->find('.streamItemsAge')->getAttribute('title');
             if($i === 0) {
                 $feed->pubdate = $date;
                 $i++;

@@ -61,6 +61,10 @@ Route::group(['middleware' => 'web'], function() {
             ->where('currency', '(currency(\.php)?)');
     });
 
+    Route::group(['prefix' => 'r6', 'as' => 'r6.'], function() {
+        Route::get('patch_notes', ['as' => 'patch_notes', 'uses' => 'Rainbow6Controller@patchNotes']);
+    });
+
     Route::group(['prefix' => 'random', 'as' => 'random.'], function() {
         Route::get('{number}/{min?}/{max?}', ['as' => 'number', 'uses' => 'RandomController@number'])
             ->where('number', '(num(ber)?)')

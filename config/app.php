@@ -163,6 +163,7 @@ return [
         Alaouy\Youtube\YoutubeServiceProvider::class,
         Syntax\SteamApi\SteamApiServiceProvider::class,
         SocialiteProviders\Manager\ServiceProvider::class,
+        Vinelab\Rss\RssServiceProvider::class,
     ],
 
     /*

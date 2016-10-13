@@ -126,7 +126,8 @@ class BattleRoyaleController extends Controller
         }
 
         if (empty($output)) {
-            return Helper::text('No valid options where specified. Visit '. route('br.player.summary', [$id, $type]) . '?options=list');
+            $route = route('br.player.summary', [$id, $type]);
+            return Helper::text(sprintf('No valid options where specified. Visit %s?options=list', $route));
         }
 
         return Helper::text(implode($separator, $output));

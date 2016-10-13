@@ -16,8 +16,7 @@ Route::group(['middleware' => 'web'], function() {
         ->where('index', '(index(.php)?|home)');
 
     Route::group(['prefix' => 'askfm'], function() {
-        Route::get('rss', 'AskfmController@rss');
-        Route::get('rss/{user}', 'AskfmController@rss');
+        Route::get('rss/{user?}', 'AskfmController@rss');
     });
 
     Route::group(['prefix' => 'auth', 'as' => 'auth.'], function() {
@@ -38,8 +37,9 @@ Route::group(['middleware' => 'web'], function() {
 
     Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
         Route::get('/', ['as' => 'home', 'uses' => 'BttvController@home']);
-        Route::get('{emotes}', ['as' => 'emotes', 'uses' => 'BttvController@emotes'])
-            ->where('emotes', '(emotes(\.php)?)');
+        Route::get('{emotes}/{channel?}', ['as' => 'emotes', 'uses' => 'BttvController@emotes'])
+            ->where('emotes', '(emotes(\.php)?)')
+            ->where('channel', '([A-z0-9]{1,30})');
     });
 
     Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {

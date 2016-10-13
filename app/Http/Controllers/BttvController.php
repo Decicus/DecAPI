@@ -49,10 +49,18 @@ class BttvController extends Controller
         return view('bttv.home', $data);
     }
 
-    public function emotes(Request $request)
+    /**
+     * Retrieves the available BetterTTV channel emotes for the specified channel.
+     *
+     * @param  Request $request
+     * @param  String  $emotes  Route name
+     * @param  String  $channel The channel name
+     * @return Response
+     */
+    public function emotes(Request $request, $emotes = null, $channel = null)
     {
-        $channel = $request->input('channel', null);
-        $resp = 'You have to specify ?channel=';
+        $channel = $channel ?: $request->input('channel', null);
+        $resp = 'You have to specify a channel name';
 
         if (!empty($channel)) {
             $emotes = Helper::get('https://api.betterttv.net/2/channels/' . $channel);
@@ -74,10 +82,6 @@ class BttvController extends Controller
             }
         }
 
-        $headers = [
-            'Content-Type' => 'text/plain',
-            'Access-Control-Allow-Origin' => '*'
-        ];
-        return response($resp)->withHeaders($headers);
+        return Helper::text($resp);
     }
 }

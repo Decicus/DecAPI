@@ -4,9 +4,9 @@
         <meta charset="utf-8">
         <meta name="description" content="{{ site.description }}" />
         <title>{{ site.title }} | {{ page.title }}</title>
-        <link rel="stylesheet" href="{{ '/assets/css/bootstrap.min.css' | relative_url }}" media="screen" title="no title">
-        <link rel="stylesheet" href="{{ '/assets/css/darkly.min.css' | relative_url }}" media="screen" title="no title">
-        <link rel="stylesheet" href="{{ '/assets/css/font-awesome.min.css' | relative_url }}" media="screen" title="no title">
+        <link rel="stylesheet" href="{{ '/assets/css/bootstrap.min.css' | relative_url }}">
+        <link rel="stylesheet" href="{{ '/assets/css/simplex.min.css' | relative_url }}">
+        <link rel="stylesheet" href="{{ '/assets/css/font-awesome.min.css' | relative_url }}">
         <script src="{{ '/assets/js/jquery-3.1.1.min.js' | relative_url }}" charset="utf-8"></script>
         <script src="{{ '/assets/js/bootstrap.min.js' | relative_url }}" charset="utf-8"></script>
     </head>
@@ -18,13 +18,14 @@
                 </div>
 
                 <ul class="nav navbar-nav">
+                    <li><a href="./"><i class="fa fa-1x fa-home"></i> Home</a></li>
                     <li class="dropdown">
                         <a href="#" class="dropdown navbar-link" data-toggle="dropdown">
                             <i class="fa fa-1x fa-link"></i> Endpoints <span class="caret"></span>
                         </a>
 
                         <ul class="dropdown-menu" role="menu">
-                            {% for endpoint in site.data.endpoints %}
+                            {% for endpoint in site.data.base_endpoints %}
                                 {% if endpoint.icon %}
                                     {% assign icon = endpoint.icon %}
                                 {% else %}
@@ -43,6 +44,10 @@
         </nav>
 
         <div class="container-fluid">
+            <div class="page-header">
+                <h1>DecAPI - {{ page.page }}</h1>
+            </div>
+
             {{ content }}
         </div>
     </body>

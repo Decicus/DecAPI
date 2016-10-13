@@ -1,0 +1,39 @@
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Route:</th>
+            <th>Parameters:</th>
+            <th>Query strings:</th>
+            <th>Notes:</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for endpoint in include.endpoints.endpoints %}
+        <tr>
+            <th>{{ include.endpoints.base_path }}/{{ endpoint.route }}</th>
+            <td>
+                <ul class="list-group">
+                    {% for param in endpoint.parameters %}
+                    <li class="list-group-item"><code>{{ param.name }}</code> &mdash; {{ param.description }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul class="list-group">
+                    {% for qs in endpoint.qs %}
+                        <li class="list-group-item"><code>{{ qs.name }}</code> &mdash; {{ qs.description }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul class="list-group">
+                    {% for note in endpoint.notes %}
+                        <li class="list-group-item">{{ note }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

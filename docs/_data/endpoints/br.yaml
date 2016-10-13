@@ -11,4 +11,4 @@ endpoints:
         - name: "options={OPTIONS}"
           description: "A comma-separated list of options. Available options can be listed if you specify <code>list</code> instead of <code>{OPTIONS}</code>. Similarly, specifying <code>default</code> will list the default options."
       notes:
-        - '<i class="fa fa-1x fa-info"></i> Returns stats from the leaderboards API about the player.'
+        - 'Returns stats from the leaderboards API about the player.'

@@ -7,7 +7,7 @@ endpoints:
           description: "<code>{SEARCH}</code> the location name to search for."
           required: true
       notes:
-        - '<i class="fa fa-1x fa-info"></i> Searches for locations based on the search query string, and returns a location name together with a URL to the location on <a href="https://www.izurvive.com/">iZurvive</a>.'
+        - 'Searches for locations based on the search query string, and returns a location name together with a URL to the location on <a href="https://www.izurvive.com/">iZurvive</a>.'
     - route: "players"
       parameters:
       qs:
@@ -21,15 +21,15 @@ endpoints:
           description: "The query port of the server."
           required: true
       notes:
-        - '<i class="fa fa-1x fa-info"></i> Queries the specified DayZ server and returns a player count in format of: <code>{PLAYERCOUNT}/{MAXPLAYERS}</code>'
+        - 'Queries the specified DayZ server and returns a player count in format of: <code>{PLAYERCOUNT}/{MAXPLAYERS}</code>'
         - 'Note: This also works with other games, such as <a href="http://store.steampowered.com/app/299740/">Miscreated</a>.'
     - route: "status-report"
       parameters:
       qs:
       notes:
-        - '<i class="fa fa-1x fa-info"></i> Retrieves the latest status report from the <a href="https://dayz.com/">DayZ website</a>.'
+        - 'Retrieves the latest status report from the <a href="https://dayz.com/">DayZ website</a>.'
     - route: "steam-status-report"
       parameters:
       qs:
       notes:
-        - '<i class="fa fa-1x fa-info"></i> Retrieves the latest status report from the <a href="https://steamcommunity.com/app/221100/allnews/">DayZ news section on Steam</a>.'
+        - 'Retrieves the latest status report from the <a href="https://steamcommunity.com/app/221100/allnews/">DayZ news section on Steam</a>.'

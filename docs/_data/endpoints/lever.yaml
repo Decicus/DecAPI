@@ -1,0 +1,7 @@
+base_path: "/lever"
+endpoints:
+    - route: "twitch"
+      parameters:
+      qs:
+      notes:
+        - 'Returns an RSS feed of the latest <a href="https://jobs.lever.co/twitch/"><i class="fa fa-1x fa-twitch"></i> Twitch jobs listings</a>.'

@@ -6,4 +6,4 @@ endpoints:
           description: "The name of the user you wish to retrieve a feed from"
       qs:
       notes:
-        - '<i class="fa fa-1x fa-info"></i> Provides an RSS feed of a specified ASKfm users answers.'
+        - 'Provides an RSS feed of a specified ASKfm users answers.'

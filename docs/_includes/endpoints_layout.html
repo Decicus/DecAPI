@@ -11,7 +11,7 @@
     <tbody>
         {% for endpoint in include.endpoints.endpoints %}
         <tr>
-            <th>{{ include.endpoints.base_path }}/{{ endpoint.route }}</th>
+            <th><a href="https://beta.decapi.me{{ include.endpoints.base_path }}/{{ endpoint.route }}">{{ include.endpoints.base_path }}/{{ endpoint.route }}</a></th>
             <td>
                 <ul class="list-group">
                     {% if endpoint.parameters.size > 0 %}
@@ -40,7 +40,7 @@
                             <li class="list-group-item"><code>{{ qs.name }}</code> &mdash; {{ qs.description }}{{ tag }}</li>
                         {% endfor %}
                     {% else %}
-                        <li class="list-group-item list-group-item-info">No available query strings for this endpoint.</li>
+                        <li class="list-group-item list-group-item-info">No available query string options for this endpoint.</li>
                     {% endif %}
                 </ul>
             </td>

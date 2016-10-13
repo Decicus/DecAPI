@@ -13,7 +13,7 @@ endpoints:
         - name: "limit={NUMBER}"
           description: "The limit of list entries - Max: 100"
       notes:
-        - "<i class='fa fa-1x fa-info'></i> This is just an example note."
+        - "This is just an example note."
     - route: "test/{USER}"
       parameters:
         - name: "{USER}"

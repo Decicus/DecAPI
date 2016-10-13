@@ -16,7 +16,7 @@
 title: DecAPI
 email: alex@thomassen.xyz
 description: The documentation for DecAPI
-baseurl: "/DecAPI" # the subpath of your site, e.g. /blog
+baseurl: "/DecAPI"
 url: "https://decicus.github.io"
 
 # Build settings

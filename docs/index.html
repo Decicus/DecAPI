@@ -3,33 +3,34 @@ title: Home
 layout: base
 page: Documentation
 options:
-    - "The base URL for all endpoints is <code>https://beta.decapi.me</code> and requires SSL."
+    - "The base URL for all endpoints is <code>https://beta.decapi.me</code> and requires support for SSL."
     - "<strong>HTTP</strong> requests will receive a <code>301 Moved Permanently</code> to <strong>HTTPS</strong>."
     - "The default HTTP method supported is <code>GET</code>."
     - "Responses are <code>Content-Type: text/plain</code>."
+    - "Parameters are <strong>always</strong> required."
+    - "Query strings are <strong>never</strong> required."
 ---
 <div class="alert alert-warning">
     Currently these docs are incomplete and only contain some endpoints, even though the navigation bar contains placeholder URLs for most of them.
 </div>
 
-<div class="jumbotron">
-    <h3 class="text-info">General information</h3>
-    <p>
-        These pages will house the documentation of endpoints under DecAPI.
-        <br>
-        Each page of documentation will contain a list of endpoints as well as some information regarding each of them.
-    </p>
+<h3 class="text-info">General information</h3>
 
-    <h3 class="text-info">Default options &amp; results</h3>
-    <p>These are options or results that will be the default, unless the notes about the endpoint says otherwise.</p>
-    <div class="list-group">
-        {% for option in page.options %}
-            <li class="list-group-item">{{ option }}</li>
-        {% endfor %}
-    </div>
+<p>
+    These pages will house the documentation of endpoints under DecAPI.
+    <br>
+    Each page of documentation will contain a list of endpoints as well as some information regarding each of them.
+</p>
 
-    <h3 class="text-info">Example:</h3>
-    <p>This is an example table of how the documentation of endpoints will look like.</p>
-
-    {% include endpoints_layout.html endpoints=site.data.endpoints.example %}
+<h3 class="text-info">Default options &amp; results</h3>
+<p>These are options or results that will be the default, <strong>unless the notes about the endpoint says otherwise</strong>.</p>
+<div class="list-group">
+    {% for option in page.options %}
+        <li class="list-group-item">{{ option }}</li>
+    {% endfor %}
 </div>
+
+<h3 class="text-info">Example:</h3>
+<p>This is an example table of how the documentation of endpoints will look like.</p>
+
+{% include endpoints_layout.html endpoints=site.data.endpoints.example %}

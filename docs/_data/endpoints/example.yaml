@@ -6,6 +6,7 @@ endpoints:
           description: "The channel name"
         - name: "{USER}"
           description: "The name of the user"
+          optional: true
       qs:
         - name: "key={API_KEY}"
           description: "Your custom API key"

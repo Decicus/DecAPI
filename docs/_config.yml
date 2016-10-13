@@ -16,8 +16,8 @@
 title: DecAPI
 email: alex@thomassen.xyz
 description: The documentation for DecAPI
-baseurl: "/DecAPI"
-url: "https://decicus.github.io"
+baseurl: ""
+url: ""
 
 # Build settings
 markdown: kramdown

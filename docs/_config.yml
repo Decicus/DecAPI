@@ -16,8 +16,8 @@
 title: DecAPI
 email: alex@thomassen.xyz
 description: The documentation for DecAPI
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "http://decapi.dev:4000" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/DecAPI" # the subpath of your site, e.g. /blog
+url: "https://decicus.github.io"
 
 # Build settings
 markdown: kramdown

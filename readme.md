@@ -4,7 +4,7 @@
 This is essentially an attempt at rewriting everything that DecAPI supports into something more structured and documented, while still keeping backwards compatibility to those applications that still rely on it, using the [Laravel framework](https://laravel.com/).
 
 As of right now, there is no ETA when this will be "complete". The idea is to keep adding features until I feel like it's time for another rewrite.  
-Pull requests are generally welcome for new features, but generally features that are implemented to support backwards compatibility I would prefer to implement myself.  
+Pull requests are generally welcome for new features, but features that are implemented to support backwards compatibility I would prefer to implement myself.  
 This is only because certain features have never been documented (not even in my [blog post covering my custom APIs](https://blog.thomassen.xyz/custom-apis/)).
 
 If you're interested, a beta version is available under [beta.decapi.me](https://beta.decapi.me).
@@ -65,9 +65,9 @@ The following things are required for setting this up:
 - [Composer](https://getcomposer.org/)
 
 ## Setup
-**I only recommend setting this up for development reasons;**
+**I only recommend setting this up for development purposes.**
 - Rename `.env.example` to `.env` and fill in the information. Primarly the database and Twitch information.
-    - You can create a Twitch application here: https://www.twitch.tv/settings/connections. The redirect URL has to be `http://your.url/auth/twitch` and needs to be set the same under `TWITCH_REDIRECT_URI` in the `.env` file.
+    - You can create a Twitch application here: https://www.twitch.tv/settings/connections. The redirect URL has to be `http://your.url/auth/twitch/callback` and `TWITCH_REDIRECT_URI` in the `.env` file has to be set to the same URL.
 - Run `composer install` in the project directory.
 - Run `php artisan migrate` from the command line in the base project directory.
 - Point your web server to the `/public` directory of the repo.

@@ -15,8 +15,9 @@ class TwitterController extends Controller
     /**
      * Retrieves tweets from the specified user.
      *
-     * @param  string  $name   Twitter username
-     * @param  boolean $no_rts 'true' excludes retweets, 'false' includes them.
+     * @param  string  $name            Twitter username
+     * @param  boolean $no_rts          'true' excludes retweets, 'false' includes them.
+     * @param  boolean $exclude_replies Exclude replies or not, default: true.
      * @return array
      */
     private function getTweets($name = null, $no_rts = true, $exclude_replies = true)
@@ -45,6 +46,7 @@ class TwitterController extends Controller
     public function latest(Request $request, $latest = null, $name = null)
     {
         $name = $name ?: $request->input('name', null);
+        $search = $request->input('search', null);
 
         if (empty($name)) {
             return Helper::text('You have to specify a (user)name.');
@@ -71,15 +73,50 @@ class TwitterController extends Controller
                 return Helper::text('No tweets were found for this user.');
             }
 
-            $first = $tweets[0];
-            $text = [];
-            if ($onlyUrl === false) {
-                $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($first->text));
+            if (!empty($search)) {
+                $search = urldecode($search);
+                $strict = $request->exists('strict');
+
+                if ($strict === false) {
+                    $search = strtolower($search);
+                }
+
+                foreach ($tweets as $current) {
+                    $text = htmlspecialchars_decode($current->text);
+
+                    if ($strict === false) {
+                        $text = strtolower($text);
+                    }
+
+                    if (strpos($text, $search) !== false) {
+                        $tweet = $current;
+                        break;
+                    }
+                }
+
+                if (!isset($tweet)) {
+                    throw new Exception('No tweets found based on the search query.');
+                }
+            } else {
+                $tweet = $tweets[0];
             }
 
-            if ($request->exists('url') || $onlyUrl) {
-                $link = Twitter::linkTweet($first);
+            $text = [];
+            if ($onlyUrl === false) {
+                $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->text));
+            }
 
+            /**
+             * Appends the tweet URL to the tweet,
+             * or displays only the URL, depending on
+             * the query string parameters
+             */
+            if ($request->exists('url') || $onlyUrl) {
+                $link = Twitter::linkTweet($tweet);
+
+                /**
+                 * Shortens the URL using TinyURL
+                 */
                 if ($request->exists('shorten')) {
                     $link = Helper::get('http://tinyurl.com/api-create.php?url=' . $link, [
                         'User-Agent' => env('SITE_TITLE') . '/Twitter'
@@ -89,17 +126,23 @@ class TwitterController extends Controller
                 $text[] = $link;
             }
 
+            /**
+             * Appends length of time since tweet was posted.
+             */
             if ($request->exists('howlong')) {
                 $precision = 4;
                 if ($request->has('precision')) {
                     $precision = intval($request->input('precision'));
                 }
 
-                $text[] = Helper::getDateDiff($first->created_at, time(), $precision) . " ago";
+                $text[] = Helper::getDateDiff($tweet->created_at, time(), $precision) . " ago";
             }
 
+            /**
+             * Returns just the tweet ID.
+             */
             if ($onlyId === true) {
-                $text = [$first->id];
+                $text = [$tweet->id];
             }
 
             return Helper::text(implode(' - ', $text));
@@ -108,7 +151,7 @@ class TwitterController extends Controller
                 return Helper::text('Not authorized (Normally this means locked/private account)');
             }
 
-            return Helper::text('An error has occurred: ' . trim($e->getMessage()));
+            return Helper::text('[Error] - ' . trim($e->getMessage()));
         }
     }
 }

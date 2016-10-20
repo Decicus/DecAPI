@@ -66,8 +66,18 @@ class TwitterController extends Controller
          */
         $onlyId = (strpos($latest, 'latest_id') === false ? false : true);
 
+        /**
+         * To exclude replies to other users or not.
+         * 
+         * @var boolean
+         */
+        $excludeReplies = true;
+        if ($request->exists('include_replies') || !empty($request->input('no_exclude_replies', null))) {
+            $excludeReplies = false;
+        }
+
         try {
-            $tweets = $this->getTweets($name, $request->exists('no_rts'));
+            $tweets = $this->getTweets($name, $request->exists('no_rts'), $excludeReplies);
 
             if (empty($tweets)) {
                 return Helper::text('No tweets were found for this user.');

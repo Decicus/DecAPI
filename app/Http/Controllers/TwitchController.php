@@ -206,11 +206,11 @@ class TwitchController extends Controller
      *
      * @param  Request $request
      * @param  string  $followed
-     * @param  string  $user
      * @param  string  $channel
+     * @param  string  $user
      * @return Response
      */
-    public function followed(Request $request, $followed = null, $user = null, $channel = null)
+    public function followed(Request $request, $followed = null, $channel = null, $user = null)
     {
         $user = $user ?: $request->input('user', null);
         $channel = $channel ?: $request->input('channel', null);

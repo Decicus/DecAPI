@@ -109,10 +109,10 @@ Route::group(['middleware' => 'web'], function() {
             ->where('channel', $channelRegex)
             ->where('user', $channelRegex);
 
-        Route::get('{followed}/{user?}/{channel?}', 'TwitchController@followed')
+        Route::get('{followed}/{channel?}/{user?}', 'TwitchController@followed')
             ->where('followed', '(followed(\.php)?)')
-            ->where('user', $channelRegex)
-            ->where('channel', $channelRegex);
+            ->where('channel', $channelRegex)
+            ->where('user', $channelRegex);
 
         Route::get('{gameOrStatus}/{channel?}', 'TwitchController@gameOrStatus')
             ->where('gameOrStatus', '(game|status|title)')

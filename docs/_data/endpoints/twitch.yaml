@@ -34,6 +34,27 @@ endpoints:
     - route: "followed/{CHANNEL}/{USER}"
       parameters:
         - name: "{CHANNEL}"
-          description: ''
+          description: 'The channel name.'
         - name: "{USER}"
-          description: 'The name of the user to check the time of follow for.'
+          description: 'The name of the user.'
+      qs:
+      notes:
+        - 'Retrieves the date and time of when the user followed the channel.'
+        - 'Example format: <code>Mar 13. 2016 - 07:31:29 PM (UTC)</code>'
+    - route: "game/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: "The channel name."
+      qs:
+      notes:
+        - 'Retrieves the current game the channel has been set to.'
+    - route: "help/{SEARCH}"
+      parameters:
+        - name: "{SEARCH}"
+          description: 'The string to search for in the titles of the help articles.'
+      qs:
+        - name: "list"
+          description: 'If this is specified at all, a list of available help articles will be returned instead.'
+      notes:
+        - 'Allows you to search help article titles and return the full title + URL.'
+        - 'Search results and the help article list is also available as JSON by specifying the HTTP header: <code>Accept: application/json</code>'

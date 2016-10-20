@@ -2,7 +2,7 @@ base_path: "/twitch"
 endpoints:
     - route: ""
       notes:
-        - 'Lists the currently available endpoints'
+        - 'Lists the currently available endpoints - <strong>Returns a JSON object</strong>'
     - route: "chat_rules/{CHANNEL}"
       parameters:
         - name: "{CHANNEL}"

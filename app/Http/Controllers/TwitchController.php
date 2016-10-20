@@ -280,14 +280,14 @@ class TwitchController extends Controller
         $lang = $request->input('lang', 'en');
 
         $prefix = 'https://help.twitch.tv/customer/' . $lang . '/portal/articles/';
+        $data = [
+            'url_template' => $prefix . '{id}',
+            'articles' => $articles
+        ];
 
         $json = $request->wantsJson();
         if ($request->exists('list')) {
             if ($json) {
-                $data = [
-                    'url_template' => $prefix . '{id}',
-                    'articles' => $articles
-                ];
                 return $this->json($data);
             }
 
@@ -304,6 +304,9 @@ class TwitchController extends Controller
 
         $search = trim($search);
         if (empty($search) || strtolower($search) === 'list') {
+            if ($json) {
+                return $this->json($data);
+            }
             return Helper::text('List of available help articles with titles: ' . route('twitch.help') . '?list');
         }
 

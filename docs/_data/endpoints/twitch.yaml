@@ -1,22 +1,18 @@
 base_path: "/twitch"
 endpoints:
     - route: ""
-      parameters:
-      qs:
       notes:
         - 'Lists the currently available endpoints'
     - route: "chat_rules/{CHANNEL}"
       parameters:
         - name: "{CHANNEL}"
           description: 'The channel name to retrieve the chat rules for.'
-      qs:
       notes:
         - 'Gives a "newlined" list of chat rules for the specified channel.'
     - route: "clusters/{CHANNEL}"
       parameters:
         - name: "{CHANNEL}"
           description: 'The channel to check chat cluster for.'
-      qs:
       notes:
         - 'Retrieves the chat cluster name for the channel specified.'
         - 'Note that this is essentially useless from now on, as all requests will (most likely) return <code>aws</code>.'
@@ -37,7 +33,6 @@ endpoints:
           description: 'The channel name.'
         - name: "{USER}"
           description: 'The name of the user.'
-      qs:
       notes:
         - 'Retrieves the date and time of when the user followed the channel.'
         - 'Example format: <code>Mar 13. 2016 - 07:31:29 PM (UTC)</code>'
@@ -45,7 +40,6 @@ endpoints:
       parameters:
         - name: "{CHANNEL}"
           description: "The channel name."
-      qs:
       notes:
         - 'Retrieves the current game the channel has been set to.'
     - route: "help/{SEARCH}"
@@ -57,4 +51,79 @@ endpoints:
           description: 'If this is specified at all, a list of available help articles will be returned instead.'
       notes:
         - 'Allows you to search help article titles and return the full title + URL.'
-        - 'Search results and the help article list is also available as JSON by specifying the HTTP header: <code>Accept: application/json</code>'
+        - '<strong>JSON results are supported for most requests</strong> (search + help articles).'
+    - route: "highlight/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: 'The channel name.'
+      notes:
+        - 'Retrieves the latest "highlight" of the specified channel.'
+    - route: "hosts/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: 'The channel name.'
+      qs:
+        - name: "implode"
+          description: 'If specified the list will be returned comma-separated (", ") instead of using "newline" characters.'
+      notes:
+        - 'Returns a list of channel names hosting the specified channel.'
+        - '<strong>JSON results are supported</strong>.'
+    - route: "id/{USER}"
+      parameters:
+        - name: "{USER}"
+          description: 'The name of the user.'
+      notes:
+        - 'Returns the Twitch user ID of the specified user (if valid).'
+    - route: "ingests"
+      notes:
+        - 'Returns a formatted list of available ingest servers.'
+    - route: "subcount/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: "The channel name."
+      notes:
+        - 'Retrieves the subscriber count of the specified channel.'
+        - '<strong>This only works for channels that have authenticated and authorized this app</strong>.'
+    - route: "subscriber_emotes/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: 'The channel name.'
+      notes:
+        - 'Retrieves the subscriber emotes for the specified channels and lists them (space-separated).'
+        - '<strong>JSON results are supported</strong>.'
+    - route: "status/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: 'The channel name.'
+      notes:
+        - 'Retrieves the current title set on the channel.'
+    - route: "team_members/{TEAM_ID}"
+      parameters:
+        - name: "{TEAM_ID}"
+          description: 'The team identifier.'
+      qs:
+        - name: "sort"
+          description: 'If this is specified, it will sort the members of the team alphabetically.'
+      notes:
+        - 'Retrieves the members of a specified team.'
+        - 'The team identifier is the identifier used in URLs. Example: The team "New Game Plus" has the identifier "newgameplus".'
+        - '<strong>JSON results are supported</strong>.'
+    - route: "title/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: "The channel name."
+      notes:
+        - 'Works identical to <code>status</code> - Retrieves the current title set on the channel.'
+    - route: "upload/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: "The channel name."
+      notes:
+        - 'Returns the latest uploaded video (title + URL) for the specified channel.'
+    - route: "uptime/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: "The channel name."
+      notes:
+        - 'Returns how long the specified channel has been live for the current broadcast.'
+        - '<strong>Rate-limited:</strong> This is rate-limited to 100 requests per minute.'

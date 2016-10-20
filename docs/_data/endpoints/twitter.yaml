@@ -1,0 +1,31 @@
+base_path: "/twitter"
+endpoints:
+    - route: "latest"
+      parameters:
+        - name: "{USER}"
+          description: 'The name of the user.'
+      qs:
+        - name: "no_rts"
+          description: 'If specified, retweets will <strong>not</strong> be included.'
+        - name: "include_replies"
+          description: 'If specified at all, this includes replies from the specified user to other users as well.'
+        - name: "no_exclude_replies"
+          description: 'Works similarly to <code>include_replies</code>, except this query string cannot be specified as just empty unlike <code>include_replies</code>.'
+        - name: "search"
+          description: 'Goes through each of the latest tweets (up to 200) and then searches with the specified string (case-insensitive). If this is not specified, it will just return the latest tweet.'
+        - name: "strict"
+          description: 'This is used together with <code>search</code>. If specified, it will do a case-sensitive search.'
+        - name: "url"
+          description: 'If specified, the URL of the tweet will be appended to the result.'
+        - name: "shorten"
+          description: 'Used together with <code>url</code>. Shortens the URL using TinyURL.'
+        - name: "howlong"
+          description: 'Includes the time since the tweet was posted.'
+      notes:
+        - 'Returns the latest tweet by the specified user.'
+    - route: "latest_url"
+      notes:
+        - 'Works exactly like <code>latest</code>, except this will not include the tweet text and by default only include the URL.'
+    - route: "latest_id"
+      notes:
+        - 'Works exactly like <code>latest</code>, except this will <strong>only</strong> include the tweet ID and nothing else.'

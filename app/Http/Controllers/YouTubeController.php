@@ -86,6 +86,7 @@ class YouTubeController extends Controller
     public function videoId(Request $request, $videoId = null, $search = null)
     {
         $search = $search ?: $request->input('search', null);
+        $showUrl = $request->exists('show_url');
 
         if (empty($search)) {
             // Send an empty response so that Nightbot doesn't attempt to 'search' the YouTube API with the returned string.
@@ -129,6 +130,10 @@ class YouTubeController extends Controller
             return Helper::text('Invalid video ID or invalid search string.');
         }
 
+        if ($showUrl) {
+            $video = 'https://youtu.be/' . $video;
+        }
+        
         return $video;
     }
 

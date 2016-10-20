@@ -1,0 +1,33 @@
+base_path: "/steam"
+endpoints:
+    - route: "currencies"
+      parameters:
+      qs:
+      notes:
+        - 'Lists currencies available on Steam (3-letter code + full name)'
+        - 'Send the header <code>Accept: application/json</code> to retrieve a JSON object.'
+    - route: "hours/{STEAM_ID}/{APP_ID}/readable"
+      parameters:
+        - name: "{STEAM_ID}"
+          description: 'The Steam64 ID of the user. See: <a href="http://steamid.co/">steamid.co</a>'
+        - name: "{APP_ID}"
+          description: 'The Steam application ID.'
+        - name: "readable"
+          description: 'This has to be passed as just <code>readable</code> and nothing else to have any effect. It formats the time to a more "human-readable" format. For example: 190.97 hours = 7 days 22 hours 58 minutes.'
+          optional: true
+      qs:
+        - name: "round"
+          description: "How many decimals the hours should round to - Default: 2."
+        - name: "key"
+          description: "A custom Steam API key. In some cases this is necessary to retrieve profile information about private/friends-only profiles."
+      notes:
+        - "Retrieves the player's time played in the specified game (app ID)."
+        - 'The Steam API key can be retrieved here: <a href="https://steamcommunity.com/dev/">https://steamcommunity.com/dev/</a>'
+    - route: "server_ip/{STEAM_ID}"
+      parameters:
+        - name: "{STEAM_ID}"
+          description: 'The Steam64 ID of the user. See: <a href="http://steamid.co/">steamid.co</a>'
+      qs:
+      notes:
+        - "Retrieves the gameserver information of the user, if available."
+        - "This only works for certain games and only if the user's profile is set to public."

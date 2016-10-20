@@ -1,0 +1,9 @@
+base_path: "/askfm"
+endpoints:
+    - route: "rss/{USER}"
+      parameters:
+        - name: "{USER}"
+          description: "The name of the user you wish to retrieve a feed from"
+      qs:
+      notes:
+        - 'Provides an RSS feed of a specified ASKfm users answers.'

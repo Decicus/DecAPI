@@ -31,6 +31,7 @@
                 'Partner Emoticon and Badge Guide' => 2348985,
                 'Partner Help and Contact Information' => 735178,
                 'Partner Payment FAQ' => 735169,
+                'Partner Payout FAQ' => 735169,
                 'Partner Revenue Guide' => 2347894,
                 'Partner Settings Guide' => 2401004,
                 'Purchase Support FAQ' => 2341636,

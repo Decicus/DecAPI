@@ -540,7 +540,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $message = 'Channel name is not specified';
             if ($wantsJson) {
-                return $this->errorJson($request, ['message' => $message, 'status' => 404]);
+                return $this->errorJson(['message' => $message, 'status' => 404], 404);
             }
             return $this->error($message);
         }
@@ -568,7 +568,7 @@ class TwitchController extends Controller
         if (empty($emotes)) {
             $message = 'This channel does not have any subscriber emotes.';
             if ($wantsJson) {
-                return $this->errorJson($request, ['message' => $message]);
+                return $this->errorJson(['message' => $message], 404);
             }
             return $this->error($message);
         }

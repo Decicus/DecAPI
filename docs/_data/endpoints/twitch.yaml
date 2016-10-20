@@ -1,0 +1,39 @@
+base_path: "/twitch"
+endpoints:
+    - route: ""
+      parameters:
+      qs:
+      notes:
+        - 'Lists the currently available endpoints'
+    - route: "chat_rules/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: 'The channel name to retrieve the chat rules for.'
+      qs:
+      notes:
+        - 'Gives a "newlined" list of chat rules for the specified channel.'
+    - route: "clusters/{CHANNEL}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: 'The channel to check chat cluster for.'
+      qs:
+      notes:
+        - 'Retrieves the chat cluster name for the channel specified.'
+        - 'Note that this is essentially useless from now on, as all requests will (most likely) return <code>aws</code>.'
+    - route: "followage/{CHANNEL}/{USER}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: 'The channel name that will be used as reference for checking the "follow age".'
+        - name: "{USER}"
+          description: 'The name of the user that you wish to check the "follow age" for.'
+      qs:
+        - name: "precision"
+          description: 'How precise the timestamp should be in terms of years, months, weeks, days, hours, minutes & seconds.- Default: 2.'
+      notes:
+        - 'Gets the time difference (also known as the "follow age") between when <code>{USER}</code> followed <code>{CHANNEL}</code>'
+    - route: "followed/{CHANNEL}/{USER}"
+      parameters:
+        - name: "{CHANNEL}"
+          description: ''
+        - name: "{USER}"
+          description: 'The name of the user to check the time of follow for.'

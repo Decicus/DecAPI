@@ -58,17 +58,6 @@ endpoints:
           description: 'The channel name.'
       notes:
         - 'Retrieves the latest "highlight" of the specified channel.'
-    - route: "highlight_random/{CHANNEL}"
-      parameters:
-        - name: "{CHANNEL}"
-          description: 'The channel name.'
-      qs:
-        - name: "count"
-          description: 'How many highlights to retrieve from the Twitch API. - Maximum: 100. - Default: 100.'
-        - name: "offset"
-          description: 'How many highlights to skip when retrieving them from the Twitch API. - Default: 0.'
-      notes:
-        - 'Gets the latest highlights from the specified channel and picks a random one from them.'
     - route: "hosts/{CHANNEL}"
       parameters:
         - name: "{CHANNEL}"

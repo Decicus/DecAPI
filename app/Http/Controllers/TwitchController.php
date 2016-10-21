@@ -387,7 +387,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $message = 'Channel cannot be empty';
             if($request->wantsJson()) {
-                return $this->errorJson($request, ['message' => $message]);
+                return $this->errorJson(['message' => $message, 'status' => 404], 404);
             }
             return $this->error($message);
         }
@@ -397,17 +397,16 @@ class TwitchController extends Controller
             $message = $hosts['message'];
             $code = $hosts['status'];
             if ($request->wantsJson()) {
-                return $this->errorJson($request, ['message' => $message, 'status' => $code], $code);
+                return $this->errorJson(['message' => $message, 'status' => $code], $code);
             }
             return $this->error($message, $code);
         }
 
         if (empty($hosts)) {
-            $message = 'No one is currently hosting ' . $channel;
             if ($request->wantsJson()) {
-                return $this->errorJson($request, ['message' => $message]);
+                return $this->errorJson([]); // just send an empty host list
             }
-            return $this->error($message);
+            return $this->error('No one is currently hosting ' . $channel);
         }
 
         $hostList = [];
@@ -551,7 +550,7 @@ class TwitchController extends Controller
             $status = $emoticons['status'];
             $message = $emoticons['message'];
             if ($wantsJson) {
-                return $this->errorJson($request, ['error' => $emoticons['error'], 'message' => $message, 'status' => $status]);
+                return $this->errorJson(['error' => $emoticons['error'], 'message' => $message, 'status' => $status], $status);
             }
             return $this->error($message, $status);
         }
@@ -596,7 +595,7 @@ class TwitchController extends Controller
         if (empty($team)) {
             $message = 'Team identifier is empty';
             if ($wantsJson) {
-                return $this->errorJson($request, ['message' => $message, 'status' => 404]);
+                return $this->errorJson(['message' => $message, 'status' => 404], 404);
             }
             return $this->error($message);
         }
@@ -606,7 +605,7 @@ class TwitchController extends Controller
             $message = $checkTeam['message'];
             $code = $checkTeam['status'];
             if($wantsJson) {
-                return $this->errorJson($request, ['message' => $message, 'status' => $code], $code);
+                return $this->errorJson(['message' => $message, 'status' => $code], $code);
             }
             return $this->error($message, $code);
         }

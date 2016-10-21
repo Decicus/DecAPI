@@ -39,6 +39,7 @@ class TwitchApiController extends Controller
     {
         $settings['headers'] = $headers;
         $settings['headers']['Client-ID'] = $this->twitchClientID;
+        $settings['headers']['Accept'] = 'application/vnd.twitchtv.v3+json';
         $settings['http_errors'] = false;
         $client = new Client();
         $result = $client->request('GET', ( !$override ? self::API_BASE_URL : '' ) . $url, $settings);

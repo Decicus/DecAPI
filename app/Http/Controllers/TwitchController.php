@@ -590,7 +590,7 @@ class TwitchController extends Controller
      */
     public function teamMembers(Request $request, $team_members = null, $team = null)
     {
-        $wantsJson = (($request->wantsJson() || $request->exists('json')) ? true : false);
+        $wantsJson = ($request->exists('text') ? false : true);
 
         $team = $team ?: $request->input('team', null);
         if (empty($team)) {

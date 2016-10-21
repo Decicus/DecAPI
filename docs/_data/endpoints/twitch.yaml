@@ -104,10 +104,12 @@ endpoints:
       qs:
         - name: "sort"
           description: 'If this is specified, it will sort the members of the team alphabetically.'
+        - name: "text"
+          description: 'If this is specified, the list will be returned in plaintext compared to a JSON array.'
       notes:
         - 'Retrieves the members of a specified team.'
         - 'The team identifier is the identifier used in URLs. Example: The team "New Game Plus" has the identifier "newgameplus".'
-        - '<strong>JSON results are supported</strong>.'
+        - '<strong>JSON results are returned by default. See <code>text</code> query string.</strong>.'
     - route: "title/{CHANNEL}"
       parameters:
         - name: "{CHANNEL}"

@@ -63,11 +63,15 @@ endpoints:
         - name: "{CHANNEL}"
           description: 'The channel name.'
       qs:
+        - name: "display_name"
+          description: 'If specified, this will use the display names instead of the usernames of the users that are hosting.'
+        - name: "list"
+          description: 'If specified, the list will be in plaintext (using newlines) instead of in a JSON object.'
         - name: "implode"
-          description: 'If specified the list will be returned comma-separated (", ") instead of using "newline" characters.'
+          description: 'If specified, the list will be returned comma-separated (", ") instead of JSON/a "newlined" list.'
       notes:
         - 'Returns a list of channel names hosting the specified channel.'
-        - '<strong>JSON results are supported</strong>.'
+        - '<strong>JSON results are returned by default. See <code>list/implode</code> query string.</strong>.'
     - route: "id/{USER}"
       parameters:
         - name: "{USER}"

@@ -384,9 +384,11 @@ class TwitchController extends Controller
     public function hosts(Request $request, $hosts = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
+        $wantsJson = ($request->exists('list') || $request->exists('implode') ? false : true);
+        $displayNames = $request->exists('display_name');
         if (empty($channel)) {
             $message = 'Channel cannot be empty';
-            if($request->wantsJson()) {
+            if($wantsJson) {
                 return $this->errorJson(['message' => $message, 'status' => 404], 404);
             }
             return $this->error($message);
@@ -396,30 +398,36 @@ class TwitchController extends Controller
         if (!empty($hosts['status'])) {
             $message = $hosts['message'];
             $code = $hosts['status'];
-            if ($request->wantsJson()) {
+            if ($wantsJson) {
                 return $this->errorJson(['message' => $message, 'status' => $code], $code);
             }
             return $this->error($message, $code);
         }
 
         if (empty($hosts)) {
-            if ($request->wantsJson()) {
-                return $this->errorJson([]); // just send an empty host list
+            if ($wantsJson) {
+                return Helper::json(['hosts' => []]); // just send an empty host list
             }
             return $this->error('No one is currently hosting ' . $channel);
         }
 
         $hostList = [];
         foreach($hosts as $host) {
-            $hostList[] = $host['host_login'];
+            if ($displayNames) {
+                $hostList[] = $host['host_display_name'];
+            } else {
+                $hostList[] = $host['host_login'];
+            }
         }
 
-        if ($request->wantsJson()) {
-            return response()->json($hostList)->header('Access-Control-Allow-Origin', '*');
+        if ($wantsJson) {
+            return Helper::json([
+                'hosts' => $hostList
+            ]);
         }
 
         $implode = $request->exists('implode') ? ', ' : PHP_EOL;
-        return response(implode($implode, $hostList))->withHeaders($this->headers);
+        return Helper::text(implode($implode, $hostList));
     }
 
     /**

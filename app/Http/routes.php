@@ -95,7 +95,7 @@ Route::group(['middleware' => 'web'], function() {
     });
 
     Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
-        $channelRegex = '([A-z0-9]{1,25})';
+        $channelRegex = '(.*)+';
 
         Route::get('/', 'TwitchController@base');
 

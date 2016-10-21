@@ -375,6 +375,51 @@ class TwitchController extends Controller
     }
 
     /**
+     * Retrieves a random highlight from the channel.
+     *
+     * @param  Request $request
+     * @param  String  $highlight_random Route name
+     * @param  String  $channel          The channel name
+     * @return Response
+     */
+    public function highlightRandom(Request $request, $highlight_random = null, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $limit = intval($request->input('count', 100));
+        $offset = intval($request->input('offset', 0));
+
+        if (empty($channel)) {
+            return Helper::text('A channel name has to be specified.');
+        }
+
+        $data = $this->twitchApi->videos($request, $channel, ['highlight'], $limit, $offset);
+
+        if (!empty($data['status'])) {
+            return Helper::text($data['message'], $data['status']);
+        }
+
+        if (empty($data['videos'])) {
+            return Helper::text($channel . ' has no saved highlights.');
+        }
+
+        $highlights = $data['videos'];
+        $random = array_rand($highlights);
+        $vid = $highlights[$random];
+        $format = '%s: %s';
+        $text = [
+            $vid['title'],
+            $vid['url']
+        ];
+
+        if ($request->exists('game')) {
+            array_unshift($text, $vid['game']);
+            $format = '%s - ' . $format;
+        }
+
+        return Helper::text(vsprintf($format, $text));
+    }
+
+    /**
      * Return list of hosts for a channel
      * @param  Request $request
      * @param  string  $hosts

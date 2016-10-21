@@ -125,6 +125,10 @@ Route::group(['middleware' => 'web'], function() {
             ->where('highlight', '(highlight(\.php)?)')
             ->where('channel', $channelRegex);
 
+        Route::get('{highlight_random}/{channel?}', ['as' => 'highlight_random', 'uses' => 'TwitchController@highlightRandom'])
+            ->where('highlight_random', '(highlight_random(\.php)?)')
+            ->where('channel', $channelRegex);
+
         Route::get('{hosts}/{channel?}', 'TwitchController@hosts')
             ->where('hosts', '(hosts(\.php)?)')
             ->where('channel', $channelRegex);

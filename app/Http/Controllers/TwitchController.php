@@ -451,7 +451,7 @@ class TwitchController extends Controller
 
         if (empty($hosts)) {
             if ($wantsJson) {
-                return Helper::json(['hosts' => []]); // just send an empty host list
+                return Helper::json([]); // just send an empty host list
             }
             return $this->error('No one is currently hosting ' . $channel);
         }
@@ -466,9 +466,7 @@ class TwitchController extends Controller
         }
 
         if ($wantsJson) {
-            return Helper::json([
-                'hosts' => $hostList
-            ]);
+            return Helper::json($hostList);
         }
 
         $implode = $request->exists('implode') ? ', ' : PHP_EOL;
@@ -698,9 +696,7 @@ class TwitchController extends Controller
         }
 
         if ($wantsJson) {
-            return response()->json([
-                'members' => $members
-            ])->header('Access-Control-Allow-Origin', '*');
+            return response()->json($members)->header('Access-Control-Allow-Origin', '*');
         }
         return response(implode(PHP_EOL, $members))->withHeaders($this->headers);
     }

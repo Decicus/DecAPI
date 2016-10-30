@@ -104,6 +104,9 @@ Route::group(['middleware' => 'web'], function() {
 
         Route::get('clusters/{channel?}', 'TwitchController@clusters')
             ->where('channel', $channelRegex);
+            
+        Route::get('emoteslots/{channel?}', 'TwitchController@emoteslots')
+            ->where('channel', $channelRegex);
 
         Route::get('followage/{channel?}/{user?}', 'TwitchController@followAge')
             ->where('channel', $channelRegex)

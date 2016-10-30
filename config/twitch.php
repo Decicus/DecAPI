@@ -1,5 +1,20 @@
 <?php
     return [
+        'emoteslots' => [
+            0 => 2,
+            25 => 4,
+            50 => 6,
+            100 => 8,
+            250 => 10,
+            500 => 15,
+            1000 => 20,
+            2000 => 25,
+            3000 => 30,
+            4000 => 35,
+            5000 => 40,
+            6000 => 45,
+            7000 => 50
+        ],
         'help' => [
             'articles' => [
                 'About Site Suspensions, DMCA Suspensions, and Chat Bans' => 1727973,

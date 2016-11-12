@@ -110,10 +110,24 @@ class TwitterController extends Controller
             } else {
                 $tweet = $tweets[0];
             }
-
+            
             $text = [];
             if ($onlyUrl === false) {
                 $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->text));
+            }
+            
+            /**
+             * Appends the amount of retweets the tweet has received.
+             */
+            if ($request->exists('retweets')) {
+                $text[] = 'Retweets: ' . $tweet->retweet_count;
+            }
+            
+            /**
+             * Appends the amount of users that has favorited the tweet.
+             */
+            if ($request->exists('favorites')) {
+                $text[] = 'Favorites: ' . $tweet->favorite_count;
             }
 
             /**

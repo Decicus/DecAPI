@@ -46,6 +46,7 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('/', ['as' => 'base', 'uses' => 'DayZController@base']);
         Route::get('players', ['as' => 'players', 'uses' => 'DayZController@players']);
         Route::get('izurvive', ['as' => 'izurvive', 'uses' => 'DayZController@izurvive']);
+        Route::get('random-server', ['as' => 'randomServer', 'uses' => 'DayZController@randomServer']);
         Route::get('status-report', ['as' => 'statusReport', 'uses' => 'DayZController@statusReport']);
         Route::get('steam-status-report', ['as' => 'steamStatusReport', 'uses' => 'DayZController@steamStatusReport']);
     });

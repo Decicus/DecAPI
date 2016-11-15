@@ -172,14 +172,16 @@ class DayZController extends Controller
         $results = explode(',', $results);
         $text = [];
         
-        if (empty($results)) {
-            $results = ['id'];
-        }
-        
         foreach ($results as $result) {
             if (!empty($options[$result])) {
                 $text[] = $options[$result];
             }
+        }
+        
+        if (empty($text)) {
+            $text = [
+                $options['ip']
+            ];
         }
         
         return Helper::text(implode(' - ', $text));

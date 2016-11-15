@@ -65,7 +65,7 @@ class YouTubeController extends Controller
 
         // Check if the channel has even uploaded the amount of videos the user wants to skip.
         if ($total < ($skip + 1)) {
-            return Helper::text('Invalid skip count specified for this channel.');
+            return Helper::text(sprintf('Channel only has %d videos, invalid skip count specified: %d.', $total, $skip));
         }
 
         $video = $uploads['results'][$skip];
@@ -127,7 +127,7 @@ class YouTubeController extends Controller
                 return Helper::text('');
             }
 
-            return Helper::text('Invalid video ID or invalid search string.');
+            return Helper::text('Invalid video ID or search string.');
         }
 
         if ($showUrl) {

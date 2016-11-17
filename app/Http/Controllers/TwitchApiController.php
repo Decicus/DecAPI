@@ -39,7 +39,11 @@ class TwitchApiController extends Controller
     {
         $settings['headers'] = $headers;
         $settings['headers']['Client-ID'] = $this->twitchClientID;
-        $settings['headers']['Accept'] = 'application/vnd.twitchtv.v3+json';
+        
+        if (empty($settings['headers']['Accept'])) {
+            $settings['headers']['Accept'] = 'application/vnd.twitchtv.v3+json';
+        }
+        
         $settings['http_errors'] = false;
         $client = new Client();
         $result = $client->request('GET', ( !$override ? self::API_BASE_URL : '' ) . $url, $settings);
@@ -157,11 +161,12 @@ class TwitchApiController extends Controller
      * Returns values from the Kraken teams endpoint
      *
      * @param  string $team Team identifier
+     * @param  array  $headers HTTP headers to passthrough to TwitchApiController\get;
      * @return TwitchApiController\get
      */
-    public function team($team = '')
+    public function team($team = '', $headers = [])
     {
-        return $this->get('teams/' . $team);
+        return $this->get('teams/' . $team, false, $headers);
     }
 
     /**

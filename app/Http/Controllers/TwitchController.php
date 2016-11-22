@@ -37,7 +37,7 @@ class TwitchController extends Controller
 
     /**
      * Returns an error response
-     * 
+     *
      * @param  string  $message Error message
      * @param  integer $code    HTTP error code, default: 404
      * @return Response
@@ -49,7 +49,7 @@ class TwitchController extends Controller
 
     /**
      * Returns an error JSON response
-     * 
+     *
      * @param  array  $data
      * @param  integer $code
      * @return Response
@@ -76,7 +76,7 @@ class TwitchController extends Controller
 
     /**
      * The base API request
-     * 
+     *
      * @return response
      */
     public function base()
@@ -170,10 +170,10 @@ class TwitchController extends Controller
 
         return Helper::text($cluster['cluster']);
     }
-    
+
     /**
      * Uses the specified subscriber count to see how many subscribers are needed to open a certain amount of emoteslots.
-     * 
+     *
      * @param  Request $request
      * @param  string  $channel The channel name
      * @return Response
@@ -182,24 +182,24 @@ class TwitchController extends Controller
     {
         $nb = new Nightbot($request);
         $subs = $request->input('subscribers', null);
-        
+
         if (empty($channel)) {
-            if (empty($nb->channel)) {                
+            if (empty($nb->channel)) {
                 return Helper::text('A channel name has to be specified.');
             }
-            
+
             $channel = $nb->channel['displayName'];
         }
-        
+
         if (empty($subs)) {
             return Helper::text('A subscriber ("subscribers") count has to be specified.');
         }
-        
+
         $format = urldecode($request->input('format', '{1} currently has {2} subscribers and is {3} subscriber(s) away from {4} emote slots!'));
         $subs = intval($subs);
         // config/twitch.php
         $slotMap = config('twitch.emoteslots');
-        
+
         $count = null;
         foreach ($slotMap as $subcount => $slots) {
             if ($subs < $subcount) {
@@ -207,7 +207,7 @@ class TwitchController extends Controller
                 break;
             }
         }
-        
+
         if (!empty($count)) {
             $diff = $count - $subs;
             $result = str_replace(['{1}', '{2}', '{3}', '{4}'], [$channel, $subs, $diff, $slotMap[$count]], $format);
@@ -216,7 +216,7 @@ class TwitchController extends Controller
             reset($slotMap);
             $result = sprintf('%s has the maximum emote slots (%d) with %d subscribers!', $channel, $max, $subs);
         }
-        
+
         return Helper::text($result);
     }
 
@@ -687,7 +687,7 @@ class TwitchController extends Controller
 
     /**
      * Returns a list of team members
-     * 
+     *
      * @param Request $request
      * @param string $team_members Route name
      * @param string $team Team identifier
@@ -701,35 +701,35 @@ class TwitchController extends Controller
         $team = $team ?: $request->input('team', null);
         if (empty($team)) {
             $message = 'Team identifier is empty';
-            
+
             if ($wantsJson) {
                 return Helper::json(['message' => $message, 'status' => 404], 404);
             }
-            
+
             return Helper::text($message, 404);
         }
 
         $checkTeam = $this->twitchApi->team($team, [
             'Accept' => 'application/vnd.twitchtv.v5+json'
         ]);
-        
+
         if (!empty($checkTeam['status'])) {
             $message = $checkTeam['message'];
             $code = $checkTeam['status'];
-            
+
             if ($wantsJson) {
                 return Helper::json([
                     'message' => $message,
                     'status' => $code
                 ], $code);
             }
-            
+
             return Helper::text($message, $code);
         }
-        
+
         $users = $checkTeam['users'];
         $members = [];
-        
+
         foreach ($users as $user) {
             $members[] = (in_array('display_names', $settings) ? $user['display_name'] : $user['name']);
         }
@@ -741,7 +741,7 @@ class TwitchController extends Controller
         if ($wantsJson) {
             return Helper::json($members);
         }
-        
+
         return Helper::text(implode(PHP_EOL, $members));
     }
 
@@ -784,16 +784,26 @@ class TwitchController extends Controller
     public function uptime(Request $request, $uptime = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        if (empty($channel)) {
+        $id = $request->input('id', null);
+
+        if (empty($channel) && empty($id)) {
             return $this->error('Channel cannot be empty');
         }
 
-        $stream = $this->twitchApi->streams($channel);
+        if (empty($channel)) {
+            $stream = $this->twitchApi->streams($id, [
+                'Accept' => 'application/vnd.twitchtv.v5+json'
+            ]);
+        } else {
+            $stream = $this->twitchApi->streams($channel);
+        }
+
         if (!empty($stream['status'])) {
             return $this->error($stream['message'], $stream['status']);
         }
 
         if (empty($stream['stream'])) {
+            $channel = ($channel ?: $id);
             $offline = $channel . ' is offline';
             if (!empty($request->input('offline_msg', null))) {
                 $offline = $request->input('offline_msg');

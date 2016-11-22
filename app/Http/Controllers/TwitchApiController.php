@@ -21,8 +21,10 @@ class TwitchApiController extends Controller
      * @param string $clientId     Twitch client ID
      * @param string $clientSecret Twitch client Secret
      */
-    public function __construct($clientId, $clientSecret)
+    public function __construct($clientId = null, $clientSecret = null)
     {
+        $clientId = $clientId ?: env('TWITCH_CLIENT_ID', null);
+        $clientSecret = $clientSecret ?: env('TWITCH_CLIENT_ID', null);
         $this->twitchClientID = $clientId;
         $this->twitchClientSecret = $clientSecret;
     }
@@ -39,11 +41,11 @@ class TwitchApiController extends Controller
     {
         $settings['headers'] = $headers;
         $settings['headers']['Client-ID'] = $this->twitchClientID;
-        
+
         if (empty($settings['headers']['Accept'])) {
             $settings['headers']['Accept'] = 'application/vnd.twitchtv.v3+json';
         }
-        
+
         $settings['http_errors'] = false;
         $client = new Client();
         $result = $client->request('GET', ( !$override ? self::API_BASE_URL : '' ) . $url, $settings);
@@ -150,23 +152,37 @@ class TwitchApiController extends Controller
      * Returns values from the Kraken streams endpoint.
      *
      * @param  string $channel Channel name
+     * @param  array  $headers HTTP headers to pass through to TwitchApiController\get;
      * @return TwitchApiController\get
      */
-    public function streams($channel = '')
+    public function streams($channel = '', $headers = [])
     {
-        return $this->get('streams/' . $channel);
+        return $this->get('streams/' . $channel, false, $headers);
     }
 
     /**
      * Returns values from the Kraken teams endpoint
      *
      * @param  string $team Team identifier
-     * @param  array  $headers HTTP headers to passthrough to TwitchApiController\get;
+     * @param  array  $headers HTTP headers to pass through to TwitchApiController\get;
      * @return TwitchApiController\get
      */
     public function team($team = '', $headers = [])
     {
         return $this->get('teams/' . $team, false, $headers);
+    }
+
+    /**
+     * Retrieves the user object specified by the username.
+     *
+     * @param  string $user The username
+     * @return TwitchApiController\get
+     */
+    public static function userByName($user = '')
+    {
+        return $this->get('users?login=' . $user, false, [
+            'Accept' => 'application/vnd.twitchtv.v5+json'
+        ]);
     }
 
     /**

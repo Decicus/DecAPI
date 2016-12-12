@@ -33,6 +33,7 @@
                 'How to Handle Viewbots/Followbots' => 2435640,
                 'How to Link Your Amazon Account' => 2574978,
                 'How to Redeem Coupon Codes' => 2392092,
+                'How to Use AutoMod' => 2662186,
                 'How to use Channel Feed' => 2377877,
                 'How to Use Clips' => 2442508,
                 'How to use the Friends Feature' => 2418761,

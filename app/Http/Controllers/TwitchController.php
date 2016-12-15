@@ -12,6 +12,9 @@ use Auth;
 use App\Helpers\Helper;
 use App\Helpers\Nightbot;
 
+use Carbon\Carbon;
+use DateTimeZone;
+
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector;
 use GuzzleHttp\Client;
@@ -268,25 +271,34 @@ class TwitchController extends Controller
     {
         $user = $user ?: $request->input('user', null);
         $channel = $channel ?: $request->input('channel', null);
+        $tz = $request->input('tz', 'UTC');
+        // https://secure.php.net/manual/en/timezones.php
+        $allTimezones = DateTimeZone::listIdentifiers();
 
         if (empty($user) || empty($channel)) {
             return $this->error('You have to specify both user and channel name');
+        }
+        
+        if (!in_array($tz, $allTimezones)) {
+            return Helper::text('Invalid timezone specified: ' . $tz);
         }
 
         $getFollow = $this->twitchApi->followRelationship($user, $channel);
 
         if (strtolower($user) === strtolower($channel)) {
-            return response('A user cannot follow themself.')->withHeaders($this->headers);
+            return Helper::text('A user cannot follow themself.');
         }
 
         // If $user isn't following $channel, a 404 is returned.
         if (!empty($getFollow['status'])) {
-            return response($getFollow['message'])->withHeaders($this->headers);
+            return Helper::text($getFollow['message']);
         }
 
-        $time = strtotime($getFollow['created_at']);
+        $time = Carbon::parse($getFollow['created_at']);
         $format = 'M j. Y - h:i:s A (e)';
-        return response(date($format, $time))->withHeaders($this->headers);
+        $time->setTimezone($tz);
+        
+        return Helper::text($time->format($format));
     }
 
     /**

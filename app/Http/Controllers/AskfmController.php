@@ -40,7 +40,7 @@ class AskfmController extends Controller
 
         foreach($answers as $a) {
             $question = trim($a->find('.streamItemContent-question')->firstChild()->text);
-            $answer = trim($a->find('.streamItemContent-answer_old')->firstChild()->text);
+            $answer = trim($a->find('.streamItemContent-answer')->firstChild()->text);
             $link = "https://ask.fm" . $a->find('.streamItemsAge')->getAttribute('href');
             $date = $a->find('.streamItemsAge')->getAttribute('title');
             if($i === 0) {

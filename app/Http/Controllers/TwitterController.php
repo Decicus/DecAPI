@@ -47,6 +47,7 @@ class TwitterController extends Controller
     {
         $name = $name ?: $request->input('name', null);
         $search = $request->input('search', null);
+        $skip = intval($request->input('skip', 0));
 
         if (empty($name)) {
             return Helper::text('You have to specify a (user)name.');
@@ -91,6 +92,7 @@ class TwitterController extends Controller
                     $search = strtolower($search);
                 }
 
+                $searchSkip = 0;
                 foreach ($tweets as $current) {
                     $text = htmlspecialchars_decode($current->text);
 
@@ -99,8 +101,13 @@ class TwitterController extends Controller
                     }
 
                     if (strpos($text, $search) !== false) {
-                        $tweet = $current;
-                        break;
+                        if ($searchSkip === $skip) {
+                            $tweet = $current;
+                            break;
+                        } else {
+                            $searchSkip++;
+                            continue;
+                        }
                     }
                 }
 
@@ -108,7 +115,7 @@ class TwitterController extends Controller
                     throw new Exception('No tweets found based on the search query.');
                 }
             } else {
-                $tweet = $tweets[0];
+                $tweet = $tweets[$skip];
             }
             
             $text = [];

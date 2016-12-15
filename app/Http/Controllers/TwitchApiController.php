@@ -57,11 +57,12 @@ class TwitchApiController extends Controller
      * Returns values from the Kraken channels endpoint.
      *
      * @param  string $channel Channel name
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function channels($channel = '')
+    public function channels($channel = '', $headers = [])
     {
-        return $this->get('channels/' . $channel);
+        return $this->get('channels/' . $channel, $headers);
     }
 
     /**

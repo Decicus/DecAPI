@@ -44,7 +44,7 @@ class TwitchController extends Controller
      *
      * @var string
      */
-    private $v5 = 'application/vnd.twitchtv.v5+json';
+    private $v5 = ['Accept' => 'application/vnd.twitchtv.v5+json'];
 
     /**
      * Initiliazes the controller with a reference to TwitchApiController.
@@ -274,14 +274,13 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $user = $user ?: $request->input('user', null);
         $id = $request->input('id', 'false');
-        $nb = new Nightbot($request);
 
         $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
 
         if (empty($channel) || empty($user)) {
+            $nb = new Nightbot($request);
             if (empty($nb->channel) || empty($nb->user)) {
-                $message = 'You need to specify both user and channel name';
-                return Helper::text($message);
+                return Helper::text('You need to specify both user and channel name');
             }
 
             $channel = $nb->channel->name;
@@ -304,9 +303,7 @@ class TwitchController extends Controller
             }
         }
 
-        $getFollow = $this->twitchApi->followRelationship($user, $channel, [
-            'Accept' => $this->v5
-        ]);
+        $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->v5);
 
         if (!empty($getFollow['status'])) {
             return response($getFollow['message'])->withHeaders($this->headers);
@@ -330,23 +327,40 @@ class TwitchController extends Controller
     {
         $user = $user ?: $request->input('user', null);
         $channel = $channel ?: $request->input('channel', null);
+        $id = $request->input('id', 'false');
         $tz = $request->input('tz', 'UTC');
+        $format = $request->input('format', 'M j. Y - h:i:s A (e)');
         // https://secure.php.net/manual/en/timezones.php
         $allTimezones = DateTimeZone::listIdentifiers();
 
         if (empty($user) || empty($channel)) {
-            return $this->error('You have to specify both user and channel name');
+            $nb = new Nightbot($request);
+            if (empty($nb->channel) || empty($nb->user)) {
+                return Helper::text('You need to specify both user and channel name');
+            }
+
+            $channel = $nb->channel->name;
+            $user = $nb->user->name;
         }
 
         if (!in_array($tz, $allTimezones)) {
             return Helper::text('Invalid timezone specified: ' . $tz);
         }
 
-        $getFollow = $this->twitchApi->followRelationship($user, $channel);
-
         if (strtolower($user) === strtolower($channel)) {
             return Helper::text('A user cannot follow themself.');
         }
+
+        if ($id !== 'true') {
+            try {
+                $channel = $this->userByName($channel)['_id'];
+                $user = $this->userByName($user)['_id'];
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->v5);
 
         // If $user isn't following $channel, a 404 is returned.
         if (!empty($getFollow['status'])) {
@@ -354,7 +368,6 @@ class TwitchController extends Controller
         }
 
         $time = Carbon::parse($getFollow['created_at']);
-        $format = 'M j. Y - h:i:s A (e)';
         $time->setTimezone($tz);
 
         return Helper::text($time->format($format));
@@ -370,6 +383,7 @@ class TwitchController extends Controller
      */
     public function gameOrStatus(Request $request, $route, $channel = null)
     {
+        $id = $request->input('id', 'false');
         if ($route !== 'game') {
             $route = 'status';
         }
@@ -377,10 +391,23 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
 
         if (empty($channel)) {
-            return Helper::text('Channel name has to be specified.');
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('Channel name has to be specified.');
+            }
+
+            $channel = $nb->channel->name;
         }
 
-        $getGame = $this->twitchApi->channels($channel);
+        if ($id !== 'true') {
+            try {
+                $channel = $this->userByName($channel)['_id'];
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $getGame = $this->twitchApi->channels($channel, $this->v5);
 
         if (!empty($getGame['message'])) {
             return Helper::text($getGame['message']);
@@ -780,9 +807,7 @@ class TwitchController extends Controller
             return Helper::text($message, 404);
         }
 
-        $checkTeam = $this->twitchApi->team($team, [
-            'Accept' => $this->v5
-        ]);
+        $checkTeam = $this->twitchApi->team($team, $this->v5);
 
         if (!empty($checkTeam['status'])) {
             $message = $checkTeam['message'];

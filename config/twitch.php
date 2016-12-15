@@ -57,6 +57,7 @@
                 'Tips for Applying to the Partner Program' => 735127,
                 'Twitch Chat Badges Guide' => 659115,
                 'Twitch IRC' => 1302780,
+                'Twitch IRL FAQ' => 2672652,
                 'Twitch Music FAQ' => 1824967,
                 'Twitch Prime Guide' => 2572060,
                 'Twitch Rules of Conduct (RoC)' => 983016,

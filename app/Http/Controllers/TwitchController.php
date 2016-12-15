@@ -22,13 +22,29 @@ use GuzzleHttp\Client;
 use Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
 
+use Exception;
+
 class TwitchController extends Controller
 {
+    /**
+     * @var array
+     */
     private $headers = [
         'Content-Type' => 'text/plain',
         'Access-Control-Allow-Origin' => '*'
     ];
+
+    /**
+     * @var TwitchApiController
+     */
     private $twitchApi;
+
+    /**
+     * The 'Accept' header to receive Twitch API V5 responses.
+     *
+     * @var string
+     */
+    private $v5 = 'application/vnd.twitchtv.v5+json';
 
     /**
      * Initiliazes the controller with a reference to TwitchApiController.
@@ -75,6 +91,28 @@ class TwitchController extends Controller
         $headers['Access-Control-Allow-Origin'] = '*';
 
         return \Response::json($data, $code)->withHeaders($headers);
+    }
+
+    /**
+     * Retrieves the Twitch user object specified by login name.
+     * Throws an exception on errors.
+     *
+     * @param  string $name The username to look for.
+     * @return array
+     */
+    protected function userByName($name)
+    {
+        $user = $this->twitchApi->userByName($name);
+
+        if (!empty($user['message'])) {
+            throw new Exception($user['message']);
+        }
+
+        if (empty($user['users'])) {
+            throw new Exception($name . ' does not exist.');
+        }
+
+        return $user['users'][0];
     }
 
     /**
@@ -235,19 +273,40 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
         $user = $user ?: $request->input('user', null);
+        $id = $request->input('id', 'false');
+        $nb = new Nightbot($request);
 
         $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
 
         if (empty($channel) || empty($user)) {
-            $message = 'You need to specify both user and channel name';
-            return $this->error($message);
+            if (empty($nb->channel) || empty($nb->user)) {
+                $message = 'You need to specify both user and channel name';
+                return Helper::text($message);
+            }
+
+            $channel = $nb->channel->name;
+            $user = $nb->user->name;
         }
+
+        $channel = trim($channel);
+        $user = trim($user);
 
         if (strtolower($channel) === strtolower($user)) {
-            return response('A user cannot follow themself.')->withHeaders($this->headers);
+            return Helper::text('A user cannot follow themself.');
         }
 
-        $getFollow = $this->twitchApi->followRelationship($user, $channel);
+        if ($id !== 'true') {
+            try {
+                $channel = $this->userByName($channel)['_id'];
+                $user = $this->userByName($user)['_id'];
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $getFollow = $this->twitchApi->followRelationship($user, $channel, [
+            'Accept' => $this->v5
+        ]);
 
         if (!empty($getFollow['status'])) {
             return response($getFollow['message'])->withHeaders($this->headers);
@@ -278,7 +337,7 @@ class TwitchController extends Controller
         if (empty($user) || empty($channel)) {
             return $this->error('You have to specify both user and channel name');
         }
-        
+
         if (!in_array($tz, $allTimezones)) {
             return Helper::text('Invalid timezone specified: ' . $tz);
         }
@@ -297,7 +356,7 @@ class TwitchController extends Controller
         $time = Carbon::parse($getFollow['created_at']);
         $format = 'M j. Y - h:i:s A (e)';
         $time->setTimezone($tz);
-        
+
         return Helper::text($time->format($format));
     }
 
@@ -722,7 +781,7 @@ class TwitchController extends Controller
         }
 
         $checkTeam = $this->twitchApi->team($team, [
-            'Accept' => 'application/vnd.twitchtv.v5+json'
+            'Accept' => $this->v5
         ]);
 
         if (!empty($checkTeam['status'])) {

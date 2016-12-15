@@ -8,6 +8,7 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use GuzzleHttp\Client;
+use Exception;
 
 class TwitchApiController extends Controller
 {
@@ -123,9 +124,10 @@ class TwitchApiController extends Controller
      *
      * @param  string $user
      * @param  string $channel
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function followRelationship($user = '', $channel = '')
+    public function followRelationship($user = '', $channel = '', $headers = [])
     {
         if (empty($user)) {
             throw new Exception('You have to specify a user');
@@ -135,7 +137,7 @@ class TwitchApiController extends Controller
             throw new Exception('You have to specify a channel');
         }
 
-        return $this->get('users/' . $user . '/follows/channels/' . $channel);
+        return $this->get('users/' . $user . '/follows/channels/' . $channel, $headers);
     }
 
     /**

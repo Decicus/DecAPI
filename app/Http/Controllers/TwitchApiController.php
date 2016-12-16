@@ -62,7 +62,7 @@ class TwitchApiController extends Controller
      */
     public function channels($channel = '', $headers = [])
     {
-        return $this->get('channels/' . $channel, $headers);
+        return $this->get('channels/' . $channel, false, $headers);
     }
 
     /**
@@ -73,28 +73,31 @@ class TwitchApiController extends Controller
      * @param  int    $limit       Maximum numbers of objects
      * @param  int    $offset      Object offset for pagination.
      * @param  string $direction   Creation date sorting direction - Valid values are asc and desc.
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function channelSubscriptions($channel = '', $accessToken = '', $limit = 25, $offset = 0, $direction = 'asc')
+    public function channelSubscriptions($channel = '', $accessToken = '', $limit = 25, $offset = 0, $direction = 'asc', $headers = [])
     {
         $params = [
-            'oauth_token=' . $accessToken,
             'limit=' . $limit,
             'offset=' . $offset,
             'direction=' . $direction
         ];
-        return $this->get('channels/' . $channel . '/subscriptions?' . implode('&', $params));
+
+        $headers['Authorization'] = 'OAuth ' . $accessToken;
+        return $this->get('channels/' . $channel . '/subscriptions?' . implode('&', $params), false, $headers);
     }
 
     /**
      * Gets chat/:channel/emoticons data
      *
      * @param  string $channel Channel name
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function emoticons($channel = '')
+    public function emoticons($channel = '', $headers = [])
     {
-        return $this->get('chat/' . $channel . '/emoticons');
+        return $this->get('chat/' . $channel . '/emoticons', false, $headers);
     }
 
     /**
@@ -109,14 +112,8 @@ class TwitchApiController extends Controller
             throw new Exception('You have to specify a channel');
         }
 
-        $channelInfo = $this->channels($channel);
-        if (!empty($channelInfo['error'])) {
-            return $channelInfo;
-        }
-
-        $userId = $channelInfo['_id'];
         $hostUrl = 'https://tmi.twitch.tv/hosts?include_logins=1&target={_id}';
-        $hosts = $this->get(str_replace('{_id}', $userId, $hostUrl), true);
+        $hosts = $this->get(str_replace('{_id}', $channel, $hostUrl), true);
         return $hosts['hosts'];
     }
 
@@ -138,7 +135,7 @@ class TwitchApiController extends Controller
             throw new Exception('You have to specify a channel');
         }
 
-        return $this->get('users/' . $user . '/follows/channels/' . $channel, $headers);
+        return $this->get('users/' . $user . '/follows/channels/' . $channel, false, $headers);
     }
 
     /**
@@ -207,11 +204,10 @@ class TwitchApiController extends Controller
      * @param  array   $broadcastTypes  Array of broadcast types
      * @param  integer $limit           Limit of highlights
      * @param  integer $offset          Offset
-     * @param  bool    $broadcasts      Returns only past broadcasts on true, highlights on false
-     * @param  bool    $hls             Returns only HLS VODs when true, non-HLS VODs on false
+     * @param  array   $headers         Request headers
      * @return array                    JSON-decoded result of highlights endpoint
      */
-    public function videos(Request $request, $channel, $broadcastType = ['all'], $limit = 1, $offset = 0, $broadcasts = false, $hls = false)
+    public function videos(Request $request, $channel, $broadcastType = ['all'], $limit = 1, $offset = 0, $headers = [])
     {
         $input = $request->all();
         $channel = $channel ?: $request->input('channel', null);
@@ -221,8 +217,8 @@ class TwitchApiController extends Controller
 
         $limit = ($request->has('limit') ? intval($input['limit']) : $limit);
         $offset = ($request->has('offset') ? intval($input['offset']) : $offset);
-        $format = '%s/videos?limit=%d&offset=%d&broadcasts=%s&hls=%s&broadcast_type=%s';
-        $url = sprintf($format, $channel, $limit, $offset, $broadcasts, $hls, implode(',', $broadcastType));
-        return $this->channels($url);
+        $format = '%s/videos?limit=%d&offset=%d&broadcast_type=%s';
+        $url = sprintf($format, $channel, $limit, $offset, implode(',', $broadcastType));
+        return $this->channels($url, $headers);
     }
 }

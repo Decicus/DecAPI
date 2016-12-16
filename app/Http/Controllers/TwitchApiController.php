@@ -178,7 +178,7 @@ class TwitchApiController extends Controller
      * @param  string $user The username
      * @return TwitchApiController\get
      */
-    public static function userByName($user = '')
+    public function userByName($user = '')
     {
         return $this->get('users?login=' . $user, false, [
             'Accept' => 'application/vnd.twitchtv.v5+json'

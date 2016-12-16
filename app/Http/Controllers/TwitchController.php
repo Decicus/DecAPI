@@ -731,6 +731,7 @@ class TwitchController extends Controller
     public function subcount(Request $request, $subcount = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
+        $id = $request->input('id', 'false');
 
         if ($request->exists('logout')) {
             return redirect()->route('auth.twitch.logout');
@@ -743,7 +744,8 @@ class TwitchController extends Controller
         if (!empty($channel)) {
             $channel = strtolower($channel);
             $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=user_read+channel_subscriptions';
-            $user = User::where('username', $channel)->first();
+            $field = $id === 'true' ? 'id' : 'username';
+            $user = User::where($field, $channel)->first();
             $needToReAuth = sprintf('%s needs to authenticate to use subcount: %s', $channel, $reAuth);
 
             if (empty($user)) {
@@ -800,19 +802,21 @@ class TwitchController extends Controller
                 return Helper::text($message);
             }
 
-            $channel = $nb->channel['providerId'];
-            $id = 'true';
+            $channel = $nb->channel['name'];
+            $id = 'false';
         }
 
-        if ($id !== 'true') {
-            try {
-                $channel = $this->userByName($channel)['_id'];
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
+        if ($id === 'true') {
+            $channel = $this->twitchApi->channels($channel, $this->version);
+
+            if (!empty($channel['message'])) {
+                return Helper::text($channel['message']);
             }
+
+            $channel = $channel['name'];
         }
 
-        $emoticons = $this->twitchApi->emoticons($channel, $this->version);
+        $emoticons = $this->twitchApi->emoticons($channel);
 
         if (!empty($emoticons['error'])) {
             $status = $emoticons['status'];
@@ -984,12 +988,10 @@ class TwitchController extends Controller
             }
         }
 
-        $stream = $this->twitchApi->streams($id, [
-            'Accept' => 'application/vnd.twitchtv.v5+json'
-        ]);
+        $stream = $this->twitchApi->streams($channel, $this->version);
 
         if (!empty($stream['status'])) {
-            return $this->error($stream['message'], $stream['status']);
+            return Helper::text($stream['message']);
         }
 
         if (empty($stream['stream'])) {

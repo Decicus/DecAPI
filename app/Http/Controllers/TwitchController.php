@@ -40,7 +40,7 @@ class TwitchController extends Controller
 
     /**
      * Returns an error response
-     * 
+     *
      * @param  string  $message Error message
      * @param  integer $code    HTTP error code, default: 404
      * @return Response
@@ -52,7 +52,7 @@ class TwitchController extends Controller
 
     /**
      * Returns an error JSON response
-     * 
+     *
      * @param  array  $data
      * @param  integer $code
      * @return Response
@@ -79,7 +79,7 @@ class TwitchController extends Controller
 
     /**
      * The base API request
-     * 
+     *
      * @return response
      */
     public function base()
@@ -173,10 +173,10 @@ class TwitchController extends Controller
 
         return Helper::text($cluster['cluster']);
     }
-    
+
     /**
      * Uses the specified subscriber count to see how many subscribers are needed to open a certain amount of emoteslots.
-     * 
+     *
      * @param  Request $request
      * @param  string  $channel The channel name
      * @return Response
@@ -185,24 +185,24 @@ class TwitchController extends Controller
     {
         $nb = new Nightbot($request);
         $subs = $request->input('subscribers', null);
-        
+
         if (empty($channel)) {
-            if (empty($nb->channel)) {                
+            if (empty($nb->channel)) {
                 return Helper::text('A channel name has to be specified.');
             }
-            
+
             $channel = $nb->channel['displayName'];
         }
-        
+
         if (empty($subs)) {
             return Helper::text('A subscriber ("subscribers") count has to be specified.');
         }
-        
+
         $format = urldecode($request->input('format', '{1} currently has {2} subscribers and is {3} subscriber(s) away from {4} emote slots!'));
         $subs = intval($subs);
         // config/twitch.php
         $slotMap = config('twitch.emoteslots');
-        
+
         $count = null;
         foreach ($slotMap as $subcount => $slots) {
             if ($subs < $subcount) {
@@ -210,7 +210,7 @@ class TwitchController extends Controller
                 break;
             }
         }
-        
+
         if (!empty($count)) {
             $diff = $count - $subs;
             $result = str_replace(['{1}', '{2}', '{3}', '{4}'], [$channel, $subs, $diff, $slotMap[$count]], $format);
@@ -219,7 +219,7 @@ class TwitchController extends Controller
             reset($slotMap);
             $result = sprintf('%s has the maximum emote slots (%d) with %d subscribers!', $channel, $max, $subs);
         }
-        
+
         return Helper::text($result);
     }
 
@@ -259,6 +259,28 @@ class TwitchController extends Controller
     }
 
     /**
+     * Retrieves the specified channel's follower count.
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
+    public function followCount(Request $request, $channel = null)
+    {
+        if (empty($channel)) {
+            return Helper::text('A channel name has to be specified.');
+        }
+
+        $getFollowers = $this->twitchApi->channelFollows($channel, 1);
+
+        if (!empty($getFollowers['status'])) {
+            return Helper::text($getFollowers['message']);
+        }
+
+        return Helper::text($getFollowers['_total']);
+    }
+
+    /**
      * Shows the date and time of when a user followed a channel.
      *
      * @param  Request $request
@@ -278,7 +300,7 @@ class TwitchController extends Controller
         if (empty($user) || empty($channel)) {
             return $this->error('You have to specify both user and channel name');
         }
-        
+
         if (!in_array($tz, $allTimezones)) {
             return Helper::text('Invalid timezone specified: ' . $tz);
         }
@@ -297,8 +319,47 @@ class TwitchController extends Controller
         $time = Carbon::parse($getFollow['created_at']);
         $format = 'M j. Y - h:i:s A (e)';
         $time->setTimezone($tz);
-        
+
         return Helper::text($time->format($format));
+    }
+
+    /**
+     * Retrieves and lists the latest followers for a channel.
+     *
+     * @param  Request $request
+     * @param  string  $route
+     * @param  string  $channel
+     * @return Response
+     */
+    public function followers(Request $request, $route, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $count = intval($request->input('count', 1));
+        $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
+        $separator = $request->input('separator', ', ');
+
+        if (empty($channel)) {
+            return Helper::text('A channel name has to be specified.');
+        }
+
+        if ($count > 100) {
+            return Helper::text('Count cannot be more than 100.');
+        }
+
+        $followers = $this->twitchApi->channelFollows($channel, $count);
+
+        if (!empty($followers['status'])) {
+            return Helper::text($followers['message']);
+        }
+
+        $users = [];
+        $currentNumber = 0;
+        foreach ($followers['follows'] as $user) {
+            $currentNumber++;
+            $users[] = ($showNumbers ? $currentNumber . '. ' : '') . $user['user']['display_name'];
+        }
+
+        return Helper::text(implode($separator, $users));
     }
 
     /**

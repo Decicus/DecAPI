@@ -100,6 +100,10 @@ Route::group(['middleware' => 'web'], function() {
 
         Route::get('/', 'TwitchController@base');
 
+        Route::group(['prefix' => 'blog', 'as' => 'blog.'], function() {
+            Route::get('latest', ['as' => 'latest', 'uses' => 'TwitchBlogController@latest']);
+        });
+
         Route::get('chat_rules/{channel?}', ['as' => 'chat_rules', 'uses' => 'TwitchController@chatRules'])
             ->where('channel', $channelRegex);
 

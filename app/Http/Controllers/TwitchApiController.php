@@ -197,11 +197,9 @@ class TwitchApiController extends Controller
      * @param  array   $broadcastTypes  Array of broadcast types
      * @param  integer $limit           Limit of highlights
      * @param  integer $offset          Offset
-     * @param  bool    $broadcasts      Returns only past broadcasts on true, highlights on false
-     * @param  bool    $hls             Returns only HLS VODs when true, non-HLS VODs on false
      * @return array                    JSON-decoded result of highlights endpoint
      */
-    public function videos(Request $request, $channel, $broadcastType = ['all'], $limit = 1, $offset = 0, $broadcasts = false, $hls = false)
+    public function videos(Request $request, $channel, $broadcastType = ['all'], $limit = 1, $offset = 0)
     {
         $input = $request->all();
         $channel = $channel ?: $request->input('channel', null);
@@ -211,8 +209,8 @@ class TwitchApiController extends Controller
 
         $limit = ($request->has('limit') ? intval($input['limit']) : $limit);
         $offset = ($request->has('offset') ? intval($input['offset']) : $offset);
-        $format = '%s/videos?limit=%d&offset=%d&broadcasts=%s&hls=%s&broadcast_type=%s';
-        $url = sprintf($format, $channel, $limit, $offset, $broadcasts, $hls, implode(',', $broadcastType));
+        $format = '%s/videos?limit=%d&offset=%d&broadcast_type=%s';
+        $url = sprintf($format, $channel, $limit, $offset, implode(',', $broadcastType));
         return $this->channels($url);
     }
 }

@@ -63,11 +63,12 @@ class TwitchApiController extends Controller
      * @param  string $channel
      * @param  int    $limit
      * @param  int    $offset
+     * @param  string $direction
      * @return TwitchApiController\channels
      */
-    public function channelFollows($channel = '', $limit = 25, $offset = 0)
+    public function channelFollows($channel = '', $limit = 25, $offset = 0, $direction = 'desc')
     {
-        $url = sprintf('%s/follows?limit=%d&offset=%d', $channel, $limit, $offset);
+        $url = sprintf('%s/follows?limit=%d&offset=%d&direction=%s', $channel, $limit, $offset, $direction);
         return $this->channels($url);
     }
 

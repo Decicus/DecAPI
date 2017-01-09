@@ -335,6 +335,8 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
         $count = intval($request->input('count', 1));
+        $offset = intval($request->input('offset', 0));
+        $direction = $request->input('direction', 'desc');
         $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
         $separator = $request->input('separator', ', ');
 
@@ -346,7 +348,7 @@ class TwitchController extends Controller
             return Helper::text('Count cannot be more than 100.');
         }
 
-        $followers = $this->twitchApi->channelFollows($channel, $count);
+        $followers = $this->twitchApi->channelFollows($channel, $count, $offset, $direction);
 
         if (!empty($followers['status'])) {
             return Helper::text($followers['message']);

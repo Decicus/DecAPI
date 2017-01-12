@@ -89,7 +89,7 @@ class TwitchController extends Controller
         $urls = [
             'chat_rules' => 'chat_rules/{CHANNEL}',
             'clusters' => 'clusters/{CHANNEL}',
-            'emoteslots' => 'emoteslots/{CHANNEL}/{SUBS}',
+            'emoteslots' => 'emoteslots/{CHANNEL}',
             'followage' => 'followage/{CHANNEL}/{USER}',
             'followed' => 'followed/{USER}/{CHANNEL}',
             'game' => 'game/{CHANNEL}',

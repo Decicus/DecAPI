@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Http\Requests;
-use Vinelab\Rss\Rss;
 use App\Helpers\Helper;
+use App\Http\Requests;
+use PHPHtmlParser;
 
 class Rainbow6Controller extends Controller
 {
@@ -17,19 +17,50 @@ class Rainbow6Controller extends Controller
      *
      * @return Response
      */
-    public function patchNotes()
+    public function patchNotes(Request $request)
     {
-        $feedUrl = 'http://forums.ubi.com/external.php?type=rss2&forumids=1074';
-        $rss = new Rss;
-        $feed = $rss->feed($feedUrl);
-        $articles = $feed->articles();
+        $baseUrl = 'http://forums.ubi.com/';
+        $forum = $baseUrl . 'forumdisplay.php/1074-News-amp-Announcements';
 
-        foreach ($articles as $article) {
-            if (strpos(strtolower($article->title), 'patch notes') !== false) {
-                return Helper::text(sprintf('%s - %s', $article->title, $article->guid));
+        $offset = intval($request->input('offset', 0));
+
+        $dom = new PHPHtmlParser\Dom;
+        $dom->loadFromUrl($forum);
+        $threads = $dom->find('ol#threads')->find('li');
+
+        $i = 0;
+        foreach ($threads as $item) {
+            $class = $item->getAttribute('class');
+            if (strpos($class, 'threadbit') === false) {
+                continue;
             }
+
+            $thread = $item->find('.threadtitle');
+
+            // Deleted/closed threads
+            if (trim($thread->text) !== '') {
+                continue;
+            }
+
+            $thread = $thread->find('a');
+
+            $title = $thread->text;
+
+            // Not patch notes = not interested
+            if (strpos(strtolower($title), 'patch notes') === false) {
+                continue;
+            }
+
+            // `offset` query parameter
+            if ($offset > $i) {
+                $i++;
+                continue;
+            }
+
+            $format = sprintf('%s: %s%s', $title, $baseUrl, $thread->getAttribute('href'));
+            return Helper::text($format);
         }
 
-        return Helper::text('No results found.');
+        return Helper::text('Unable to find the latest patch notes in the Ubisoft forums.');
     }
 }

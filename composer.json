@@ -18,7 +18,8 @@
         "thujohn/twitter": "^2.2",
         "alaouy/youtube": "^1.2",
         "syntax/steam-api": "^2.0",
-        "socialiteproviders/twitch": "^2.0"
+        "socialiteproviders/twitch": "^2.0",
+        "doctrine/dbal": "^2.5"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

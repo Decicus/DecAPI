@@ -74,7 +74,10 @@ The following things are required for setting this up:
     - I recommend using apache2 and configuring it to set `AllowOverride` to `All` for the specific directory in the vhost, so the `.htaccess` file can set the settings.
 
 ## Documentation
-Documentation covering all the endpoints will be available at some point in the future, probably closer to the "full release" of this project.
+Documentation is currently work in progress and can be found here:
+
+- [Website (docs.decapi.me)](https://docs.decapi.me/)
+- [Repository of website (Decicus/DecAPI-Docs)](https://github.com/Decicus/DecAPI-Docs)
 
 ## Rate limits
 Certain routes may have rate limiting applied to them to prevent abuse.  

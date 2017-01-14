@@ -42,7 +42,7 @@ class TwitchController extends Controller
     /**
      * The 'Accept' header to receive Twitch API V5 responses.
      *
-     * @var string
+     * @var array
      */
     private $version = ['Accept' => 'application/vnd.twitchtv.v5+json'];
 
@@ -318,11 +318,27 @@ class TwitchController extends Controller
      */
     public function followCount(Request $request, $channel = null)
     {
+        $id = $request->input('id', 'false');
+
         if (empty($channel)) {
-            return Helper::text('A channel name has to be specified.');
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('A channel has to be specified.');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
         }
 
-        $getFollowers = $this->twitchApi->channelFollows($channel, 1);
+        if ($id !== 'true') {
+            try {
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $getFollowers = $this->twitchApi->channelFollows($channel, 1, 0, 'desc', $this->version);
 
         if (!empty($getFollowers['status'])) {
             return Helper::text($getFollowers['message']);
@@ -408,15 +424,31 @@ class TwitchController extends Controller
         $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
         $separator = $request->input('separator', ', ');
 
+        $id = $request->input('id', 'false');
+
         if (empty($channel)) {
-            return Helper::text('A channel name has to be specified.');
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('A channel has to be specified.');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
         }
 
         if ($count > 100) {
             return Helper::text('Count cannot be more than 100.');
         }
 
-        $followers = $this->twitchApi->channelFollows($channel, $count, $offset, $direction);
+        $followers = $this->twitchApi->channelFollows($channel, $count, $offset, $direction, $this->version);
 
         if (!empty($followers['status'])) {
             return Helper::text($followers['message']);

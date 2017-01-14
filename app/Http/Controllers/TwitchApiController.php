@@ -73,12 +73,13 @@ class TwitchApiController extends Controller
      * @param  int    $limit
      * @param  int    $offset
      * @param  string $direction
+     * @param  array  $headers
      * @return TwitchApiController\channels
      */
-    public function channelFollows($channel = '', $limit = 25, $offset = 0, $direction = 'desc')
+    public function channelFollows($channel = '', $limit = 25, $offset = 0, $direction = 'desc', $headers = [])
     {
         $url = sprintf('%s/follows?limit=%d&offset=%d&direction=%s', $channel, $limit, $offset, $direction);
-        return $this->channels($url);
+        return $this->channels($url, $headers);
     }
 
     /**
@@ -207,7 +208,7 @@ class TwitchApiController extends Controller
         ]);
 
         if (empty($getUser['users'])) {
-            throw new Exception('No user by that username found.');
+            throw new Exception('No user with the name "' . $user . '" found.');
         }
 
         $user = $getUser['users'][0];

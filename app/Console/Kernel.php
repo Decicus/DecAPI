@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\UpdateCachedTwitchUsers::class,
+        Commands\ImportSubcountTokens::class,
     ];
 
     /**

@@ -76,7 +76,10 @@ The following things are required for setting this up:
     - You can see what commands the scheduler runs in `app/Console/Kernel.php`.
 
 ## Documentation
-Documentation covering all the endpoints will be available at some point in the future, probably closer to the "full release" of this project.
+Documentation is currently work in progress and can be found here:
+
+- [Website (docs.decapi.me)](https://docs.decapi.me/)
+- [Repository of website (Decicus/DecAPI-Docs)](https://github.com/Decicus/DecAPI-Docs)
 
 ## Rate limits
 Certain routes may have rate limiting applied to them to prevent abuse.  

@@ -33,8 +33,9 @@ class YouTubeController extends Controller
 
         $id = $request->input($type, null);
         $skip = intval($request->input('skip', 0));
+        $max = 50;
 
-        if ($skip >= 50) {
+        if ($skip >= $max) {
             $skip = 0;
         }
 
@@ -52,24 +53,31 @@ class YouTubeController extends Controller
             return Helper::text('The specified identifier is invalid.');
         }
 
-        $playlistId = $channel->contentDetails->relatedPlaylists->uploads;
+        $id = $channel->id;
 
-        $uploads = YouTube::getPlaylistItemsByPlaylistId($playlistId);
+        $searchParams = [
+            'part' => 'snippet',
+            'channelId' => $id,
+            'maxResults' => $max,
+            'order' => 'date',
+            'type' => 'video',
+            'q' => ''
+        ];
+        $results = YouTube::searchAdvanced($searchParams);
 
-        if (empty($uploads['results'])) {
+        if (empty($results)) {
             return Helper::text('This channel has no public videos.');
         }
 
-        $results = $uploads['results'];
-        $total = count($uploads['results']);
+        $total = count($results);
 
-        // Check if the channel has even uploaded the amount of videos the user wants to skip.
+        // Check if the request skips a valid amount of videos.
         if ($total < ($skip + 1)) {
-            return Helper::text(sprintf('Channel only has %d videos, invalid skip count specified: %d.', $total, $skip));
+            return Helper::text(sprintf('Channel only has %d public videos. Invalid skip count specified: %d.', $total, $skip));
         }
 
-        $video = $uploads['results'][$skip];
-        return Helper::text($video->snippet->title . ' - https://youtu.be/' . $video->contentDetails->videoId);
+        $video = $results[$skip];
+        return Helper::text($video->snippet->title . ' - https://youtu.be/' . $video->id->videoId);
     }
 
     /**
@@ -133,7 +141,7 @@ class YouTubeController extends Controller
         if ($showUrl) {
             $video = 'https://youtu.be/' . $video;
         }
-        
+
         return $video;
     }
 

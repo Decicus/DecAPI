@@ -96,9 +96,13 @@ Route::group(['middleware' => 'web'], function() {
     });
 
     Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
-        $channelRegex = '([A-z0-9]{1,25})';
+        $channelRegex = '([A-z0-9]{1,50})';
 
         Route::get('/', 'TwitchController@base');
+
+        Route::group(['prefix' => 'blog', 'as' => 'blog.'], function() {
+            Route::get('latest', ['as' => 'latest', 'uses' => 'TwitchBlogController@latest']);
+        });
 
         Route::get('chat_rules/{channel?}', ['as' => 'chat_rules', 'uses' => 'TwitchController@chatRules'])
             ->where('channel', $channelRegex);
@@ -113,10 +117,17 @@ Route::group(['middleware' => 'web'], function() {
             ->where('channel', $channelRegex)
             ->where('user', $channelRegex);
 
+        Route::get('followcount/{channel?}', 'TwitchController@followCount')
+            ->where('channel', $channelRegex);
+
         Route::get('{followed}/{channel?}/{user?}', 'TwitchController@followed')
             ->where('followed', '(followed(\.php)?)')
             ->where('channel', $channelRegex)
             ->where('user', $channelRegex);
+
+        Route::get('{followers}/{channel?}', 'TwitchController@followers')
+            ->where('followers', '(followers(\.php)?)')
+            ->where('channel', $channelRegex);
 
         Route::get('{gameOrStatus}/{channel?}', 'TwitchController@gameOrStatus')
             ->where('gameOrStatus', '(game|status|title)')

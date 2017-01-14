@@ -19,11 +19,12 @@
                 <h1 class="text-success">{{ env('SITE_TITLE', 'DecAPI') }}</h1>
                 <div class="container">
                     <div class="list-group">
-                        <a href="mailto:alex@thomassen.xyz" class="list-group-item"><i class="fa fa-envelope fa-1x"></i> E-mail (alex@thomassen.xyz)</a>
-                        <a href="https://www.thomassen.xyz/blog/" class="list-group-item"><i class="fa fa-pencil-square-o fa-1x"></i> Website/blog (www.thomassen.xyz)</a>
-                        <a href="https://twitter.com/Decicus" target="_blank" class="list-group-item"><i class="fa fa-twitter fa-1x"></i> Twitter (@Decicus)</a>
-                        <a href="https://github.com/Decicus" target="_blank" class="list-group-item"><i class="fa fa-github fa-1x"></i> GitHub (Decicus)</a>
-                        <a href="http://www.twitch.tv/Decicus" target="_blank" class="list-group-item"><i class="fa fa-twitch fa-1x"></i> Twitch (Decicus)</a>
+                        <a href="https://docs.decapi.me/" class="list-group-item" target="_blank"><i class="fa fa-book fa-1x fa-fw"></i> Documentation (docs.decapi.me)</a>
+                        <a href="mailto:alex@thomassen.xyz" class="list-group-item"><i class="fa fa-envelope fa-1x fa-fw"></i> E-mail (alex@thomassen.xyz)</a>
+                        <a href="https://blog.decicus.com/" class="list-group-item" target="_blank"><i class="fa fa-pencil-square-o fa-1x fa-fw"></i> Website/blog (blog.decicus.com)</a>
+                        <a href="https://twitter.com/Decicus" target="_blank" class="list-group-item"><i class="fa fa-twitter fa-1x fa-fw"></i> Twitter (@Decicus)</a>
+                        <a href="https://github.com/Decicus" target="_blank" class="list-group-item"><i class="fa fa-github fa-1x fa-fw"></i> GitHub (Decicus)</a>
+                        <a href="https://www.twitch.tv/Decicus" target="_blank" class="list-group-item"><i class="fa fa-twitch fa-1x fa-fw"></i> Twitch (Decicus)</a>
                     </div>
                 </div>
 

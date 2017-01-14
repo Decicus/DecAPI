@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 
 use GuzzleHttp\Client;
 use Exception;
+use App\CachedTwitchUser as CachedUser;
 
 class TwitchApiController extends Controller
 {
@@ -176,13 +177,35 @@ class TwitchApiController extends Controller
      * Retrieves the user object specified by the username.
      *
      * @param  string $user The username
-     * @return TwitchApiController\get
+     * @return App\CachedTwitchUser
      */
     public function userByName($user = '')
     {
-        return $this->get('users?login=' . $user, false, [
+        $cachedUser = CachedUser::where(['username' => $user])->first();
+
+        if (!empty($cachedUser) && $cachedUser->updated_at->diffInMonths() < 3) {
+            return $cachedUser;
+        }
+
+        $getUser = $this->get('users?login=' . $user, false, [
             'Accept' => 'application/vnd.twitchtv.v5+json'
         ]);
+
+        if (empty($getUser['users'])) {
+            throw new Exception('No user by that username found.');
+        }
+
+        $user = $getUser['users'][0];
+
+        if (empty($cachedUser)) {
+            $cachedUser = new CachedUser;
+        }
+
+        $cachedUser->id = $user['_id'];
+        $cachedUser->username = $user['name'];
+        $cachedUser->save();
+
+        return $cachedUser;
     }
 
     /**

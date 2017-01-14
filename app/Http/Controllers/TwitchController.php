@@ -102,17 +102,11 @@ class TwitchController extends Controller
      */
     protected function userByName($name)
     {
-        $user = $this->twitchApi->userByName($name);
-
-        if (!empty($user['message'])) {
-            throw new Exception($user['message']);
+        try {
+            return $this->twitchApi->userByName($name);
+        } catch (Exception $e) {
+            throw $e;
         }
-
-        if (empty($user['users'])) {
-            throw new Exception($name . ' does not exist.');
-        }
-
-        return $user['users'][0];
     }
 
     /**
@@ -297,8 +291,8 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
-                $user = $this->userByName($user)['_id'];
+                $channel = $this->userByName($channel)->id;
+                $user = $this->userByName($user)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
@@ -355,8 +349,8 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
-                $user = $this->userByName($user)['_id'];
+                $channel = $this->userByName($channel)->id;
+                $user = $this->userByName($user)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
@@ -404,7 +398,7 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
+                $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
@@ -522,7 +516,7 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
+                $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
@@ -571,7 +565,7 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
+                $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
@@ -635,7 +629,7 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
+                $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
@@ -692,7 +686,7 @@ class TwitchController extends Controller
 
         try {
             $data = $this->userByName($user);
-            return Helper::text($data['_id']);
+            return Helper::text($data->id);
         } catch (Exception $e) {
             return Helper::text($e->getMessage());
         }
@@ -936,7 +930,7 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
+                $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
@@ -982,7 +976,7 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                $channel = $this->userByName($channel)['_id'];
+                $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }

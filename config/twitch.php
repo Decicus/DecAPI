@@ -32,6 +32,7 @@
                 'How to File a User Report' => 725568,
                 'How to Handle Viewbots/Followbots' => 2435640,
                 'How to Link Your Amazon Account' => 2574978,
+                'How to Manage Harassment in Chat' => 2329145,
                 'How to Redeem Coupon Codes' => 2392092,
                 'How to Use AutoMod' => 2662186,
                 'How to use Channel Feed' => 2377877,

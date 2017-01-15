@@ -20,7 +20,7 @@
         "syntax/steam-api": "^2.0",
         "socialiteproviders/twitch": "^2.0",
         "doctrine/dbal": "^2.5",
-        "aboyadzhiev/php-math-parser": "dev-master"
+        "ircmaxell/php-math-parser": "dev-master"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

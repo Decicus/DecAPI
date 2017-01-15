@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Helpers\Helper;
-use Math;
+use PHPMathParser;
+use RuntimeException;
 
 class MathController extends Controller
 {
@@ -19,12 +20,23 @@ class MathController extends Controller
     public function eval(Request $request)
     {
         $exp = $request->input('exp', null);
+        $round = intval($request->input('round', 0));
 
         if (empty($exp)) {
             return Helper::text('A math expression (exp) has to be specified.');
         }
 
-        $parser = new Math\Parser;
-        return Helper::text($parser->evaluate($exp));
+        try {
+            $parser = new PHPMathParser\Math;
+            $result = $parser->evaluate($exp);
+
+            if ($request->exists('round') === true) {
+                $result = round($result, $round);
+            }
+
+            return Helper::text($result);
+        } catch (RuntimeException $e) {
+            return Helper::text($e->getMessage());
+        }
     }
 }

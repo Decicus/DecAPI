@@ -57,6 +57,10 @@ Route::group(['middleware' => 'web'], function() {
             ->where('twitch', '(twitch(\.php)?)');
     });
 
+    Route::group(['prefix' => 'math', 'as' => 'math.'], function() {
+        Route::get('/', ['as' => 'eval', 'uses' => 'MathController@eval']);
+    });
+
     Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
         Route::get('{currency}', ['as' => 'currency', 'uses' => 'MiscController@currency'])
             ->where('currency', '(currency(\.php)?)');

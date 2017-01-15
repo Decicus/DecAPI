@@ -4,9 +4,53 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "743b733a938f235728130bee26751f29",
-    "content-hash": "f9062aaccd0cf594cbe69f3d3b815bdb",
+    "hash": "7c499760de0ab1d8c939e680c4e325be",
+    "content-hash": "0ab5df80aefaf20897561552c08fb762",
     "packages": [
+        {
+            "name": "aboyadzhiev/php-math-parser",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/aboyadzhiev/php-math-parser.git",
+                "reference": "de73e8b76f660308e1c891fbd326a8fc7ea682d5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/aboyadzhiev/php-math-parser/zipball/de73e8b76f660308e1c891fbd326a8fc7ea682d5",
+                "reference": "de73e8b76f660308e1c891fbd326a8fc7ea682d5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Math\\": "src/Math"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Adrean Boyadzhiev",
+                    "email": "adrean.boyadzhiev@gmail.com"
+                }
+            ],
+            "description": "Simple mathematical expression parser and calculator.",
+            "keywords": [
+                "math calculator",
+                "math parser",
+                "shunting-yard algorithm"
+            ],
+            "time": "2016-04-12 18:19:11"
+        },
         {
             "name": "alaouy/youtube",
             "version": "v1.2.1",
@@ -4769,7 +4813,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "austinb/gameq": 20
+        "austinb/gameq": 20,
+        "aboyadzhiev/php-math-parser": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

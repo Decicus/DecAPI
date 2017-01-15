@@ -185,6 +185,8 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('{latest_video}', ['as' => 'latest_video', 'uses' => 'YouTubeController@latestVideo'])
             ->where('latest_video', '(latest_video(\.php)?)');
 
+        Route::get('latest_pl_video', ['as' => 'latest_pl_video', 'uses' => 'YouTubeController@latestPlVideo']);
+
         Route::get('{videoid}/{search?}', ['as' => 'videoid', 'uses' => 'YouTubeController@videoId'])
             ->where('videoid', '(videoid(\.php)?)')
             ->where('search', '(.*+)');

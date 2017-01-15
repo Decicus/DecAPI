@@ -58,7 +58,7 @@ Route::group(['middleware' => 'web'], function() {
     });
 
     Route::group(['prefix' => 'math', 'as' => 'math.'], function() {
-        Route::get('/', ['as' => 'eval', 'uses' => 'MathController@eval']);
+        Route::get('/', ['as' => 'evaluate', 'uses' => 'MathController@evaluate']);
     });
 
     Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {

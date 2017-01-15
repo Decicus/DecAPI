@@ -17,7 +17,7 @@ class MathController extends Controller
      * @param  Request $request
      * @return Response
      */
-    public function eval(Request $request)
+    public function evaluate(Request $request)
     {
         $exp = $request->input('exp', null);
         $round = intval($request->input('round', 0));

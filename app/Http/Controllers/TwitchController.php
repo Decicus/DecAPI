@@ -184,7 +184,7 @@ class TwitchController extends Controller
     public function emoteslots(Request $request, $channel = null)
     {
         $nb = new Nightbot($request);
-        $subs = $request->input('subscribers', null);
+        $subs = $request->input('subscribers', null) ?: $request->input('subs', null);
 
         if (empty($channel)) {
             if (empty($nb->channel)) {

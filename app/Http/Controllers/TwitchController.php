@@ -98,6 +98,7 @@ class TwitchController extends Controller
             'hosts' => 'hosts/{CHANNEL}',
             'id' => 'id/{USER}',
             'ingests' => 'ingests',
+            'multi' => 'multi/{STREAMS}',
             'subcount' => 'subcount/{CHANNEL}',
             'subscriber_emotes' => 'subscriber_emotes/{CHANNEL}',
             'status' => 'status/{CHANNEL}',
@@ -474,6 +475,7 @@ class TwitchController extends Controller
 
     /**
      * Returns the latest highlight of channel.
+     *
      * @param  Request $request
      * @param  string  $highlight
      * @param  string  $channel Channel name
@@ -550,6 +552,7 @@ class TwitchController extends Controller
 
     /**
      * Return list of hosts for a channel
+     *
      * @param  Request $request
      * @param  string  $hosts
      * @param  string  $channel Channel name
@@ -650,7 +653,74 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns a "multi stream" URL based on input streams.
+     *
+     * @param  Request $request
+     * @param  string  $streams
+     * @return Response
+     */
+    public function multi(Request $request, $streams = null)
+    {
+        $query = $request->input('query', null);
+        $service = strtolower($request->input('service', 'multistream'));
+        $streams = $streams ?: $request->input('streams', null);
+
+        $services = [
+            'multitwitch' => [
+                'link' => "http://multitwitch.tv"
+            ],
+            'kadgar' => [
+                'link' => 'http://kadgar.net/live'
+            ],
+            'multistream' => [
+                'link' => 'https://multistre.am',
+                'suffix' => '/layout{NUM}/',
+                'multipliers' => [
+                    1 => '3',
+                    2 => '4',
+                    3 => '7',
+                    4 => '10',
+                    5 => '14'
+                ]
+            ]
+        ];
+
+        $services['kbmod'] = $services['multistream'];
+        $services['multistre.am'] = $services['multistream'];
+
+        if (empty($services[$service])) {
+            return Helper::text('Invalid service specified - Available services: ' . implode(", ", array_keys($services)));
+        }
+
+        if (empty($streams)) {
+            return Helper::text('You have to specify which streams to create a multi link for (space-separated list).');
+        }
+
+        $service = $services[$service];
+        $streams = explode(" ", $streams);
+        $link = $service['link'];
+        $prefix = empty($service['prefix']) ? '/' : $service['prefix'];
+        $suffix = empty($service['suffix']) ? '' : $service['suffix'];
+
+        foreach ($streams as $stream) {
+            $link .= sprintf('%s%s', $prefix, $stream);
+        }
+
+        if (!empty($service['multipliers'])) {
+            $multipliers = $service['multipliers'];
+            $count = count($streams);
+            $replaceWith = empty($multipliers[$count]) ? '' : $multipliers[$count];
+            $suffix = str_replace('{NUM}', $replaceWith, $suffix);
+        }
+
+        $link .= $suffix;
+
+        return Helper::text($link);
+    }
+
+    /**
      * Gets the subscriber count of the specified channel
+     *
      * @param  Request $request
      * @param  string  $subcount
      * @param  string  $channel  Channel to check subscriber count for
@@ -711,6 +781,13 @@ class TwitchController extends Controller
         return view('twitch.subcount', $data);
     }
 
+    /**
+     * Retrieves the channel's subscriber emotes.
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
     public function subEmotes(Request $request, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
@@ -762,6 +839,7 @@ class TwitchController extends Controller
 
     /**
      * Returns a list of team members
+     *
      * @param  Request $request
      * @param  string $team_members
      * @param  string $team Team identifier

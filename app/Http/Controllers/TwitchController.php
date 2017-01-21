@@ -847,55 +847,39 @@ class TwitchController extends Controller
      */
     public function teamMembers(Request $request, $team_members = null, $team = null)
     {
-        $wantsJson = ($request->exists('text') ? false : true);
-
+        $wantsJson = ($request->exists('text') || $request->exists('implode') ? false : true);
+        $settings = explode(',', $request->input('settings', ''));
         $team = $team ?: $request->input('team', null);
+
         if (empty($team)) {
             $message = 'Team identifier is empty';
+
             if ($wantsJson) {
-                return $this->errorJson(['message' => $message, 'status' => 404], 404);
+                return Helper::json(['message' => $message, 'status' => 404], 404);
             }
-            return $this->error($message);
+
+            return Helper::text($message);
         }
 
-        $checkTeam = $this->twitchApi->team($team);
+        $checkTeam = $this->twitchApi->team($team, ['Accept' => 'application/vnd.twitchtv.v5+json']);
         if (!empty($checkTeam['status'])) {
             $message = $checkTeam['message'];
             $code = $checkTeam['status'];
-            if($wantsJson) {
-                return $this->errorJson(['message' => $message, 'status' => $code], $code);
+
+            if ($wantsJson) {
+                return Helper::json([
+                    'message' => $message,
+                    'status' => $code
+                ], $code);
             }
-            return $this->error($message, $code);
+
+            return Helper::text($message, $code);
         }
 
-        function getPage($team, $page = '1')
-        {
-            $url = 'https://www.twitch.tv/team/' . $team .'/live_member_list?page=' . $page;
-            $client = new Client;
-            return $client->request('GET', $url, ['http_errors' => false]);
-        }
-
-        function getMembers($crawler)
-        {
-            return $crawler->filter('.member')->each(function (Crawler $node, $i) {
-                return str_replace('channel_', null, $node->extract(['id'])[0]);
-            });
-        }
-
-        $page = getPage($team);
-
-        $body = (string) $page->getBody();
-        $crawler = new Crawler($body);
-        $members = getMembers($crawler);
-        $checkPages = $crawler->filter('.page_data');
-        if (!empty(trim($checkPages->text()))) {
-            $pageCount = (int) $crawler->filter('.page_links')->filter('a')->eq(2)->text();
-            for ($page = 2; $page <= $pageCount; $page++) {
-                $req = getPage($team, $page);
-                $body = (string) $req->getBody();
-                $crawler = new Crawler($body);
-                $members = array_merge($members, getMembers($crawler));
-            }
+        $users = $checkTeam['users'];
+        $members = [];
+        foreach ($users as $user) {
+            $members[] = (in_array('display_names', $settings) ? $user['display_name'] : $user['name']);
         }
 
         if ($request->exists('sort')) {
@@ -903,9 +887,11 @@ class TwitchController extends Controller
         }
 
         if ($wantsJson) {
-            return response()->json($members)->header('Access-Control-Allow-Origin', '*');
+            return Helper::json($members);
         }
-        return response(implode(PHP_EOL, $members))->withHeaders($this->headers);
+
+        $implode = $request->input('implode', PHP_EOL);
+        return Helper::text(implode($implode, $members));
     }
 
     /**

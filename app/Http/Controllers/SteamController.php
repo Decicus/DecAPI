@@ -224,7 +224,9 @@ class SteamController extends Controller
         try {
             $user = Steam::user($playerId);
             $player = Steam::Player($playerId);
-            if ($user->GetPlayerSummaries()[0]->communityVisibilityState === 1) {
+
+            $visibility = $user->GetPlayerSummaries()[0]->communityVisibilityState;
+            if ($visibility !== 3) {
                 return Helper::text('Cannot retrieve player information from a private/friends-only profile.');
             }
 

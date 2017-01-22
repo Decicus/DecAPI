@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use YouTube;
 use App\Helpers\Helper;
+use Exception;
 
 class YouTubeController extends Controller
 {
@@ -78,6 +79,38 @@ class YouTubeController extends Controller
 
         $video = $results[$skip];
         return Helper::text($video->snippet->title . ' - https://youtu.be/' . $video->id->videoId);
+    }
+
+    /**
+     * Retrieve the latest video in a YouTube playlist based on the playlist ID.
+     *
+     * @param  Request $request
+     * @return Response
+     */
+    public function latestPlVideo(Request $request)
+    {
+        $id = $request->input('id', null);
+        $skip = intval($request->input('skip', 0));
+        $separator = $request->input('separator', '-');
+
+        if (empty($id) || trim($id) === '') {
+            return Helper::text('A playlist ID has to be specified.');
+        }
+        try {
+            $results = YouTube::getPlaylistItemsByPlaylistId($id)['results'];
+
+            $count = count($results);
+            if ($skip > $count - 1) {
+                $error = sprintf('Skip count (%d) has to be lower than the amount of available videos in playlist (%d).', $skip, $count);
+                return Helper::text($error);
+            }
+
+            $video = $results[$skip];
+            $format = sprintf('%s %s https://youtu.be/%s', $video->snippet->title, $separator, $video->contentDetails->videoId);
+            return Helper::text($format);
+        } catch (Exception $e) {
+            return Helper::text('An error occurred retrieving playlist items with the playlist ID: ' . $id);
+        }
     }
 
     /**

@@ -57,6 +57,10 @@ Route::group(['middleware' => 'web'], function() {
             ->where('twitch', '(twitch(\.php)?)');
     });
 
+    Route::group(['prefix' => 'math', 'as' => 'math.'], function() {
+        Route::get('/', ['as' => 'evaluate', 'uses' => 'MathController@evaluate']);
+    });
+
     Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
         Route::get('{currency}', ['as' => 'currency', 'uses' => 'MiscController@currency'])
             ->where('currency', '(currency(\.php)?)');
@@ -154,6 +158,9 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('{ingests}', 'TwitchController@ingests')
             ->where('ingests', '(ingests(\.php)?)');
 
+        Route::get('multi/{streams?}', ['as' => 'multi', 'uses' => 'TwitchController@multi'])
+            ->where('streams', '([A-z0-9_\s])+');
+
         Route::get('{subcount}/{channel?}', ['as' => 'subcount', 'uses' => 'TwitchController@subcount'])
             ->where('subcount', '(subcount(\.php)?)')
             ->where('channel', $channelRegex);
@@ -188,6 +195,8 @@ Route::group(['middleware' => 'web'], function() {
     Route::group(['prefix' => 'youtube', 'as' => 'youtube'], function() {
         Route::get('{latest_video}', ['as' => 'latest_video', 'uses' => 'YouTubeController@latestVideo'])
             ->where('latest_video', '(latest_video(\.php)?)');
+
+        Route::get('latest_pl_video', ['as' => 'latest_pl_video', 'uses' => 'YouTubeController@latestPlVideo']);
 
         Route::get('{videoid}/{search?}', ['as' => 'videoid', 'uses' => 'YouTubeController@videoId'])
             ->where('videoid', '(videoid(\.php)?)')

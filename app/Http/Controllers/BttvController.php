@@ -60,28 +60,33 @@ class BttvController extends Controller
     public function emotes(Request $request, $emotes = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        $resp = 'You have to specify a channel name';
+        $types = $request->input('types', 'all');
 
-        if (!empty($channel)) {
-            $emotes = Helper::get('https://api.betterttv.net/2/channels/' . $channel);
-            $status = $emotes['status'];
-
-            if ($status === 200) {
-                if (count($emotes['emotes']) > 0) {
-                    $codes = [];
-                    foreach ($emotes['emotes'] as $emote) {
-                        $codes[] = $emote['code'];
-                    }
-
-                    $resp = implode(' ', $codes);
-                } else {
-                    $resp = 'This channel does not have any emotes, but may have some emotes pending approval from the BetterTTV Team.';
-                }
-            } else {
-                $resp = $emotes['message'];
-            }
+        if (empty($channel)) {
+            return Helper::text('You have to specify a channel name');
         }
 
-        return Helper::text($resp);
+        $emotes = Helper::get('https://api.betterttv.net/2/channels/' . $channel);
+        $status = $emotes['status'];
+        $types = explode(',', $types);
+
+        if ($status !== 200) {
+            return Helper::text($emotes['message']);
+        }
+
+        if (count($emotes['emotes']) > 0) {
+            $codes = [];
+            foreach ($emotes['emotes'] as $emote) {
+                if (!in_array('all', $types) && !in_array($emote['imageType'], $types)) {
+                    continue;
+                }
+
+                $codes[] = $emote['code'];
+            }
+
+            return Helper::text(implode(' ', $codes));
+        }
+
+        return Helper::text('This channel does not have any emotes, but may have some emotes pending approval from the BetterTTV Team.');
     }
 }

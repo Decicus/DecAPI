@@ -563,6 +563,7 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $wantsJson = ($request->exists('list') || $request->exists('implode') ? false : true);
         $displayNames = $request->exists('display_name');
+
         if (empty($channel)) {
             $message = 'Channel cannot be empty';
             if($wantsJson) {
@@ -603,6 +604,26 @@ class TwitchController extends Controller
 
         $implode = $request->exists('implode') ? ', ' : PHP_EOL;
         return Helper::text(implode($implode, $hostList));
+    }
+
+    /**
+     * Returns the amount of channels that is currently hosting a channel (or an error message).
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
+    public function hostscount(Request $request, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $hosts = $this->twitchApi->hosts($channel);
+
+        if (!empty($hosts['status'])) {
+            $message = $hosts['message'];
+            return Helper::text($message);
+        }
+
+        return Helper::text(count($hosts));
     }
 
     /**

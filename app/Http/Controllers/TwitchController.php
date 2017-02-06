@@ -719,6 +719,60 @@ class TwitchController extends Controller
     }
 
     /**
+     * Picks a random user logged into the specified channel's chat.
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
+    public function randomUser(Request $request, $channel = null)
+    {
+        if (empty($channel)) {
+            return Helper::text('Channel name cannot be empty.');
+        }
+
+        // Specific _users_ to exclude.
+        $exclude = $request->input('exclude', '');
+        $exclude = array_map('trim', explode(',', $exclude));
+
+        // "Groups" of chatters to ignore.
+        $ignore = $request->input('ignore', '');
+        $ignore = array_map('trim', explode(',', $ignore));
+
+        $data = $this->twitchApi->get('https://tmi.twitch.tv/group/user/' . $channel . '/chatters', true);
+
+        if (empty($data) || empty($data['chatters'])) {
+            return Helper::text('There was an error retrieving users for channel: ' . $channel);
+        }
+
+        $users = [];
+        foreach ($data['chatters'] as $group => $chatters) {
+            if (!in_array($group, $ignore)) {
+                $users = array_merge($users, $chatters);
+            }
+        }
+
+        if (empty($users)) {
+            return Helper::text('The list of users is empty.');
+        }
+
+        foreach ($exclude as $user) {
+            $user = strtolower($user);
+            $search = array_search($user, $users);
+
+            if ($search === false) {
+                continue;
+            }
+
+            unset($users[$search]);
+        }
+
+        shuffle($users);
+        $rand = mt_rand(0, count($users) - 1);
+        return Helper::text($users[$rand]);
+    }
+
+    /**
      * Gets the subscriber count of the specified channel
      *
      * @param  Request $request

@@ -618,6 +618,10 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $hosts = $this->twitchApi->hosts($channel);
 
+        if (empty($channel)) {
+            return Helper::text('Channel name cannot be empty.');
+        }
+
         if (!empty($hosts['status'])) {
             $message = $hosts['message'];
             return Helper::text($message);

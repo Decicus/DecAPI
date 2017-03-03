@@ -204,6 +204,10 @@ class TwitterController extends Controller
         $name = $name ?: $request->input('name', null);
         $withUrl = $request->exists('tweet_url');
 
+        if ($count < 1) {
+            return Helper::text('The "count" parameter has to be more than 0.');
+        }
+
         /**
          * To exclude replies to other users or not.
          *

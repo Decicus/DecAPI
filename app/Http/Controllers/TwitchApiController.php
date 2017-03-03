@@ -199,7 +199,7 @@ class TwitchApiController extends Controller
     {
         $cachedUser = CachedUser::where(['username' => $user])->first();
 
-        if (!empty($cachedUser) && $cachedUser->updated_at->diffInMonths() < 3) {
+        if (!empty($cachedUser)) {
             return $cachedUser;
         }
 
@@ -212,6 +212,13 @@ class TwitchApiController extends Controller
         }
 
         $user = $getUser['users'][0];
+
+        $checkId = CachedUser::where(['id' => $user['_id']])->first();
+        if (!empty($cachedUser)) {
+            $checkId->username = $user['name'];
+            $checkId->save();
+            return $checkId;
+        }
 
         if (empty($cachedUser)) {
             $cachedUser = new CachedUser;

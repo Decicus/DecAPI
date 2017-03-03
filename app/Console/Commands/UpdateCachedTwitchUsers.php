@@ -51,7 +51,7 @@ class UpdateCachedTwitchUsers extends Command
         ];
 
         foreach ($users as $user) {
-            $request = $client->request('GET', 'https://api.twitch.tv/kraken/users?login=' . $user->username, $settings);
+            $request = $client->request('GET', 'https://api.twitch.tv/kraken/users/' . $user->id, $settings);
 
             $body = json_decode($request->getBody(), true);
             if ($request->getStatusCode() !== 200) {
@@ -59,15 +59,8 @@ class UpdateCachedTwitchUsers extends Command
                 continue;
             }
 
-            if (empty($body['users'])) {
-                $user->delete();
-                continue;
-            }
-
-            $apiUser = $body['users'][0];
-
-            if ($user->id !== $apiUser['_id']) {
-                $user->id = $apiUser['_id'];
+            if ($user->username !== $body['name']) {
+                $user->username = $body['name'];
                 $user->save();
                 continue;
             }

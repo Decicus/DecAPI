@@ -40,7 +40,7 @@ class UpdateCachedTwitchUsers extends Command
      */
     public function handle()
     {
-        $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subMonths(2))->get();
+        $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHours(1))->get();
         $client = new Client;
         $settings = [
             'headers' => [

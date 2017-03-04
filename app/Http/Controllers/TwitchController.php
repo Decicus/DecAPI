@@ -600,6 +600,7 @@ class TwitchController extends Controller
     public function highlight(Request $request, $highlight = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
+        $channelName = null;
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
@@ -614,6 +615,8 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                // Store channel name separately and override $channel
+                $channelName = $channel;
                 $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
@@ -627,7 +630,7 @@ class TwitchController extends Controller
         }
 
         if (empty($fetchHighlight['videos'])) {
-            return Helper::text($channel . ' has no saved highlights');
+            return Helper::text(($channelName ?: $channel) . ' has no saved highlights');
         }
 
         $highlight = $fetchHighlight['videos'][0];
@@ -647,6 +650,7 @@ class TwitchController extends Controller
     public function highlightRandom(Request $request, $highlight_random = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
+        $channelName = null;
         $limit = intval($request->input('count', 100));
         $offset = intval($request->input('offset', 0));
         $id = $request->input('id', 'false');
@@ -663,6 +667,8 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                // Store channel name separately and override $channel
+                $channelName = $channel;
                 $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
@@ -676,7 +682,7 @@ class TwitchController extends Controller
         }
 
         if (empty($data['videos'])) {
-            return Helper::text($channel . ' has no saved highlights.');
+            return Helper::text(($channelName ?: $channel) . ' has no saved highlights.');
         }
 
         $highlights = $data['videos'];
@@ -1089,6 +1095,7 @@ class TwitchController extends Controller
     public function upload(Request $request, $channel = null)
     {
         $id = $request->input('id', 'false');
+        $channelName = null;
 
         if (empty($channel)) {
             $nb = new Nightbot($request);
@@ -1102,6 +1109,8 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                // Store channel name separately and override $channel
+                $channelName = $channel;
                 $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
@@ -1115,7 +1124,7 @@ class TwitchController extends Controller
         }
 
         if (empty($video['videos'])) {
-            return Helper::text($channel . ' has no uploaded videos.');
+            return Helper::text(($channelName ?: $channel) . ' has no uploaded videos.');
         }
 
         $upload = $video['videos'][0];
@@ -1134,6 +1143,7 @@ class TwitchController extends Controller
     public function uptime(Request $request, $uptime = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
+        $channelName = null;
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
@@ -1148,6 +1158,8 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                // Store channel name separately and override $channel
+                $channelName = $channel;
                 $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
@@ -1161,7 +1173,7 @@ class TwitchController extends Controller
         }
 
         if (empty($stream['stream'])) {
-            $channel = ($channel ?: $id);
+            $channel = $channelName ?: $channel;
             $offline = $channel . ' is offline';
             if (!empty($request->input('offline_msg', null))) {
                 $offline = $request->input('offline_msg');

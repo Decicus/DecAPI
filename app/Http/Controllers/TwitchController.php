@@ -713,9 +713,15 @@ class TwitchController extends Controller
     public function hosts(Request $request, $hosts = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        $wantsJson = ($request->exists('list') || $request->exists('implode') ? false : true);
+        $wantsJson = true;
         $displayNames = $request->exists('display_name');
         $id = $request->input('id', 'false');
+        $limit = intval($request->input('limit', 0));
+        $separator = $request->input('separator', ', ');
+
+        if ($request->exists('list') || $request->exists('implode') || $request->exists('limit')) {
+            $wantsJson = false;
+        }
 
         if (empty($channel)) {
             $message = 'Channel cannot be empty';
@@ -770,8 +776,40 @@ class TwitchController extends Controller
             return Helper::json($hostList);
         }
 
-        $implode = $request->exists('implode') ? ', ' : PHP_EOL;
-        return Helper::text(implode($implode, $hostList));
+        $implode = $request->exists('implode') || $request->exists('limit') ? $separator : PHP_EOL;
+        if ($limit <= 0 || count($hostList) <= $limit) {
+            return Helper::text(implode($implode, $hostList));
+        }
+
+        $names = array_slice($hostList, 0, $limit);
+        $others = count($hostList) - $limit;
+        $format = '%s and %d other' . ($others > 1 ? 's' : '');
+        $text = sprintf($format, implode($separator, $names), $others);
+        return Helper::text($text);
+    }
+
+    /**
+     * Returns the amount of channels that is currently hosting a channel (or an error message).
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
+    public function hostscount(Request $request, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $hosts = $this->twitchApi->hosts($channel);
+
+        if (empty($channel)) {
+            return Helper::text('Channel name cannot be empty.');
+        }
+
+        if (!empty($hosts['status'])) {
+            $message = $hosts['message'];
+            return Helper::text($message);
+        }
+
+        return Helper::text(count($hosts));
     }
 
     /**

@@ -152,6 +152,9 @@ Route::group(['middleware' => 'web'], function() {
             ->where('hosts', '(hosts(\.php)?)')
             ->where('channel', $channelRegex);
 
+        Route::get('hostscount/{channel?}', 'TwitchController@hostscount')
+            ->where('channel', $channelRegex);
+
         Route::get('id/{user?}', ['as' => 'id', 'uses' => 'TwitchController@id'])
             ->where('user', $channelRegex);
 
@@ -160,6 +163,9 @@ Route::group(['middleware' => 'web'], function() {
 
         Route::get('multi/{streams?}', ['as' => 'multi', 'uses' => 'TwitchController@multi'])
             ->where('streams', '([A-z0-9_\s])+');
+
+        Route::get('random_user/{channel?}', ['as' => 'random_viewer', 'uses' => 'TwitchController@randomUser'])
+            ->where('channel', $channelRegex);
 
         Route::get('{subcount}/{channel?}', ['as' => 'subcount', 'uses' => 'TwitchController@subcount'])
             ->where('subcount', '(subcount(\.php)?)')

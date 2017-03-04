@@ -713,9 +713,15 @@ class TwitchController extends Controller
     public function hosts(Request $request, $hosts = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        $wantsJson = ($request->exists('list') || $request->exists('implode') ? false : true);
+        $wantsJson = true;
         $displayNames = $request->exists('display_name');
         $id = $request->input('id', 'false');
+        $limit = intval($request->input('limit', 0));
+        $separator = $request->input('separator', ', ');
+
+        if ($request->exists('list') || $request->exists('implode') || $request->exists('limit')) {
+            $wantsJson = false;
+        }
 
         if (empty($channel)) {
             $message = 'Channel cannot be empty';
@@ -770,8 +776,40 @@ class TwitchController extends Controller
             return Helper::json($hostList);
         }
 
-        $implode = $request->exists('implode') ? ', ' : PHP_EOL;
-        return Helper::text(implode($implode, $hostList));
+        $implode = $request->exists('implode') || $request->exists('limit') ? $separator : PHP_EOL;
+        if ($limit <= 0 || count($hostList) <= $limit) {
+            return Helper::text(implode($implode, $hostList));
+        }
+
+        $names = array_slice($hostList, 0, $limit);
+        $others = count($hostList) - $limit;
+        $format = '%s and %d other' . ($others > 1 ? 's' : '');
+        $text = sprintf($format, implode($separator, $names), $others);
+        return Helper::text($text);
+    }
+
+    /**
+     * Returns the amount of channels that is currently hosting a channel (or an error message).
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
+    public function hostscount(Request $request, $channel = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $hosts = $this->twitchApi->hosts($channel);
+
+        if (empty($channel)) {
+            return Helper::text('Channel name cannot be empty.');
+        }
+
+        if (!empty($hosts['status'])) {
+            $message = $hosts['message'];
+            return Helper::text($message);
+        }
+
+        return Helper::text(count($hosts));
     }
 
     /**
@@ -884,6 +922,60 @@ class TwitchController extends Controller
         $link .= $suffix;
 
         return Helper::text($link);
+    }
+
+    /**
+     * Picks a random user logged into the specified channel's chat.
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
+    public function randomUser(Request $request, $channel = null)
+    {
+        if (empty($channel)) {
+            return Helper::text('Channel name cannot be empty.');
+        }
+
+        // Specific _users_ to exclude.
+        $exclude = $request->input('exclude', '');
+        $exclude = array_map('trim', explode(',', $exclude));
+
+        // "Groups" of chatters to ignore.
+        $ignore = $request->input('ignore', '');
+        $ignore = array_map('trim', explode(',', $ignore));
+
+        $data = $this->twitchApi->get('https://tmi.twitch.tv/group/user/' . $channel . '/chatters', true);
+
+        if (empty($data) || empty($data['chatters'])) {
+            return Helper::text('There was an error retrieving users for channel: ' . $channel);
+        }
+
+        $users = [];
+        foreach ($data['chatters'] as $group => $chatters) {
+            if (!in_array($group, $ignore)) {
+                $users = array_merge($users, $chatters);
+            }
+        }
+
+        if (empty($users)) {
+            return Helper::text('The list of users is empty.');
+        }
+
+        foreach ($exclude as $user) {
+            $user = strtolower($user);
+            $search = array_search($user, $users);
+
+            if ($search === false) {
+                continue;
+            }
+
+            unset($users[$search]);
+        }
+
+        shuffle($users);
+        $rand = mt_rand(0, count($users) - 1);
+        return Helper::text($users[$rand]);
     }
 
     /**

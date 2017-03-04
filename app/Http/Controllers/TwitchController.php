@@ -182,7 +182,8 @@ class TwitchController extends Controller
     }
 
     /**
-     * Returns the Twitch chat cluster for the specified channel. Added purely for backwards compatibility as it's not necessary as of March 23rd 2016.
+     * Returns the Twitch chat cluster for the specified channel.
+     * Added purely for backwards compatibility as it's not necessary as of March 23rd 2016.
      *
      * @param  Request $request
      * @param  string  $channel Channel name
@@ -278,8 +279,8 @@ class TwitchController extends Controller
                 return Helper::text('You need to specify both user and channel name');
             }
 
-            $channel = $nb->channel['providerId'];
-            $user = $nb->user['providerId'];
+            $channel = $channel ?: $nb->channel['providerId'];
+            $user = $user ?: $nb->user['providerId'];
             $id = 'true';
         }
 
@@ -373,8 +374,8 @@ class TwitchController extends Controller
                 return Helper::text('You need to specify both user and channel name');
             }
 
-            $channel = $nb->channel['providerId'];
-            $user = $nb->user['providerId'];
+            $channel = $channel ?: $nb->channel['providerId'];
+            $user = $user ?: $nb->user['providerId'];
             $id = 'true';
         }
 

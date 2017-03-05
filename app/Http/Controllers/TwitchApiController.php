@@ -8,6 +8,8 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use GuzzleHttp\Client;
+use Exception;
+use App\CachedTwitchUser as CachedUser;
 
 class TwitchApiController extends Controller
 {
@@ -21,8 +23,10 @@ class TwitchApiController extends Controller
      * @param string $clientId     Twitch client ID
      * @param string $clientSecret Twitch client Secret
      */
-    public function __construct($clientId, $clientSecret)
+    public function __construct($clientId = null, $clientSecret = null)
     {
+        $clientId = $clientId ?: env('TWITCH_CLIENT_ID', null);
+        $clientSecret = $clientSecret ?: env('TWITCH_CLIENT_ID', null);
         $this->twitchClientID = $clientId;
         $this->twitchClientSecret = $clientSecret;
     }
@@ -54,11 +58,12 @@ class TwitchApiController extends Controller
      * Returns values from the Kraken channels endpoint.
      *
      * @param  string $channel Channel name
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function channels($channel = '')
+    public function channels($channel = '', $headers = [])
     {
-        return $this->get('channels/' . $channel);
+        return $this->get('channels/' . $channel, false, $headers);
     }
 
     /**
@@ -68,12 +73,13 @@ class TwitchApiController extends Controller
      * @param  int    $limit
      * @param  int    $offset
      * @param  string $direction
+     * @param  array  $headers
      * @return TwitchApiController\channels
      */
-    public function channelFollows($channel = '', $limit = 25, $offset = 0, $direction = 'desc')
+    public function channelFollows($channel = '', $limit = 25, $offset = 0, $direction = 'desc', $headers = [])
     {
         $url = sprintf('%s/follows?limit=%d&offset=%d&direction=%s', $channel, $limit, $offset, $direction);
-        return $this->channels($url);
+        return $this->channels($url, $headers);
     }
 
     /**
@@ -84,28 +90,31 @@ class TwitchApiController extends Controller
      * @param  int    $limit       Maximum numbers of objects
      * @param  int    $offset      Object offset for pagination.
      * @param  string $direction   Creation date sorting direction - Valid values are asc and desc.
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function channelSubscriptions($channel = '', $accessToken = '', $limit = 25, $offset = 0, $direction = 'asc')
+    public function channelSubscriptions($channel = '', $accessToken = '', $limit = 25, $offset = 0, $direction = 'asc', $headers = [])
     {
         $params = [
-            'oauth_token=' . $accessToken,
             'limit=' . $limit,
             'offset=' . $offset,
             'direction=' . $direction
         ];
-        return $this->get('channels/' . $channel . '/subscriptions?' . implode('&', $params));
+
+        $headers['Authorization'] = 'OAuth ' . $accessToken;
+        return $this->get('channels/' . $channel . '/subscriptions?' . implode('&', $params), false, $headers);
     }
 
     /**
      * Gets chat/:channel/emoticons data
      *
      * @param  string $channel Channel name
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function emoticons($channel = '')
+    public function emoticons($channel = '', $headers = [])
     {
-        return $this->get('chat/' . $channel . '/emoticons');
+        return $this->get('chat/' . $channel . '/emoticons', false, $headers);
     }
 
     /**
@@ -120,14 +129,8 @@ class TwitchApiController extends Controller
             throw new Exception('You have to specify a channel');
         }
 
-        $channelInfo = $this->channels($channel);
-        if (!empty($channelInfo['error'])) {
-            return $channelInfo;
-        }
-
-        $userId = $channelInfo['_id'];
         $hostUrl = 'https://tmi.twitch.tv/hosts?include_logins=1&target={_id}';
-        $hosts = $this->get(str_replace('{_id}', $userId, $hostUrl), true);
+        $hosts = $this->get(str_replace('{_id}', $channel, $hostUrl), true);
         return $hosts['hosts'];
     }
 
@@ -136,9 +139,10 @@ class TwitchApiController extends Controller
      *
      * @param  string $user
      * @param  string $channel
+     * @param  array  $headers
      * @return TwitchApiController\get
      */
-    public function followRelationship($user = '', $channel = '')
+    public function followRelationship($user = '', $channel = '', $headers = [])
     {
         if (empty($user)) {
             throw new Exception('You have to specify a user');
@@ -148,7 +152,7 @@ class TwitchApiController extends Controller
             throw new Exception('You have to specify a channel');
         }
 
-        return $this->get('users/' . $user . '/follows/channels/' . $channel);
+        return $this->get('users/' . $user . '/follows/channels/' . $channel, false, $headers);
     }
 
     /**
@@ -165,23 +169,66 @@ class TwitchApiController extends Controller
      * Returns values from the Kraken streams endpoint.
      *
      * @param  string $channel Channel name
+     * @param  array  $headers HTTP headers to pass through to TwitchApiController\get;
      * @return TwitchApiController\get
      */
-    public function streams($channel = '')
+    public function streams($channel = '', $headers = [])
     {
-        return $this->get('streams/' . $channel);
+        return $this->get('streams/' . $channel, false, $headers);
     }
 
     /**
      * Returns values from the Kraken teams endpoint
      *
      * @param  string $team Team identifier
-     * @param  array  $headers Request headers
+     * @param  array  $headers HTTP headers to pass through to TwitchApiController\get;
      * @return TwitchApiController\get
      */
     public function team($team = '', $headers = [])
     {
         return $this->get('teams/' . $team, false, $headers);
+    }
+
+    /**
+     * Retrieves the user object specified by the username.
+     *
+     * @param  string $user The username
+     * @return App\CachedTwitchUser
+     */
+    public function userByName($user = '')
+    {
+        $cachedUser = CachedUser::where(['username' => $user])->first();
+
+        if (!empty($cachedUser)) {
+            return $cachedUser;
+        }
+
+        $getUser = $this->get('users?login=' . $user, false, [
+            'Accept' => 'application/vnd.twitchtv.v5+json'
+        ]);
+
+        if (empty($getUser['users'])) {
+            throw new Exception('No user with the name "' . $user . '" found.');
+        }
+
+        $user = $getUser['users'][0];
+
+        $checkId = CachedUser::where(['id' => $user['_id']])->first();
+        if (!empty($cachedUser)) {
+            $checkId->username = $user['name'];
+            $checkId->save();
+            return $checkId;
+        }
+
+        if (empty($cachedUser)) {
+            $cachedUser = new CachedUser;
+        }
+
+        $cachedUser->id = $user['_id'];
+        $cachedUser->username = $user['name'];
+        $cachedUser->save();
+
+        return $cachedUser;
     }
 
     /**
@@ -203,9 +250,10 @@ class TwitchApiController extends Controller
      * @param  array   $broadcastTypes  Array of broadcast types
      * @param  integer $limit           Limit of highlights
      * @param  integer $offset          Offset
+     * @param  array   $headers         Request headers
      * @return array                    JSON-decoded result of highlights endpoint
      */
-    public function videos(Request $request, $channel, $broadcastType = ['all'], $limit = 1, $offset = 0)
+    public function videos(Request $request, $channel, $broadcastType = ['all'], $limit = 1, $offset = 0, $headers = [])
     {
         $input = $request->all();
         $channel = $channel ?: $request->input('channel', null);
@@ -217,6 +265,6 @@ class TwitchApiController extends Controller
         $offset = ($request->has('offset') ? intval($input['offset']) : $offset);
         $format = '%s/videos?limit=%d&offset=%d&broadcast_type=%s';
         $url = sprintf($format, $channel, $limit, $offset, implode(',', $broadcastType));
-        return $this->channels($url);
+        return $this->channels($url, $headers);
     }
 }

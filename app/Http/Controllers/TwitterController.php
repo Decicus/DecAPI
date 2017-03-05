@@ -69,7 +69,7 @@ class TwitterController extends Controller
 
         /**
          * To exclude replies to other users or not.
-         * 
+         *
          * @var boolean
          */
         $excludeReplies = true;
@@ -82,6 +82,10 @@ class TwitterController extends Controller
 
             if (empty($tweets)) {
                 return Helper::text('No tweets were found for this user.');
+            }
+
+            if (count($tweets) < $skip) {
+                return Helper::text('Skip count is higher than the amount of available tweets.');
             }
 
             if (!empty($search)) {
@@ -117,19 +121,19 @@ class TwitterController extends Controller
             } else {
                 $tweet = $tweets[$skip];
             }
-            
+
             $text = [];
             if ($onlyUrl === false) {
                 $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->text));
             }
-            
+
             /**
              * Appends the amount of retweets the tweet has received.
              */
             if ($request->exists('retweets')) {
                 $text[] = 'Retweets: ' . $tweet->retweet_count;
             }
-            
+
             /**
              * Appends the amount of users that has favorited the tweet.
              */
@@ -174,6 +178,68 @@ class TwitterController extends Controller
              */
             if ($onlyId === true) {
                 $text = [$tweet->id];
+            }
+
+            return Helper::text(implode(' - ', $text));
+        } catch (Exception $e) {
+            if ($e->getCode() === 401) {
+                return Helper::text('Not authorized (Normally this means locked/private account)');
+            }
+
+            return Helper::text('[Error] - ' . trim($e->getMessage()));
+        }
+    }
+
+    /**
+     * Legacy support for /twitter/tweet. Similar to /twitter/tweet with "skip".
+     *
+     * @param  Request $request
+     * @param  string  $tweet
+     * @param  string  $name
+     * @return Response
+     */
+    public function tweet(Request $request, $tweet = null, $name = null)
+    {
+        $count = $request->input('count', 1);
+        $name = $name ?: $request->input('name', null);
+        $withUrl = $request->exists('tweet_url');
+
+        if ($count < 1) {
+            return Helper::text('The "count" parameter has to be more than 0.');
+        }
+
+        /**
+         * To exclude replies to other users or not.
+         *
+         * @var boolean
+         */
+        $excludeReplies = true;
+        if ($request->exists('include_replies') || !empty($request->input('no_exclude_replies', null))) {
+            $excludeReplies = false;
+        }
+
+        if (empty($name)) {
+            return Helper::text('A Twitter username has to be specified');
+        }
+
+        try {
+            $tweets = $this->getTweets($name, $request->exists('no_rts'), $excludeReplies);
+
+            if (empty($tweets)) {
+                return Helper::text('No tweets were found for this user.');
+            }
+
+            if (count($tweets) < $count) {
+                return Helper::text('The "count" parameter is more than the amount of available tweets the user has.');
+            }
+
+            $tweet = $tweets[$count - 1];
+            $text = [
+                str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->text))
+            ];
+
+            if ($withUrl) {
+                $text[] = Twitter::linkTweet($tweet);
             }
 
             return Helper::text(implode(' - ', $text));

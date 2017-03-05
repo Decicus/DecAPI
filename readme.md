@@ -72,6 +72,8 @@ The following things are required for setting this up:
 - Run `php artisan migrate` from the command line in the base project directory.
 - Point your web server to the `/public` directory of the repo.
     - I recommend using apache2 and configuring it to set `AllowOverride` to `All` for the specific directory in the vhost, so the `.htaccess` file can set the settings.
+- Setup the task scheduler by pointing a cron entry to `* * * * * php /path/to/decapi/artisan schedule:run >> /dev/null 2>&1`.
+    - You can see what commands the scheduler runs in `app/Console/Kernel.php`.
 
 ## Documentation
 Documentation is currently work in progress and can be found here:

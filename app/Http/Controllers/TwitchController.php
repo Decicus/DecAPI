@@ -798,17 +798,21 @@ class TwitchController extends Controller
     public function hostscount(Request $request, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        $hosts = $this->twitchApi->hosts($channel);
+        $id = $request->input('id', 'false');
 
         if (empty($channel)) {
             return Helper::text('Channel name cannot be empty.');
         }
 
-        if (!empty($hosts['status'])) {
-            $message = $hosts['message'];
-            return Helper::text($message);
+        if ($id !== 'true') {
+            try {
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
         }
 
+        $hosts = $this->twitchApi->hosts($channel);
         return Helper::text(count($hosts));
     }
 

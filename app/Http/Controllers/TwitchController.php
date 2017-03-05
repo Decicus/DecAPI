@@ -723,13 +723,13 @@ class TwitchController extends Controller
             $wantsJson = false;
         }
 
+        $nb = new Nightbot($request);
         if (empty($channel)) {
             $message = 'Channel cannot be empty';
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message, 'status' => 404], 404);
             }
 
-            $nb = new Nightbot($request);
             if (empty($nb->channel)) {
                 return Helper::text($message);
             }
@@ -753,14 +753,17 @@ class TwitchController extends Controller
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message, 'status' => $code], $code);
             }
-            return $this->error($message, $code);
+
+            // Return 200 if it's a Nightbot request to prevent "Remote Server Returned Code 404"
+            return Helper::text($message, (empty($nb->channel) ? $code : 200));
         }
 
         if (empty($hosts)) {
             if ($wantsJson) {
                 return Helper::json([]); // just send an empty host list
             }
-            return $this->error('No one is currently hosting ' . $channel);
+
+            return Helper::text('No one is currently hosting ' . $channel);
         }
 
         $hostList = [];

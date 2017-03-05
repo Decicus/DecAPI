@@ -713,6 +713,7 @@ class TwitchController extends Controller
     public function hosts(Request $request, $hosts = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
+        $channelName = null;
         $wantsJson = true;
         $displayNames = $request->exists('display_name');
         $id = $request->input('id', 'false');
@@ -740,6 +741,8 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                // Store channel name separately and override $channel
+                $channelName = $channel;
                 $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
@@ -763,7 +766,7 @@ class TwitchController extends Controller
                 return Helper::json([]); // just send an empty host list
             }
 
-            return Helper::text('No one is currently hosting ' . $channel);
+            return Helper::text('No one is currently hosting ' . ($channelName ?: $channel));
         }
 
         $hostList = [];

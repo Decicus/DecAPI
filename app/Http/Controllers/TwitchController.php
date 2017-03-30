@@ -1012,9 +1012,14 @@ class TwitchController extends Controller
         if (!empty($channel)) {
             $channel = strtolower($channel);
             $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=user_read+channel_subscriptions';
-            $field = $id === 'true' ? 'id' : 'username';
-            $user = User::where($field, $channel)->first();
             $needToReAuth = sprintf('%s needs to authenticate to use subcount: %s', $channel, $reAuth);
+
+            try {
+                $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
+            } catch (Exception $e) {
+                $field = $id === 'true' ? 'ID' : 'username';
+                return Helper::text('An error occurred when trying to find a channel with the ' . $field . ': ' . $channel);
+            }
 
             if (empty($user)) {
                 return Helper::text($needToReAuth);

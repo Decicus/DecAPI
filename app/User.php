@@ -33,7 +33,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'id', 'username', 'access_token', 'scopes'
+        'id', 'access_token', 'scopes'
     ];
 
     /**
@@ -44,4 +44,14 @@ class User extends Authenticatable
     protected $hidden = [
         'access_token', 'scopes'
     ];
+
+    /**
+     * The associated CachedTwitchUser model
+     *
+     * @return App\CachedTwitchUser
+     */
+    public function twitch()
+    {
+        return $this->belongsTo('App\CachedTwitchUser', 'id', 'id');
+    }
 }

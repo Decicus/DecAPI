@@ -35,4 +35,14 @@ class CachedTwitchUser extends Model
     protected $fillable = [
         'id', 'username'
     ];
+
+    /**
+     * The associated User model.
+     *
+     * @return App\User
+     */
+    public function user()
+    {
+        return $this->hasOne('App\User', 'id', 'id');
+    }
 }

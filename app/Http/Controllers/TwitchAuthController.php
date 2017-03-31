@@ -99,8 +99,7 @@ class TwitchAuthController extends Controller
         }
 
         $auth = User::firstOrCreate([
-            'id' => $user->id,
-            'username' => $user->name
+            'id' => $user->id
         ]);
         $auth->access_token = Crypt::encrypt($user->token);
         $auth->scopes = implode('+', $user->accessTokenResponseBody['scope']);

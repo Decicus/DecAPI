@@ -1053,7 +1053,7 @@ class TwitchController extends Controller
         $user = Auth::user();
         $data = [
             'page' => 'Subcount',
-            'route' => route('twitch.subcount', ['subcount', $user->username])
+            'route' => route('twitch.subcount', ['subcount', $user->twitch->username])
         ];
         return view('twitch.subcount', $data);
     }

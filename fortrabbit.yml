@@ -1,2 +1,2 @@
 version: 2
-post: php artisan migrate --force
+post: artisan migrate --force

@@ -235,11 +235,12 @@ class TwitchApiController extends Controller
      * Returns values from the Kraken "users" endpoint.
      *
      * @param  string $user Username
+     * @param  array  $headers HTTP headers to send with the request
      * @return Response
      */
-    public function users($user = '')
+    public function users($user = '', $headers = [])
     {
-        return $this->get('users/' . $user);
+        return $this->get('users/' . $user, false, $headers);
     }
 
     /**

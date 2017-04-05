@@ -209,6 +209,58 @@ class TwitchController extends Controller
     }
 
     /**
+     * Retrieve the creation time and date of the specified user.
+     *
+     * @param  Request $request
+     * @param  string  $route
+     * @param  string  $user
+     * @return Response
+     */
+    public function creation(Request $request, $route = null, $user = null)
+    {
+        $user = $user ?: ($request->input('name', null) ?: $request->input('user', null));
+        $id = $request->input('id', 'false');
+        $tz = $request->input('tz', 'UTC');
+        $format = $request->input('format', 'M j. Y - h:i:s A (e)');
+        // https://secure.php.net/manual/en/timezones.php
+        $allTimezones = DateTimeZone::listIdentifiers();
+
+        if (!in_array($tz, $allTimezones)) {
+            return Helper::text('Invalid timezone specified: ' . $tz);
+        }
+
+        if (empty($user)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->user)) {
+                return Helper::text('You need to specify a username!');
+            }
+
+            $user = $user ?: $nb->user['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                $user = $this->userByName($user)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $userData = $this->twitchApi->users($user, $this->version);
+
+        if (!empty($userData['status'])) {
+            return Helper::text($userData['message']);
+        }
+
+        $time = $userData['created_at'];
+        $time = Carbon::parse($userData['created_at']);
+        $time->setTimezone($tz);
+
+        return Helper::text($time->format($format));
+    }
+
+    /**
      * Uses the specified subscriber count to see how many subscribers are needed to open a certain amount of emoteslots.
      *
      * @param  Request $request

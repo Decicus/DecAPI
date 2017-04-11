@@ -16,11 +16,11 @@ class DayZController extends Controller
 {
     /**
      * The master server API URL.
-     * 
+     *
      * @var string
      */
     private $masterServerUrl = 'http://api.steampowered.com/IGameServersService/GetServerList/v1/?filter=\gamedir\dayz%s&limit=%d&key=%s';
-    
+
     /**
      * The base API endpoint
      *
@@ -133,7 +133,7 @@ class DayZController extends Controller
 
         return Helper::text($result['num_players'] . '/' . $result['max_players']);
     }
-        
+
     /**
      * Retrieves a random DayZ server.
      *
@@ -142,22 +142,22 @@ class DayZController extends Controller
      */
     public function randomServer(Request $request)
     {
-        $results = $request->input('results', 'ip'); 
+        $results = $request->input('results', 'ip');
         $filter = '\name_match\*';
         $key = env('STEAM_API_KEY');
         $url = sprintf($this->masterServerUrl, $filter, 5000, $key);
-        
+
         $client = new Client;
         $response = $client->request('GET', $url, [
             'http_errors' => false
         ]);
-        
+
         $body = json_decode(utf8_encode($response->getBody()), true);
-        
+
         if (empty($body['response']['servers']) || count($body['response']['servers']) <= 0) {
             return Helper::text('An error occurred while retrieving server info.');
         }
-        
+
         $servers = $body['response']['servers'];
         $count = count($servers);
         $serv = $servers[random_int(0, $count - 1)];
@@ -167,23 +167,23 @@ class DayZController extends Controller
             'ip' => $splitIp[0] . ':' . $serv['gameport'],
             'players' => $serv['players'] . '/' . $serv['max_players']
         ];
-        
+
         $format = '%s';
         $results = explode(',', $results);
         $text = [];
-        
+
         foreach ($results as $result) {
             if (!empty($options[$result])) {
                 $text[] = $options[$result];
             }
         }
-        
+
         if (empty($text)) {
             $text = [
                 $options['ip']
             ];
         }
-        
+
         return Helper::text(implode(' - ', $text));
     }
 

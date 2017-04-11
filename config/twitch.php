@@ -30,6 +30,8 @@
                 'Guide to Closed Captions' => 2564215,
                 'Guide to Custom Resub Messages' => 2457351,
                 'Guide to Earning Revenue from Game Sales' => 2582870,
+                'Guide to Twitch Crates' => 2772801,
+                'How to Buy Games on Twitch' => 2771293,
                 'How to Claim In-Game Content' => 2773669,
                 'How to Edit Info Panels' => 2416760,
                 'How to File a User Report' => 725568,

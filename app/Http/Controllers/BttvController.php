@@ -11,6 +11,13 @@ use App\Helpers\Helper;
 class BttvController extends Controller
 {
     /**
+     * The base API URL for the BetterTTV API
+     *
+     * @var string
+     */
+    private $baseUrl = 'https://api.betterttv.net/2';
+
+    /**
      * The BTTV route homepage view
      *
      * @param  Request $request
@@ -27,7 +34,7 @@ class BttvController extends Controller
         ];
 
         if (!empty($channel)) {
-            $emotes = Helper::get('https://api.betterttv.net/2/channels/' . $channel);
+            $emotes = Helper::get($this->baseUrl . '/channels/' . $channel);
             $status = $emotes['status'];
 
             if ($status === 200) {
@@ -66,7 +73,7 @@ class BttvController extends Controller
             return Helper::text('You have to specify a channel name');
         }
 
-        $emotes = Helper::get('https://api.betterttv.net/2/channels/' . $channel);
+        $emotes = Helper::get($this->baseUrl . '/channels/' . $channel);
         $status = $emotes['status'];
         $types = explode(',', $types);
 

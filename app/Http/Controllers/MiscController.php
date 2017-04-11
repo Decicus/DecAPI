@@ -66,6 +66,6 @@ class MiscController extends Controller
         }
 
         $calculate = round($value * $convert['rates'][$to], $round);
-        return Helper::text($value . " " . $from . " = " . $calculate . " " . $to);
+        return Helper::text(sprintf('%s %s = %s %s', $value, $from, $calculate, $to));
     }
 }

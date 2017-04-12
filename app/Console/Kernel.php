@@ -14,8 +14,9 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        Commands\UpdateCachedTwitchUsers::class,
         Commands\ImportSubcountTokens::class,
+        Commands\UpdateCachedTwitchUsers::class,
+        Commands\UpdateTwitchHelp::class,
     ];
 
     /**
@@ -28,5 +29,8 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('twitch:userupdate')
                  ->everyMinute();
+
+        $schedule->command('twitch:help')
+                 ->daily();
     }
 }

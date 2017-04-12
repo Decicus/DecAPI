@@ -16,6 +16,7 @@ class CreateTwitchHelpArticlesTable extends Migration
             $table->string('id')->unique();
             $table->string('title')->nullable();
             $table->string('category_id')->nullable();
+            $table->timestamp('published');
 
             $table->timestamps();
         });

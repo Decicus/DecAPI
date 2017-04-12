@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 
+use Carbon\Carbon;
 use PHPHtmlParser\Dom;
 use Vinelab\Rss\Rss;
 
@@ -69,6 +70,7 @@ class UpdateTwitchHelp extends Command
                 $helpArticle = Article::firstOrNew(['id' => $id]);
                 $helpArticle->title = $title;
                 $helpArticle->category_id = $catId;
+                $helpArticle->published = Carbon::parse($article->pubDate);
                 $helpArticle->save();
 
                 $this->info('Found help article: ' . $title);

@@ -51,7 +51,7 @@ class UpdateTwitchHelp extends Command
         $rss = new Rss;
         foreach ($topics as $topic) {
             $catId = str_replace('topic topic', null, $topic->class);
-            $catTitle = $topic->find('h5.articles')->innerHtml;
+            $catTitle = htmlspecialchars_decode($topic->find('h5.articles')->innerHtml);
 
             $this->info('Found help category/topic: ' . $catTitle);
 
@@ -64,7 +64,7 @@ class UpdateTwitchHelp extends Command
 
             foreach ($feed->articles() as $article) {
                 $id = str_replace($base . '/customer/en/portal/articles/', null, $article->link);
-                $title = $article->title;
+                $title = htmlspecialchars_decode($article->title);
 
                 $helpArticle = Article::firstOrNew(['id' => $id]);
                 $helpArticle->title = $title;

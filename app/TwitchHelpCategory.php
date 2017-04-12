@@ -11,7 +11,7 @@ class TwitchHelpCategory extends Model
      *
      * @var string
      */
-    protected $table = 'twitch_help_articles';
+    protected $table = 'twitch_help_categories';
 
     /**
      * The column to set as the primary key.

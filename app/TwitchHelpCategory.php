@@ -28,6 +28,15 @@ class TwitchHelpCategory extends Model
     public $incrementing = false;
 
     /**
+     * The attributes that are mass-assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'id'
+    ];
+
+    /**
      * The associated TwitchHelpArticle models.
      *
      * @return App\TwitchHelpArticle

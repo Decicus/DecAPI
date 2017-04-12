@@ -28,6 +28,15 @@ class TwitchHelpArticle extends Model
     public $incrementing = false;
 
     /**
+     * The attributes that are mass-assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'id'
+    ];
+
+    /**
      * Scope a query to search.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query

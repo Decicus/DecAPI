@@ -11,6 +11,7 @@ use App\User;
 use Auth;
 use App\Helpers\Helper;
 use App\Helpers\Nightbot;
+use App\TwitchHelpArticle as HelpArticle;
 
 use Carbon\Carbon;
 use DateTimeZone;
@@ -572,27 +573,35 @@ class TwitchController extends Controller
      */
     public function help(Request $request, $search = null)
     {
-        // config/twitch.php
-        $articles = config('twitch.help.articles');
-
         $lang = $request->input('lang', 'en');
+        $search = strtolower(trim($search));
 
         $prefix = 'https://help.twitch.tv/customer/' . $lang . '/portal/articles/';
-        $data = [
-            'url_template' => $prefix . '{id}',
-            'articles' => $articles
-        ];
 
         $json = $request->wantsJson();
-        if ($request->exists('list')) {
+        if ($request->exists('list') || ($json && $search === 'list')) {
+            $articles = [];
+            $helpArticles = HelpArticle::select('id', 'title')
+                            ->get()
+                            ->sortBy('title');
+
+            foreach ($helpArticles as $article) {
+                $articles[$article->title] = $article->id;
+            }
+
+            $data = [
+                'url_template' => $prefix . '{id}',
+                'articles' => $articles
+            ];
+
             if ($json) {
                 return $this->json($data);
             }
 
             $data = [
-                'list' => $articles,
-                'prefix' => $prefix,
-                'page' => 'Help Articles'
+                'list' => $data['articles'],
+                'page' => 'Help Articles',
+                'prefix' => $prefix
             ];
             return view('shared.list', $data);
         }
@@ -600,16 +609,17 @@ class TwitchController extends Controller
         $msg = null;
         $code = null;
 
-        $search = trim($search);
-        if (empty($search) || strtolower($search) === 'list') {
-            if ($json) {
-                return $this->json($data);
-            }
+        if (empty($search) || $search === 'list') {
             return Helper::text('List of available help articles with titles: ' . route('twitch.help') . '?list');
         }
 
-        $results = preg_grep('/(' . $search . ')/i', array_keys($articles));
-        if (empty($results)) {
+        $articles = HelpArticle::search($search)
+                    ->select('id', 'title', 'published')
+                    ->latest('published')
+                    ->orderBy('title')
+                    ->get();
+
+        if (empty($articles)) {
             $msg = 'No results found.';
             $code = 404;
         }
@@ -627,13 +637,15 @@ class TwitchController extends Controller
             return Helper::text($msg);
         }
 
-        $title = array_values($results)[0];
-        $url = $prefix . $articles[$title];
+        $article = $articles->first();
+        $title = $article->title;
+        $url = $prefix . $article->id;
         if ($json) {
             $data = [
                 'code' => 200,
                 'title' => $title,
-                'url' => $url
+                'url' => $url,
+                'results' => $articles->toArray()
             ];
             return Helper::json($data);
         }

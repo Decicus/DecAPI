@@ -190,6 +190,9 @@ Route::group(['middleware' => 'web'], function() {
                 ->where('uptime', '(uptime(\.php)?)')
                 ->where('channel', '([A-z0-9]){1,25}');
         });
+
+        Route::get('viewercount/{channel?}', 'TwitchController@viewercount')
+            ->where('channel', $channelRegex);
     });
 
     Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {

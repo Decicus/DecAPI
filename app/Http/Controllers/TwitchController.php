@@ -1345,4 +1345,50 @@ class TwitchController extends Controller
         $diff = Helper::getDateDiff($start, time(), 4);
         return response($diff)->withHeaders($this->headers);
     }
+
+    /**
+     * Retrieves the viewer count of the specified channel.
+     *
+     * @param  Request $request
+     * @param  string  $channel Channel name (or channel ID with "id=true")
+     * @return Response
+     */
+    public function viewercount(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('Channel cannot be empty');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately for potential messages and override $channel
+                $channelName = $channel;
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $stream = $this->twitchApi->streams($channel, $this->version);
+
+        if (!empty($stream['status'])) {
+            return Helper::text($stream['message']);
+        }
+
+        if (empty($stream['stream'])) {
+            $channel = $channelName ?: $channel;
+            return Helper::text($channel . ' is offline');
+        }
+
+        $viewers = $stream['stream']['viewers'];
+        return Helper::text($viewers);
+    }
 }

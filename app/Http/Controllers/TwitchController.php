@@ -1304,6 +1304,7 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $channelName = null;
         $id = $request->input('id', 'false');
+        $precision = intval($request->input('precision', 4));
 
         if (empty($channel)) {
             $nb = new Nightbot($request);
@@ -1342,8 +1343,8 @@ class TwitchController extends Controller
         }
 
         $start = $stream['stream']['created_at'];
-        $diff = Helper::getDateDiff($start, time(), 4);
-        return response($diff)->withHeaders($this->headers);
+        $diff = Helper::getDateDiff($start, time(), $precision);
+        return Helper::text($diff);
     }
 
     /**

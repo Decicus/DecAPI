@@ -1023,6 +1023,11 @@ class TwitchController extends Controller
         }
 
         $count = $data['_total'];
+
+        if ($amount > $count) {
+            return Helper::text(sprintf('Count specified (%d) is higher than the amount of subscribers (%d) this channel has!', $amount, $count));
+        }
+
         $subscriptions = $data['subscriptions'];
         $offset = 0;
         if ($count > $limit) {
@@ -1046,6 +1051,7 @@ class TwitchController extends Controller
             }
 
             unset($subscriptions[$index]);
+            shuffle($subscriptions); // Reset array keys
         }
 
         return Helper::text(implode($separator, $output));

@@ -230,7 +230,7 @@ class TwitchApiController extends Controller
         $user = $getUser['users'][0];
 
         $checkId = CachedUser::where(['id' => $user['_id']])->first();
-        if (!empty($cachedUser)) {
+        if (!empty($checkId)) {
             $checkId->username = $user['name'];
             $checkId->save();
             return $checkId;

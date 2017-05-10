@@ -987,10 +987,10 @@ class TwitchController extends Controller
     }
 
     /**
-     * Get a random subscriber from the specified channel.
+     * Get a random subscriber based on the OAuth token.
      *
      * @param  Request $request
-     * @return mixed
+     * @return Response
      */
     public function randomSub(Request $request)
     {

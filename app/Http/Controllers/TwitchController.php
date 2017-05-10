@@ -987,6 +987,71 @@ class TwitchController extends Controller
     }
 
     /**
+     * Get a random subscriber from the specified channel.
+     *
+     * @param  Request $request
+     * @return mixed
+     */
+    public function randomSub(Request $request)
+    {
+        $token = $request->input('token', null);
+        $amount = intval($request->input('count', 1));
+        $field = $request->input('field', 'name');
+        $separator = $request->input('separator', ', ');
+
+        if (empty($token)) {
+            return Helper::text('An OAuth token has to be specified.');
+        }
+
+        $tokenData = $this->twitchApi->base($token, $this->version)['token'];
+
+        if ($tokenData['valid'] === false) {
+            return Helper::text('The specified OAuth token is invalid.');
+        }
+
+        $scopes = $tokenData['authorization']['scopes'];
+
+        if (!in_array('channel_subscriptions', $scopes)) {
+            return Helper::text('The OAuth token is missing a required scope: channel_subscriptions');
+        }
+
+        $limit = 100;
+        $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'asc', $this->version);
+
+        if (!empty($data['message'])) {
+            return Helper::text('An error occurred retrieving data from the API: ' . $data['message']);
+        }
+
+        $count = $data['_total'];
+        $subscriptions = $data['subscriptions'];
+        $offset = 0;
+        if ($count > $limit) {
+            while ($offset < $count) {
+                $offset += 100;
+                $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, $offset, $direction = 'asc', $this->version);
+                $subscriptions = array_merge($subscriptions, $data['subscriptions']);
+            }
+        }
+
+        shuffle($subscriptions);
+        $output = [];
+
+        for ($i = 0; $i < $amount; $i++) {
+            $count = count($subscriptions);
+            $index = mt_rand(0, $count - 1);
+            $sub = $subscriptions[$index]['user'];
+
+            if (isset($sub[$field])) {
+                $output[] = $sub[$field];
+            }
+
+            unset($subscriptions[$index]);
+        }
+
+        return Helper::text(implode($separator, $output));
+    }
+
+    /**
      * Picks a random user logged into the specified channel's chat.
      *
      * @param  Request $request

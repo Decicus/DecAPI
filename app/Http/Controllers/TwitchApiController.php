@@ -55,6 +55,22 @@ class TwitchApiController extends Controller
     }
 
     /**
+     * Get information from the base Kraken endpoint
+     *
+     * @param  string $token
+     * @param  array $headers
+     * @return TwitchApiController\get
+     */
+    public function base($token = '', $headers = [])
+    {
+        if (!empty($token)) {
+            $headers['Authorization'] = 'OAuth ' . $token;
+        }
+
+        return $this->get('', false, $headers);
+    }
+
+    /**
      * Returns values from the Kraken channels endpoint.
      *
      * @param  string $channel Channel name

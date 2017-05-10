@@ -168,6 +168,8 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('multi/{streams?}', ['as' => 'multi', 'uses' => 'TwitchController@multi'])
             ->where('streams', '([A-z0-9_\s])+');
 
+        Route::get('random_sub', ['as' => 'random_sub', 'uses' => 'TwitchController@randomSub']);
+
         Route::get('random_user/{channel?}', ['as' => 'random_viewer', 'uses' => 'TwitchController@randomUser'])
             ->where('channel', $channelRegex);
 

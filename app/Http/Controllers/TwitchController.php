@@ -150,6 +150,48 @@ class TwitchController extends Controller
     }
 
     /**
+     * Retrieves the account age of the specified user.
+     *
+     * @param  Request $request
+     * @param  string  $user
+     * @return Response
+     */
+    public function accountAge(Request $request, $user = null)
+    {
+        $id = $request->input('id', false);
+        $precision = intval($request->input('precision', 2));
+
+        if (empty($user)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->user)) {
+                return Helper::text('You need to specify a username!');
+            }
+
+            $user = $user ?: $nb->user['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                $user = $this->userByName($user)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $userData = $this->twitchApi->users($user, $this->version);
+
+        if (!empty($userData['status'])) {
+            return Helper::text($userData['message']);
+        }
+
+        $time = $userData['created_at'];
+        $time = Helper::getDateDiff($time, time(), $precision);
+
+        return Helper::text($time);
+    }
+
+    /**
      * Returns a text list with chat rules of the specified channel.
      *
      * @param  Request $request

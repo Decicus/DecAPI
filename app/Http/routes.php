@@ -104,6 +104,9 @@ Route::group(['middleware' => 'web'], function() {
 
         Route::get('/', 'TwitchController@base');
 
+        Route::get('accountage/{user?}', 'TwitchController@accountAge')
+            ->where('user', $channelRegex);
+
         Route::group(['prefix' => 'blog', 'as' => 'blog.'], function() {
             Route::get('latest', ['as' => 'latest', 'uses' => 'TwitchBlogController@latest']);
         });

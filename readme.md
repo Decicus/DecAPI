@@ -16,47 +16,15 @@ The standard layout will be https://example.com/main-route/sub-route/parameter -
 
 To keep it backwards compatible, routes also support /main-route/sub-route?channel=decicus or /main-route/sub-route.php?channel=decicus.
 
-## Current re-implemented features
-This list of features will contain links to the current version hosted under [decapi.me](https://decapi.me/)
+## Re-implementation of features
+All features will be rewritten to be mostly identical to current features.
 
-It _should_ function similarly or identical in this rewrite, even if the code hosted under [decapi.me](https://decapi.me/) is still the old code.
+What this means is that certain text output from endpoints might be changed, new parameters to modify functionality will be added (for some), but for the most part the functionality will remain identical.
+
+Read [the documentation](https://docs.decapi.me/) to see how each endpoint functions.
 
 Anything that for some reason did not get included in this rewrite, will still be hosted under [old.decapi.me](https://old.decapi.me/).  
 There is also a fallback route setup to redirect all requests to the [old.decapi.me](https://old.decapi.me/) URL, if it cannot find a valid route in the rewrite.
-
-- Twitch
-    - [Follow date and time](https://decapi.me/twitch/followed?user=decicus&channel=twitch)
-    - [Latest highlight](https://decapi.me/twitch/highlight?channel=decicus)
-    - [List of hosts](https://decapi.me/twitch/hosts?channel=decicus)
-    - [List of ingests](https://decapi.me/twitch/ingests)
-    - [List of team members](https://decapi.me/twitch/team_members?team=theblacklist)
-    - [Current subcount (requires authentication)](https://decapi.me/twitch/subcount?channel=decicus)
-    - [Current uptime](https://decapi.me/twitch/uptime?channel=decicus)
-- ASKfm
-    - [RSS/Atom feed of user questions/answers](https://decapi.me/askfm/rss?user=xangold)
-- BetterTTV
-    - [Look up channel emotes](https://decapi.me/bttv/?channel=decicus)
-    - [Custom API for displaying emotes in chat](https://decapi.me/bttv/emotes?channel=decicus)
-- DayZ
-    - [Latest "status report" from their blog](https://decapi.me/dayz/status-report)
-    - [Latest "status report" from their Steam 'news' section](https://decapi.me/dayz/steam-status-report)
-    - [Maps location names/searches to their respective coordinates/location on izurvive.com](https://decapi.me/dayz/izurvive)
-        - Special thanks to [WastedUser](https://www.twitch.tv/wasteduser) for the `location name -> coordinates` data.
-    - [Queries DayZ servers for their current player count](https://decapi.me/dayz/players)
-- Lever
-    - [RSS feed of the available Twitch jobs](https://decapi.me/lever/twitch)
-- Misc
-    - [Currency converter](https://decapi.me/misc/currency)
-- Twitter
-    - [Latest tweet](https://decapi.me/twitter/latest?name=decicus)
-    - [Latest tweet URL](https://decapi.me/twitter/latest_url?name=decicus)
-    - [Latest tweet ID](https://decapi.me/twitter/latest_id?name=decicus)
-- YouTube
-    - [Latest public video for a specified channel](https://decapi.me/youtube/latest_video?user=decicus)
-    - [Video ID by search](https://decapi.me/youtube/videoid?search=barbie%20girl)
-- Steam
-    - [Amount of hours in a specified game](https://decapi.me/steam/hours?id=76561197997719567&appid=221100)
-    - [Current gameserver (supported games are limited)](https://decapi.me/steam/server_ip?id=76561197997719567)
 
 ## Requirements
 The following things are required for setting this up:

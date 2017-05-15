@@ -151,6 +151,48 @@ class TwitchController extends Controller
     }
 
     /**
+     * Retrieves the account age of the specified user.
+     *
+     * @param  Request $request
+     * @param  string  $user
+     * @return Response
+     */
+    public function accountAge(Request $request, $user = null)
+    {
+        $id = $request->input('id', false);
+        $precision = intval($request->input('precision', 2));
+
+        if (empty($user)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->user)) {
+                return Helper::text('You need to specify a username!');
+            }
+
+            $user = $user ?: $nb->user['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                $user = $this->userByName($user)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $userData = $this->twitchApi->users($user, $this->version);
+
+        if (!empty($userData['status'])) {
+            return Helper::text($userData['message']);
+        }
+
+        $time = $userData['created_at'];
+        $time = Helper::getDateDiff($time, time(), $precision);
+
+        return Helper::text($time);
+    }
+
+    /**
      * Returns a text list with chat rules of the specified channel.
      *
      * @param  Request $request
@@ -999,6 +1041,77 @@ class TwitchController extends Controller
     }
 
     /**
+     * Get a random subscriber based on the OAuth token.
+     *
+     * @param  Request $request
+     * @return Response
+     */
+    public function randomSub(Request $request)
+    {
+        $token = $request->input('token', null);
+        $amount = intval($request->input('count', 1));
+        $field = $request->input('field', 'name');
+        $separator = $request->input('separator', ', ');
+
+        if (empty($token)) {
+            return Helper::text('An OAuth token has to be specified.');
+        }
+
+        $tokenData = $this->twitchApi->base($token, $this->version)['token'];
+
+        if ($tokenData['valid'] === false) {
+            return Helper::text('The specified OAuth token is invalid.');
+        }
+
+        $scopes = $tokenData['authorization']['scopes'];
+
+        if (!in_array('channel_subscriptions', $scopes)) {
+            return Helper::text('The OAuth token is missing a required scope: channel_subscriptions');
+        }
+
+        $limit = 100;
+        $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'asc', $this->version);
+
+        if (!empty($data['message'])) {
+            return Helper::text('An error occurred retrieving data from the API: ' . $data['message']);
+        }
+
+        $count = $data['_total'];
+
+        if ($amount > $count) {
+            return Helper::text(sprintf('Count specified (%d) is higher than the amount of subscribers (%d) this channel has!', $amount, $count));
+        }
+
+        $subscriptions = $data['subscriptions'];
+        $offset = 0;
+        if ($count > $limit) {
+            while ($offset < $count) {
+                $offset += 100;
+                $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, $offset, $direction = 'asc', $this->version);
+                $subscriptions = array_merge($subscriptions, $data['subscriptions']);
+            }
+        }
+
+        shuffle($subscriptions);
+        $output = [];
+
+        for ($i = 0; $i < $amount; $i++) {
+            $count = count($subscriptions);
+            $index = mt_rand(0, $count - 1);
+            $sub = $subscriptions[$index]['user'];
+
+            if (isset($sub[$field])) {
+                $output[] = $sub[$field];
+            }
+
+            unset($subscriptions[$index]);
+            shuffle($subscriptions); // Reset array keys
+        }
+
+        return Helper::text(implode($separator, $output));
+    }
+
+    /**
      * Picks a random user logged into the specified channel's chat.
      *
      * @param  Request $request
@@ -1316,6 +1429,7 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $channelName = null;
         $id = $request->input('id', 'false');
+        $precision = intval($request->input('precision', 4));
 
         if (empty($channel)) {
             $nb = new Nightbot($request);
@@ -1354,7 +1468,53 @@ class TwitchController extends Controller
         }
 
         $start = $stream['stream']['created_at'];
-        $diff = Helper::getDateDiff($start, time(), 4);
-        return response($diff)->withHeaders($this->headers);
+        $diff = Helper::getDateDiff($start, time(), $precision);
+        return Helper::text($diff);
+    }
+
+    /**
+     * Retrieves the viewer count of the specified channel.
+     *
+     * @param  Request $request
+     * @param  string  $channel Channel name (or channel ID with "id=true")
+     * @return Response
+     */
+    public function viewercount(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('Channel cannot be empty');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately for potential messages and override $channel
+                $channelName = $channel;
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $stream = $this->twitchApi->streams($channel, $this->version);
+
+        if (!empty($stream['status'])) {
+            return Helper::text($stream['message']);
+        }
+
+        if (empty($stream['stream'])) {
+            $channel = $channelName ?: $channel;
+            return Helper::text($channel . ' is offline');
+        }
+
+        $viewers = $stream['stream']['viewers'];
+        return Helper::text($viewers);
     }
 }

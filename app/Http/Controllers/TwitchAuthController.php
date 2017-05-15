@@ -47,7 +47,11 @@ class TwitchAuthController extends Controller
         'channel_check_subscription',
         'chat_login',
         'channel_feed_read',
-        'channel_feed_edit'
+        'channel_feed_edit',
+        'collections_edit',
+        'communities_edit',
+        'communities_moderate',
+        'viewing_activity_read'
     ];
 
     /**

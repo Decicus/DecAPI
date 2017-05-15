@@ -64,6 +64,8 @@ Route::group(['middleware' => 'web'], function() {
     Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
         Route::get('{currency}', ['as' => 'currency', 'uses' => 'MiscController@currency'])
             ->where('currency', '(currency(\.php)?)');
+        Route::get('{time}', ['as' => 'time', 'uses' => 'MiscController@time'])
+            ->where('time', '(time(\.php)?)');
     });
 
     Route::group(['prefix' => 'r6', 'as' => 'r6.'], function() {
@@ -103,6 +105,9 @@ Route::group(['middleware' => 'web'], function() {
         $channelRegex = '([A-z0-9]{1,50})';
 
         Route::get('/', 'TwitchController@base');
+
+        Route::get('accountage/{user?}', 'TwitchController@accountAge')
+            ->where('user', $channelRegex);
 
         Route::group(['prefix' => 'blog', 'as' => 'blog.'], function() {
             Route::get('latest', ['as' => 'latest', 'uses' => 'TwitchBlogController@latest']);
@@ -168,6 +173,8 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('multi/{streams?}', ['as' => 'multi', 'uses' => 'TwitchController@multi'])
             ->where('streams', '([A-z0-9_\s])+');
 
+        Route::get('random_sub', ['as' => 'random_sub', 'uses' => 'TwitchController@randomSub']);
+
         Route::get('random_user/{channel?}', ['as' => 'random_viewer', 'uses' => 'TwitchController@randomUser'])
             ->where('channel', $channelRegex);
 
@@ -190,6 +197,9 @@ Route::group(['middleware' => 'web'], function() {
                 ->where('uptime', '(uptime(\.php)?)')
                 ->where('channel', '([A-z0-9]){1,25}');
         });
+
+        Route::get('viewercount/{channel?}', 'TwitchController@viewercount')
+            ->where('channel', $channelRegex);
     });
 
     Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {

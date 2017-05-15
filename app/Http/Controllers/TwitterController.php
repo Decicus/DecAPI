@@ -29,7 +29,8 @@ class TwitterController extends Controller
             'screen_name' => $name,
             'count' => 200,
             'exclude_replies' => 'true',
-            'include_rts' => $retweets
+            'include_rts' => $retweets,
+            'tweet_mode' => 'extended',
         ]);
 
         return $tweet;
@@ -98,7 +99,7 @@ class TwitterController extends Controller
 
                 $searchSkip = 0;
                 foreach ($tweets as $current) {
-                    $text = htmlspecialchars_decode($current->text);
+                    $text = htmlspecialchars_decode($current->full_text);
 
                     if ($strict === false) {
                         $text = strtolower($text);
@@ -124,7 +125,7 @@ class TwitterController extends Controller
 
             $text = [];
             if ($onlyUrl === false) {
-                $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->text));
+                $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->full_text));
             }
 
             /**
@@ -235,7 +236,7 @@ class TwitterController extends Controller
 
             $tweet = $tweets[$count - 1];
             $text = [
-                str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->text))
+                str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->full_text))
             ];
 
             if ($withUrl) {

@@ -8,6 +8,7 @@ use App\Http\Requests;
 
 use App\Helpers\Helper;
 use Carbon\Carbon;
+use DateTimeZone;
 
 class MiscController extends Controller
 {
@@ -67,5 +68,31 @@ class MiscController extends Controller
 
         $calculate = round($value * $convert['rates'][$to], $round);
         return Helper::text(sprintf('%s %s = %s %s', $value, $from, $calculate, $to));
+    }
+
+    /**
+     * Display the current time in the specified timezone.
+     *
+     * @param  Request $request
+     * @return Response
+     */
+    public function time(Request $request)
+    {
+        $format = $request->input('format', 'h:i:s A T');
+        $tz = $request->input('timezone', null);
+        $timezones = DateTimeZone::listIdentifiers();
+        $tzlist = implode(PHP_EOL, $timezones);
+        if (empty($tz)) {
+            return Helper::text("-- Available timezones:" . PHP_EOL . $tzlist);
+        }
+
+        if (!in_array($tz, $timezones)) {
+            return Helper::text(sprintf('-- Invalid timezone ("%s") - Available timezones:%s%s', $tz, PHP_EOL, $tzlist));
+        }
+
+        $time = Carbon::now()
+                ->tz($tz)
+                ->format($format);
+        return Helper::text($time);
     }
 }

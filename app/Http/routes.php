@@ -64,6 +64,8 @@ Route::group(['middleware' => 'web'], function() {
     Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
         Route::get('{currency}', ['as' => 'currency', 'uses' => 'MiscController@currency'])
             ->where('currency', '(currency(\.php)?)');
+        Route::get('{time}', ['as' => 'time', 'uses' => 'MiscController@time'])
+            ->where('time', '(time(\.php)?)');
     });
 
     Route::group(['prefix' => 'r6', 'as' => 'r6.'], function() {

@@ -1176,6 +1176,7 @@ class TwitchController extends Controller
     public function subcount(Request $request, $subcount = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
+        $subtract = intval($request->input('subtract', 0));
         $id = $request->input('id', 'false');
 
         if ($request->exists('logout')) {
@@ -1224,7 +1225,7 @@ class TwitchController extends Controller
                 return Helper::text($data['message']);
             }
 
-            return Helper::text($data['_total']);
+            return Helper::text($data['_total'] - $subtract);
         }
 
         $user = Auth::user();

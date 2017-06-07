@@ -54,9 +54,15 @@ class UpdateCachedTwitchUsers extends Command
             $request = $client->request('GET', 'https://api.twitch.tv/kraken/users/' . $user->id, $settings);
 
             $body = json_decode($request->getBody(), true);
-            if ($request->getStatusCode() !== 200) {
-                $this->info('Invalid status code, deleting: ' . $user->id);
-                $user->delete();
+            $status = $request->getStatusCode();
+            if ($status !== 200) {
+                $this->info($body['status'] . ' - ' . $body['message']);
+
+                // Delete banned/deleted/non-existing users.
+                if ($status === 422 || $status === 404) {
+                    $user->delete();
+                }
+
                 continue;
             }
 

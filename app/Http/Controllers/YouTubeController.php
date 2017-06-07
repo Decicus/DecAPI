@@ -175,7 +175,7 @@ class YouTubeController extends Controller
             $video = 'https://youtu.be/' . $video;
         }
 
-        return $video;
+        return Helper::text($video);
     }
 
     /**

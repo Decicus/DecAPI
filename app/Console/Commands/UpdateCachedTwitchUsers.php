@@ -55,7 +55,8 @@ class UpdateCachedTwitchUsers extends Command
 
             $body = json_decode($request->getBody(), true);
             if ($request->getStatusCode() !== 200) {
-                $this->info($body['status'] . ' - ' . $body['message']);
+                $this->info('Invalid status code, deleting: ' . $user->id);
+                $user->delete();
                 continue;
             }
 

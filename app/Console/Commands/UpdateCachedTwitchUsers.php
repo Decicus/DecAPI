@@ -60,6 +60,7 @@ class UpdateCachedTwitchUsers extends Command
 
                 // Delete banned/deleted/non-existing users.
                 if ($status === 422 || $status === 404) {
+                    $this->info('Deleting user: ' . $user->id);
                     $user->delete();
                 }
 

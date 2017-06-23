@@ -1371,6 +1371,47 @@ class TwitchController extends Controller
     }
 
     /**
+     * Returns the total views the channel has.
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @return Response
+     */
+    public function totalViews(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+        $channelName = null;
+
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('A channel has to be specified.');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately and override $channel
+                $channelName = $channel;
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $data = $this->twitchApi->channels($channel, $this->version);
+
+        if (!empty($data['views'])) {
+            return Helper::text($data['views']);
+        }
+
+        return Helper::text($data['error'] . ' - ' . $data['message']);
+    }
+
+    /**
      * Finds the specified channel's latest video upload.
      *
      * @param  Request $request

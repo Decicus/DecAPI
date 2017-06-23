@@ -189,6 +189,9 @@ Route::group(['middleware' => 'web'], function() {
             ->where('team_members', '(team_members(\.php)?)')
             ->where('team', '([A-z0-9]{1,40})');
 
+        Route::get('total_views/{channel?}', 'TwitchController@totalViews')
+            ->where('channel', $channelRegex);
+
         Route::get('upload/{channel?}', 'TwitchController@upload')
             ->where('channel', $channelRegex);
 

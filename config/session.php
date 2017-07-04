@@ -135,7 +135,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_COOKIE_DOMAIN', '.decapi.me'),
+    'domain' => env('SESSION_COOKIE_DOMAIN', null),
 
     /*
     |--------------------------------------------------------------------------

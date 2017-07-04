@@ -83,8 +83,7 @@ class TwitchAuthController extends Controller
         }
 
         // Clear session data before redirecting
-        $request->session()->flush();
-
+        session()->flush();
         session()->put('redirect', $redirect);
 
         return Socialite::with('twitch')->scopes($scopes)->redirect();

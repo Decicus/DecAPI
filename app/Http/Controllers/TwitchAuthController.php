@@ -65,6 +65,18 @@ class TwitchAuthController extends Controller
         $scopes = $request->input('scopes', null);
         $redirect = $request->input('redirect', 'home');
 
+        /**
+         * This block is a bit of a dirty hotfix, to fix an issue with users using beta.decapi.me instead of decapi.me
+         * Normally (according to various internet sources), changing the session cookie domain should've worked to fix this, but apparently not.
+         *
+         * Hopefully this doesn't have to linger around for months before I am able to look at this issue again.
+         */
+        $requestUrl = parse_url($request->url());
+        $authUrl = parse_url(env('TWITCH_REDIRECT_URI', 'https://example.com/auth/twitch/callback'));
+        if ($authUrl['host'] !== $requestUrl['host']) {
+            return redirect($authUrl['scheme'] . '://' . $authUrl['host'] . '/auth/twitch?scopes=' . $scopes . '&redirect=' . $redirect);
+        }
+
         if (empty($scopes)) {
             return Helper::message('missing_scopes');
         }

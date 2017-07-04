@@ -1234,7 +1234,7 @@ class TwitchController extends Controller
 
         $data = [
             'page' => 'Subcount',
-            'route' => route('twitch.subcount', ['subcount' => $name])
+            'route' => route('twitch.subcount', ['subcount' => 'subcount', 'channel' => $name])
         ];
         return view('twitch.subcount', $data);
     }

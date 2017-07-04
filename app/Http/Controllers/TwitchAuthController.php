@@ -94,6 +94,7 @@ class TwitchAuthController extends Controller
             $redirect = 'home';
         }
 
+        session()->flush();
         session()->put('redirect', $redirect);
 
         return Socialite::with('twitch')->scopes($scopes)->redirect();

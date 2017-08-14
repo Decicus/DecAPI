@@ -95,6 +95,10 @@ class Helper
         $settings['http_errors'] = false;
         $settings['headers'] = $headers;
 
+        if (empty($settings['headers']['User-Agent'])) {
+            $settings['headers']['User-Agent'] = env('DECAPI_USER_AGENT', 'DecAPI/1.0.0 (https://github.com/Decicus/DecAPI)');
+        }
+
         $client = new Client();
         $result = $client->request('GET', $url, $settings);
         return ($isJson ? json_decode($result->getBody(), true) : $result->getBody());

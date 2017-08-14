@@ -51,6 +51,11 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('steam-status-report', ['as' => 'steamStatusReport', 'uses' => 'DayZController@steamStatusReport']);
     });
 
+    Route::group(['prefix' => 'ffz', 'as' => 'ffz.'], function() {
+        Route::get('emotes/{channel?}', ['as' => 'emotes', 'uses' => 'FfzController@emotes'])
+            ->where('channel', '.*');
+    });
+
     Route::group(['prefix' => 'lever', 'as' => 'lever.'], function() {
         Route::get('/', ['as' => 'base', 'uses' => 'LeverController@base']);
         Route::get('{twitch}', ['as' => 'twitch', 'uses' => 'LeverController@twitch'])

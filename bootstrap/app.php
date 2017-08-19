@@ -56,9 +56,15 @@ $app->singleton(
  * Fortrabbit error_log
  */
 $app->configureMonologUsing(function($monolog) {
-    // chose the error_log handler
-    $handler = new \Monolog\Handler\ErrorLogHandler();
-    // time will already be logged -> change default format
+    if (!empty(env('PAPERTRAIL_LOG_DESTINATION', null))) {
+        $destination = env('PAPERTRAIL_LOG_DESTINATION');
+        $destination = explode(':', $destination);
+
+        $handler = new \Monolog\Handler\SyslogUdpHandler($destination[0], $destination[1]);
+    } else {
+        $handler = new \Monolog\Handler\ErrorLogHandler();
+    }
+
     $handler->setFormatter(new \Monolog\Formatter\LineFormatter('%channel%.%level_name%: %message% %context% %extra%'));
     $monolog->pushHandler($handler);
 });

@@ -3,11 +3,10 @@
 
 This is essentially an attempt at rewriting everything that DecAPI supports into something more structured and documented, while still keeping backwards compatibility to those applications that still rely on it, using the [Laravel framework](https://laravel.com/).
 
-As of right now, there is no ETA when this will be "complete". The idea is to keep adding features until I feel like it's time for another rewrite.  
 Pull requests are generally welcome for new features, but features that are implemented to support backwards compatibility I would prefer to implement myself.  
-This is only because certain features have never been documented (not even in my [blog post covering my custom APIs](https://blog.thomassen.xyz/custom-apis/)).
+This is only because certain features have never been documented (not even in my [blog post covering my custom APIs](https://blog.decicus.com/custom-apis/)).
 
-If you're interested, a beta version is available under [beta.decapi.me](https://beta.decapi.me).
+This is currently live under [decapi.me](https://decapi.me/).
 
 ## Layout
 The layout of the application can be reflected upon by looking at the [routes.php](app/Http/routes.php) file. Each group uses their own controller located in [app/Http/Controllers](app/Http/Controllers), and each sub-route usually has their own method in said controller.
@@ -28,7 +27,7 @@ There is also a fallback route setup to redirect all requests to the [old.decapi
 
 ## Requirements
 The following things are required for setting this up:
-- [Laravel's requirements](https://laravel.com/docs/5.2/installation#server-requirements)
+- [Laravel 5.2's requirements](https://laravel.com/docs/5.2/installation#server-requirements)
 - [A database system that Laravel supports](https://laravel.com/docs/5.2/database#introduction)
 - [Composer](https://getcomposer.org/)
 

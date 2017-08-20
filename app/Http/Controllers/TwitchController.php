@@ -661,7 +661,7 @@ class TwitchController extends Controller
                     ->orderBy('title')
                     ->get();
 
-        if (empty($articles)) {
+        if ($articles->isEmpty()) {
             $msg = 'No results found.';
             $code = 404;
         }

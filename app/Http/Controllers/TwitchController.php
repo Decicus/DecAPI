@@ -551,11 +551,28 @@ class TwitchController extends Controller
             return Helper::text($followers['message']);
         }
 
+        if (!isset($followers['follows'])) {
+            return Helper::text('An error occurred retrieving your followers.');
+        }
+
+        $follows = $followers['follows'];
+
+        if (count($followers['follows']) === 0) {
+            return Helper::text('You do not have any followers :(');
+        }
+
         $users = [];
         $currentNumber = 0;
-        foreach ($followers['follows'] as $user) {
+        foreach ($follows as $user) {
+            $user = $user['user'];
+
+            $name = $user['name'];
+            if (!empty($user['display_name'])) {
+                $name = $user['display_name'];
+            }
+
             $currentNumber++;
-            $users[] = ($showNumbers ? $currentNumber . '. ' : '') . $user['user']['display_name'];
+            $users[] = ($showNumbers ? $currentNumber . '. ' : '') . $name;
         }
 
         return Helper::text(implode($separator, $users));

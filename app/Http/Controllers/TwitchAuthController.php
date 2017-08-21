@@ -14,6 +14,7 @@ use Socialite\Two\InvalidStateException;
 use App\User;
 use App\Helpers\Helper;
 use Crypt;
+use Log;
 
 class TwitchAuthController extends Controller
 {
@@ -71,6 +72,8 @@ class TwitchAuthController extends Controller
          * Normally (according to various internet sources), changing the session cookie domain should've worked to fix this, but apparently not.
          *
          * Hopefully this doesn't have to linger around for months before I am able to look at this issue again.
+         *
+         * TODO: See the catch block for InvalidStateException inside callback().
          */
         $requestUrl = parse_url($request->url());
         $authUrl = parse_url(env('TWITCH_REDIRECT_URI', 'https://example.com/auth/twitch/callback'));
@@ -126,6 +129,8 @@ class TwitchAuthController extends Controller
         try {
             $user = Socialite::with('twitch')->user();
         } catch (InvalidStateException $e) {
+            // TODO: Remove this once the problem is properly identified.
+            Log::error('InvalidStateException: ' . json_encode($request->all()));
             return view('auth.twitch', $viewData);
         } catch (Exception $e) {
             return redirect()->route('home');

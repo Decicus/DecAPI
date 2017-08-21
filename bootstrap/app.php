@@ -56,9 +56,9 @@ $app->singleton(
  * Fortrabbit error_log
  */
 $app->configureMonologUsing(function($monolog) {
-    if (!empty(env('PAPERTRAIL_LOG_DESTINATION', null))) {
-        $destination = env('PAPERTRAIL_LOG_DESTINATION');
-        $destination = explode(':', $destination);
+    $papertrail = env('PAPERTRAIL_LOG_DESTINATION', null);
+    if (!empty($papertrail)) {
+        $destination = explode(':', $papertrail);
 
         $handler = new \Monolog\Handler\SyslogUdpHandler($destination[0], $destination[1]);
     } else {

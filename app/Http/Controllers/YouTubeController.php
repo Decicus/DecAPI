@@ -8,6 +8,7 @@ use App\Http\Requests;
 use YouTube;
 use App\Helpers\Helper;
 use Exception;
+use Log;
 
 class YouTubeController extends Controller
 {
@@ -81,6 +82,7 @@ class YouTubeController extends Controller
             $video = $results[$skip];
             return Helper::text($video->snippet->title . ' - https://youtu.be/' . $video->id->videoId);
         } catch (Exception $ex) {
+            Log::error('An error occurred in /youtube/latest_video: ' . (string) $ex);
             return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
         }
     }

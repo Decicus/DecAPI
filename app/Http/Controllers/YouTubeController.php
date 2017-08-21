@@ -40,45 +40,49 @@ class YouTubeController extends Controller
             $skip = 0;
         }
 
-        switch ($type) {
-            case 'user':
-                $channel = YouTube::getChannelByName($id);
-                break;
+        try {
+            switch ($type) {
+                case 'user':
+                    $channel = YouTube::getChannelByName($id);
+                    break;
 
-            default:
-                $channel = YouTube::getChannelById($id);
-                break;
+                default:
+                    $channel = YouTube::getChannelById($id);
+                    break;
+            }
+
+            if ($channel === false) {
+                return Helper::text('The specified identifier is invalid.');
+            }
+
+            $id = $channel->id;
+
+            $searchParams = [
+                'part' => 'snippet',
+                'channelId' => $id,
+                'maxResults' => $max,
+                'order' => 'date',
+                'type' => 'video',
+                'q' => ''
+            ];
+            $results = YouTube::searchAdvanced($searchParams);
+
+            if (empty($results)) {
+                return Helper::text('This channel has no public videos.');
+            }
+
+            $total = count($results);
+
+            // Check if the request skips a valid amount of videos.
+            if ($total < ($skip + 1)) {
+                return Helper::text(sprintf('Channel only has %d public videos. Invalid skip count specified: %d.', $total, $skip));
+            }
+
+            $video = $results[$skip];
+            return Helper::text($video->snippet->title . ' - https://youtu.be/' . $video->id->videoId);
+        } catch (Exception $ex) {
+            return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
         }
-
-        if ($channel === false) {
-            return Helper::text('The specified identifier is invalid.');
-        }
-
-        $id = $channel->id;
-
-        $searchParams = [
-            'part' => 'snippet',
-            'channelId' => $id,
-            'maxResults' => $max,
-            'order' => 'date',
-            'type' => 'video',
-            'q' => ''
-        ];
-        $results = YouTube::searchAdvanced($searchParams);
-
-        if (empty($results)) {
-            return Helper::text('This channel has no public videos.');
-        }
-
-        $total = count($results);
-
-        // Check if the request skips a valid amount of videos.
-        if ($total < ($skip + 1)) {
-            return Helper::text(sprintf('Channel only has %d public videos. Invalid skip count specified: %d.', $total, $skip));
-        }
-
-        $video = $results[$skip];
-        return Helper::text($video->snippet->title . ' - https://youtu.be/' . $video->id->videoId);
     }
 
     /**

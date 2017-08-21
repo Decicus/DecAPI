@@ -162,10 +162,19 @@ class YouTubeController extends Controller
                 'maxResults' => 1
             ];
 
-            $video = YouTube::searchAdvanced($parameters);
+            try {
+                $video = YouTube::searchAdvanced($parameters);
 
-            if (!empty($video)) {
-                $video = $video[0]->id->videoId;
+                if (!empty($video)) {
+                    $video = $video[0]->id->videoId;
+                }
+            } catch (Exception $ex) {
+                Log::error(sprintf('An error occurred in /youtube/videoid (search query: "%s" ): %s', $search, (string) $ex));
+                if ($this->isNightbot($request)) {
+                    return Helper::text('');
+                }
+
+                return Helper::text('An error occurred when searching: ' . $search);
             }
         }
 

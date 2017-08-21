@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Socialite;
+use Socialite\Two\InvalidStateException;
 use App\User;
 use App\Helpers\Helper;
 use Crypt;
@@ -96,6 +97,7 @@ class TwitchAuthController extends Controller
 
         session()->flush();
         session()->put('redirect', $redirect);
+        session()->put('scopes', implode('+', $scopes));
 
         return Socialite::with('twitch')->scopes($scopes)->redirect();
     }
@@ -103,14 +105,28 @@ class TwitchAuthController extends Controller
     /**
      * Handles return back from Twitch and takes care of authentication.
      *
+     * @param  Request $request
      * @return Response
      */
-    public function callback()
+    public function callback(Request $request)
     {
         $redirect = session()->get('redirect', 'home');
+        $scopes = session()->get('scopes');
+        $authUrl = sprintf('%s?redirect=%s&scopes=%s', route('auth.twitch.base'), $redirect, $scopes);
+        $viewData = [
+            'authUrl' => $authUrl,
+            'error' => null,
+        ];
+
+        if (empty($request->input('code', null))) {
+            $viewData['error'] = $request->input('error_description', null);
+            return view('auth.twitch', $viewData);
+        }
 
         try {
             $user = Socialite::with('twitch')->user();
+        } catch (InvalidStateException $e) {
+            return view('auth.twitch', $viewData);
         } catch (Exception $e) {
             return redirect()->route('home');
         }

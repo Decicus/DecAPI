@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\ImportSubcountTokens::class,
         Commands\UpdateCachedTwitchUsers::class,
+        Commands\UpdateTwitchAuthUsers::class,
         Commands\UpdateTwitchHelp::class,
     ];
 
@@ -32,5 +33,11 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('twitch:help')
                  ->daily();
+
+        $schedule->command('twitch:authuserupdate')
+                ->hourly()
+                ->when(function() {
+                    return date('G') % 6 === 0;
+                });
     }
 }

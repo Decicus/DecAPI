@@ -78,10 +78,10 @@ class UpdateTwitchAuthUsers extends Command
                 $user->delete();
 
                 if (empty($user->twitch)) {
-                    return $this->info(sprintf('Removed user: %s', $user->id));
+                    $this->info(sprintf('Removed user: %s', $user->id));
                 }
 
-                return $this->info(sprintf('Removed user: %s (%s)', $user->twitch->username, $user->id));
+                $this->info(sprintf('Removed user: %s (%s)', $user->twitch->username, $user->id));
             }
 
             $user->updated_at = Carbon::now();

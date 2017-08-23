@@ -76,6 +76,11 @@ class UpdateTwitchAuthUsers extends Command
 
             if (empty($body['token']) || $body['token']['valid'] === false) {
                 $user->delete();
+
+                if (empty($user->twitch)) {
+                    return $this->info(sprintf('Removed user: %s', $user->id));
+                }
+
                 return $this->info(sprintf('Removed user: %s (%s)', $user->twitch->username, $user->id));
             }
 

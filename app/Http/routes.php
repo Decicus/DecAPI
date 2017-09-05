@@ -187,6 +187,9 @@ Route::group(['middleware' => 'web'], function() {
             ->where('subcount', '(subcount(\.php)?)')
             ->where('channel', $channelRegex);
 
+        Route::get('subpoints/{channel?}', ['as' => 'subpoints', 'uses' => 'TwitchController@subpoints'])
+            ->where('channel', $channelRegex);
+
         Route::get('subscriber_emotes/{channel?}', 'TwitchController@subEmotes')
             ->where('channel', $channelRegex);
 

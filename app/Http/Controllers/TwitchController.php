@@ -24,6 +24,7 @@ use Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
 
 use Exception;
+use Log;
 
 class TwitchController extends Controller
 {
@@ -133,6 +134,7 @@ class TwitchController extends Controller
             'ingests' => 'ingests',
             'multi' => 'multi/{STREAMS}',
             'subcount' => 'subcount/{CHANNEL}',
+            'subpoints' => 'subpoints/{CHANNEL}',
             'subscriber_emotes' => 'subscriber_emotes/{CHANNEL}',
             'status' => 'status/{CHANNEL}',
             'title' => 'title/{CHANNEL}',
@@ -1254,6 +1256,84 @@ class TwitchController extends Controller
             'route' => route('twitch.subcount', ['subcount' => 'subcount', 'channel' => $name])
         ];
         return view('twitch.subcount', $data);
+    }
+
+    /**
+     * Similar to "subcount", this retrieves the "subscriber points" used to calculate
+     * when a partner receives a new emote slot.
+     *
+     * @param  Request $request
+     * @param  string  $channel Channel name/ID
+     * @return Response
+     */
+    public function subpoints(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+        $include = $request->input('include', '');
+
+        // Turn $include into an array for future reference use.
+        $include = empty($include) ? [] : explode(',', $include);
+
+        if (empty($channel) && !Auth::check()) {
+            return Helper::text('Please specify a channel name at the end of the URL - For example: /twitch/subpoints/CHANNEL_NAME');
+        }
+
+        if (!empty($channel)) {
+            $channel = strtolower($channel);
+            $reAuth = route('auth.twitch.base') . '?redirect=subpoints&scopes=user_read+channel_subscriptions';
+            $reAuth = sprintf('%s needs to authenticate to use subpoints: %s', $channel, $reAuth);
+
+            try {
+                $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
+            } catch (Exception $e) {
+                $field = $id === 'true' ? 'ID' : 'username';
+                Log::error($e->getMessage());
+                return Helper::text('An error occurred when trying to find a channel with the ' . $field . ': ' . $channel);
+            }
+
+            if (empty($user)) {
+                return Helper::text($reAuth);
+            }
+
+            try {
+                $token = Crypt::decrypt($user->access_token);
+            } catch (DecryptException $e) {
+                Log::error($e->getMessage());
+                return Helper::text($reAuth);
+            }
+
+            $url = sprintf('https://api.twitch.tv/api/channels/%s/subscriber_count', $channel);
+
+            $data = $this->twitchApi->get($url, true, [
+                'Authorization' => 'OAuth ' . $token,
+            ]);
+
+            if (!empty($data['status'])) {
+                if ($data['status'] === 401) {
+                    return Helper::text($reAuth);
+                }
+
+                return Helper::text($data['message']);
+            }
+
+            $text = $data['score'];
+            if (in_array('next_level', $include)) {
+                $text = sprintf('%d/%d', $data['score'], $data['next_level']['minimum_score']);
+            }
+
+            return Helper::text($text);
+        }
+
+        $user = Auth::user();
+        $userData = $this->twitchApi->users($user->id, $this->version);
+        $name = $userData['name'];
+
+        return view('twitch.subpoints', [
+            'page' => 'Subpoints',
+            'route' => route('twitch.subpoints', [
+                'channel' => $name,
+            ]),
+        ]);
     }
 
     /**

@@ -27,7 +27,8 @@ class TwitchAuthController extends Controller
      */
     private $redirects = [
         'home' => '/',
-        'subcount' => '/twitch/subcount'
+        'subcount' => '/twitch/subcount',
+        'subpoints' => '/twitch/subpoints',
     ];
 
     /**

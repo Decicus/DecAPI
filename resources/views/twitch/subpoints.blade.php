@@ -11,7 +11,7 @@
             <p class="text text-muted">For example, if you wanted to display this message:</p>
             <pre>Current subscriber points: 123</pre>
             <p class="text text-muted">You would put this in the command response:</p>
-            <pre>Current subscriber points: $readapi({{ $route }}) - Thank you for your support!</pre>
+            <pre>Current subscriber points: $readapi({{ $route }})</pre>
 
             <h3>Nightbot:</h3>
             <p class="text text-muted">Add a command that includes the part below and it will be replaced with the amount of subscriber points in the command:</p>
@@ -19,7 +19,7 @@
             <p class="text text-muted">For example, if you wanted to display this message:</p>
             <pre>Current subscriber points: 123</pre>
             <p class="text text-muted">You would put this in the command response:</p>
-            <pre>Current subscriber points: $(urlfetch {{ $route }})!</pre>
+            <pre>Current subscriber points: $(urlfetch {{ $route }})</pre>
 
             <p class="text text-info">If you wish to log out, you can do so below. This will not prevent any commands from working.</p>
             <a class="btn btn-danger" href="{{ route('auth.twitch.logout') }}">Log out</a>

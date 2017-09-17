@@ -107,7 +107,7 @@ Route::group(['middleware' => 'web'], function() {
     });
 
     Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
-        $channelRegex = '.*';
+        $channelRegex = '([A-z0-9]{1,50})';
 
         Route::get('/', 'TwitchController@base');
 
@@ -206,7 +206,7 @@ Route::group(['middleware' => 'web'], function() {
         Route::group(['middleware' => 'throttle:100'], function() {
             Route::get('{uptime}/{channel?}', 'TwitchController@uptime')
                 ->where('uptime', '(uptime(\.php)?)')
-                ->where('channel', '.*');
+                ->where('channel', '([A-z0-9]){1,25}');
         });
 
         Route::get('viewercount/{channel?}', 'TwitchController@viewercount')

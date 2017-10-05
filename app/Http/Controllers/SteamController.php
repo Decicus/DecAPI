@@ -206,6 +206,7 @@ class SteamController extends Controller
     {
         $playerId = $playerId ?: $request->input('id', null);
         $appId = $appId ?: $request->input('appid', null);
+        $hoursFormat = $request->input('format', '%s hours');
         $readable = ($readable === 'readable' ? true : false);
         $round = intval($request->input('round', 2));
 
@@ -245,11 +246,12 @@ class SteamController extends Controller
             }
 
             if ($readable === true) {
-                return Helper::text($game->playtimeForeverReadable);
+                $readableTime = $game->playtimeForeverReadable;
+                return Helper::text($readableTime);
             }
 
             $hours = round($game->playtimeForever / 60, $round);
-            return Helper::text($hours . ' hours');
+            return Helper::text(sprintf($hoursFormat, $hours));
         } catch (Exception $e) {
             return Helper::text($e->getMessage());
         }

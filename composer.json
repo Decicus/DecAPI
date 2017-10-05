@@ -17,7 +17,7 @@
         "austinb/gameq": "3.*@dev",
         "thujohn/twitter": "^2.2",
         "alaouy/youtube": "^1.2",
-        "syntax/steam-api": "^2.0",
+        "syntax/steam-api": "2.0.10",
         "socialiteproviders/twitch": "^2.0",
         "doctrine/dbal": "^2.5",
         "ircmaxell/php-math-parser": "dev-master"

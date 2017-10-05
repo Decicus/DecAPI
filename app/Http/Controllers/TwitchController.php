@@ -29,6 +29,11 @@ use Log;
 class TwitchController extends Controller
 {
     /**
+     * @var string
+     */
+    private $defaultAvatar = 'https://static-cdn.jtvnw.net/jtv-static/404_preview-300x300.png';
+
+    /**
      * @var array
      */
     private $headers = [
@@ -192,6 +197,41 @@ class TwitchController extends Controller
         $time = Helper::getDateDiff($time, time(), $precision);
 
         return Helper::text($time);
+    }
+
+    /**
+     * Retrieves the URL for the user's avatar.
+     *
+     * @param  Request $request
+     * @param  string  $user    Username/ID
+     * @return Response
+     */
+    public function avatar(Request $request, $user = null)
+    {
+        if (empty($user)) {
+            return Helper::text('No user specified');
+        }
+
+        $id = $request->input('id', 'false');
+        if ($id !== 'true') {
+            try {
+                $user = $this->userByName($user)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $data = $this->twitchApi->users($user, $this->version);
+
+        if (!empty($data['error'])) {
+            return Helper::text($data['status'] . ' - ' . $data['message']);
+        }
+
+        if (empty($data['logo'])) {
+            return Helper::text($this->defaultAvatar);
+        }
+
+        return Helper::text($data['logo']);
     }
 
     /**

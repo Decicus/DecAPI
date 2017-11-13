@@ -216,6 +216,8 @@ Route::group(['middleware' => 'web'], function() {
     });
 
     Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {
+        Route::get('accountage/{name?}', ['as' => 'accountage', 'uses' => 'TwitterController@accountage']);
+
         Route::get('{latest}/{name?}', ['as' => 'latest', 'uses' => 'TwitterController@latest'])
             ->where('latest', '(latest(\.php)?|latest_url(\.php)?|latest_id(\.php)?)')
             ->where('name', '([A-z0-9]+)');

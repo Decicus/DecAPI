@@ -13,6 +13,32 @@ use Exception;
 class TwitterController extends Controller
 {
     /**
+     * Returns the account age of the specified Twitter user.
+     *
+     * @param  Request $request
+     * @param  string  $name
+     * @return Response
+     */
+    public function accountAge(Request $request, $name = null)
+    {
+        if (empty($name)) {
+            return Helper::text('You have to specify a (user)name.');
+        }
+
+        $precision = intval($request->input('precision', 3));
+        try {
+            $user = Twitter::getUsers([
+                'screen_name' => $name,
+            ]);
+
+            $timeDiff = Helper::getDateDiff($user->created_at, time(), $precision);
+            return Helper::text($timeDiff);
+        } catch (Exception $ex) {
+            return Helper::text($ex->getMessage());
+        }
+    }
+
+    /**
      * Retrieves tweets from the specified user.
      *
      * @param  string  $name            Twitter username

@@ -156,7 +156,7 @@ class YouTubeController extends Controller
 
         if ($parse === false) {
             $parameters = [
-                'q' => urlencode($search),
+                'q' => $search,
                 'type' => 'video',
                 'part' => 'id',
                 'maxResults' => 1

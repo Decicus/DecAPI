@@ -159,14 +159,30 @@ class YouTubeController extends Controller
                 'q' => $search,
                 'type' => 'video',
                 'part' => 'id',
-                'maxResults' => 1
+                'maxResults' => 5,
             ];
 
             try {
-                $video = YouTube::searchAdvanced($parameters);
+                $videos = YouTube::searchAdvanced($parameters);
 
-                if (!empty($video)) {
-                    $video = $video[0]->id->videoId;
+                /**
+                 * For some reason, certain keywords (only one that I saw was "headlines") would error out.
+                 *
+                 * This is because the YouTube Data API decides to return a specific channel ID for their
+                 * auto-generated "News" channel, even though type is set to 'video'.
+                 *
+                 * Specifically talking about this channel: https://www.youtube.com/channel/UCYfdidRxbB8Qhf0Nx7ioOYw
+                 *
+                 * This is an ugly workaround that I did to prevent it from giving an error whenever
+                 * someone searches for songs like "Drake - Headlines".
+                 */
+                if (!empty($videos)) {
+                    foreach ($videos as $searchResult) {
+                        if (property_exists($searchResult->id, 'videoId')) {
+                            $video = $searchResult->id->videoId;
+                            break;
+                        }
+                    }
                 }
             } catch (Exception $ex) {
                 Log::error(sprintf('An error occurred in /youtube/videoid (search query: "%s" ): %s', $search, (string) $ex));

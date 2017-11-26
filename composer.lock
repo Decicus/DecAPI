@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "53284626b2b9e43fa0c358fb00f37b79",
-    "content-hash": "7009706aa0166d8ec28b0678001e71ac",
+    "hash": "a446d93ba87ae0234ca69f31ccd7ba33",
+    "content-hash": "592d7b596bec521c0133e168b095408a",
     "packages": [
         {
             "name": "alaouy/youtube",
@@ -876,48 +876,6 @@
                 "url"
             ],
             "time": "2017-03-20 17:10:46"
-        },
-        {
-            "name": "ircmaxell/php-math-parser",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ircmaxell/php-math-parser.git",
-                "reference": "5698ff2e910c6f6c534061064795a228d2060c7f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-math-parser/zipball/5698ff2e910c6f6c534061064795a228d2060c7f",
-                "reference": "5698ff2e910c6f6c534061064795a228d2060c7f",
-                "shasum": ""
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^1.11"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PHPMathParser\\": "lib/PHPMathParser/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Anthony Ferrara",
-                    "email": "ircmaxell@php.net",
-                    "homepage": "http://blog.ircmaxell.com"
-                }
-            ],
-            "description": "A simple shunting-yard based math parser and executor for PHP",
-            "homepage": "https://github.com/ircmaxell/php-math-parser",
-            "keywords": [
-                "eval",
-                "math"
-            ],
-            "time": "2016-09-07 17:56:48"
         },
         {
             "name": "jakub-onderka/php-console-color",
@@ -4657,8 +4615,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "austinb/gameq": 20,
-        "ircmaxell/php-math-parser": 20
+        "austinb/gameq": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

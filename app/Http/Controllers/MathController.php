@@ -6,11 +6,17 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Helpers\Helper;
-use PHPMathParser;
-use RuntimeException;
+use Exception;
 
 class MathController extends Controller
 {
+    /**
+     * Base URL for math.js API.
+     *
+     * @var string
+     */
+    private $mathBaseUrl = 'http://api.mathjs.org/v1/?expr=';
+
     /**
      * Evaluates a math expression.
      *
@@ -27,8 +33,7 @@ class MathController extends Controller
         }
 
         try {
-            $parser = new PHPMathParser\Math;
-            $result = $parser->evaluate($exp);
+            $result = Helper::get($this->mathBaseUrl . urlencode($exp), [], false);
 
             if ($request->exists('round') === true) {
                 $result = round($result, $round);
@@ -36,7 +41,7 @@ class MathController extends Controller
 
             return Helper::text($result);
         } catch (RuntimeException $e) {
-            return Helper::text($e->getMessage());
+            return Helper::text('An error occurred evaluating: ' . $exp);
         }
     }
 }

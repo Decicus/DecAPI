@@ -19,8 +19,7 @@
         "alaouy/youtube": "^1.2",
         "syntax/steam-api": "2.0.10",
         "socialiteproviders/twitch": "^2.0",
-        "doctrine/dbal": "^2.5",
-        "ircmaxell/php-math-parser": "dev-master"
+        "doctrine/dbal": "^2.5"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

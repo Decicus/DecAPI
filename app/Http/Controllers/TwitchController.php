@@ -1219,6 +1219,10 @@ class TwitchController extends Controller
             unset($users[$search]);
         }
 
+        if (empty($users)) {
+            return Helper::text('The list of users is empty.');
+        }
+
         shuffle($users);
         $rand = mt_rand(0, count($users) - 1);
         return Helper::text($users[$rand]);

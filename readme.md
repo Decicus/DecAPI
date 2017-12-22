@@ -62,7 +62,7 @@ Rate limiting is done by using Laravel's `throttle` middleware. This means you c
 
 Below is an overview over what routes are currently rate limited. If the route is not specified, it does not have a rate limit.
 
-- `/twitch/uptime`
+- `/twitch/*` - All sub-routes under `/twitch`
     - Limit: 100 requests per 60 seconds.
 
 ## License

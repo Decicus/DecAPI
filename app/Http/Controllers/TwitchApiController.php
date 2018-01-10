@@ -122,6 +122,34 @@ class TwitchApiController extends Controller
     }
 
     /**
+     * Gets channels/:channel/subscriptions/:user data
+     *
+     * @param  int $channel     Channel id
+     * @param  int $user        User id
+     * @param  string $accessToken Authorization token
+     * @param  array  $headers
+     * @return TwitchApiController\get
+     */
+    public function subscriptionRelationship($channel = '', $user = '', $accessToken = '', $headers = [])
+    {
+        if (empty($user)) {
+            throw new Exception('You have to specify a user');
+        }
+
+        if (empty($channel)) {
+            throw new Exception('You have to specify a channel');
+        }
+
+        if (!empty($accessToken)) {
+            $headers['Authorization'] = 'OAuth ' . $accessToken;
+        } else {
+            throw new Exception('You to have provide an access token');
+        }
+
+        return $this->get('channels/' . $channel . '/subscriptions/'. $user, false, $headers);
+    }
+
+    /**
      * Gets chat/:channel/emoticons data
      *
      * @param  string $channel Channel name

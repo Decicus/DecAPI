@@ -441,12 +441,10 @@ class TwitchController extends Controller
         $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->version);
 
         if (!empty($getFollow['status'])) {
-            return response($getFollow['message'])->withHeaders($this->headers);
+            return Helper::text($getFollow['message']);
         }
 
-        $time = $getFollow['created_at'];
-        $diff = Helper::getDateDiff($time, time(), $precision);
-        return response($diff)->withHeaders($this->headers);
+        return Helper::text(Helper::getDateDiff($getFollow['created_at'], time(), $precision));
     }
 
     /**
@@ -516,11 +514,10 @@ class TwitchController extends Controller
 
         $getSub = $this->twitchApi->subscriptionRelationship($channel->id, $user, $token, $this->version);
         if (!empty($getSub['status'])) {
-            return response($getSub['message'])->withHeaders($this->headers);
+            return Helper::text($getSub['message']);
         }
 
-        $diff = Helper::getDateDiff($getSub['created_at'], time(), $precision);
-        return response($diff)->withHeaders($this->headers);
+        return Helper::text(Helper::getDateDiff($getSub['created_at'], time(), $precision));
     }
 
     /**
@@ -876,7 +873,7 @@ class TwitchController extends Controller
         $highlight = $fetchHighlight['videos'][0];
         $title = $highlight['title'];
         $url = $highlight['url'];
-        return response($title . " - " . $url)->withHeaders($this->headers);
+        return Helper::text($title . " - " . $url);
     }
 
     /**

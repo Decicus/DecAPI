@@ -1239,7 +1239,7 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
         $user = $user ?: $request->input('user', null);
-        $id = false;
+        $id = $request->exists('id');
 
         $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
 
@@ -1284,6 +1284,13 @@ class TwitchController extends Controller
         }
 
         if (empty($channel)) {
+            return Helper::text($needToReAuth);
+        }
+
+        $scopes = explode('+', $channel->scopes);
+
+        if (!in_array('channel_check_subscription', $scopes)) {
+            $needToReAuth .= '+' . implode('+', $scopes);
             return Helper::text($needToReAuth);
         }
 
@@ -1347,6 +1354,12 @@ class TwitchController extends Controller
             }
 
             if (empty($user)) {
+                return Helper::text($needToReAuth);
+            }
+
+            $scopes = explode('+', $user->scopes);
+            if (!in_array('channel_subscriptions', $scopes)) {
+                $needToReAuth .= '+' . implode('+', $scopes);
                 return Helper::text($needToReAuth);
             }
 
@@ -1421,6 +1434,12 @@ class TwitchController extends Controller
 
             if (empty($user)) {
                 return Helper::text($reAuth);
+            }
+
+            $scopes = explode('+', $user->scopes);
+            if (!in_array('channel_subscriptions', $scopes)) {
+                $needToReAuth .= '+' . implode('+', $scopes);
+                return Helper::text($needToReAuth);
             }
 
             try {

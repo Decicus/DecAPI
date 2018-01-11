@@ -185,7 +185,7 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('random_user/{channel?}', ['as' => 'random_viewer', 'uses' => 'TwitchController@randomUser'])
             ->where('channel', $channelRegex);
 
-        Route::get('subage/{channel?}/{user?}', 'TwitchController@subAge')
+        Route::get('subage/{channel?}/{user?}', ['as' => 'subage', 'uses' => 'TwitchController@subAge'])
             ->where('channel', $channelRegex)
             ->where('user', $channelRegex);
 

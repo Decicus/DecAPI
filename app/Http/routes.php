@@ -185,6 +185,10 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('random_user/{channel?}', ['as' => 'random_viewer', 'uses' => 'TwitchController@randomUser'])
             ->where('channel', $channelRegex);
 
+        Route::get('subage/{channel?}/{user?}', 'TwitchController@subAge')
+            ->where('channel', $channelRegex)
+            ->where('user', $channelRegex);
+
         Route::get('{subcount}/{channel?}', ['as' => 'subcount', 'uses' => 'TwitchController@subcount'])
             ->where('subcount', '(subcount(\.php)?)')
             ->where('channel', $channelRegex);
@@ -194,10 +198,6 @@ Route::group(['middleware' => 'web'], function() {
 
         Route::get('subscriber_emotes/{channel?}', 'TwitchController@subEmotes')
             ->where('channel', $channelRegex);
-
-        Route::get('subage/{channel?}/{user?}', 'TwitchController@subAge')
-            ->where('channel', $channelRegex)
-            ->where('user', $channelRegex);
 
         Route::get('{team_members}/{team?}', 'TwitchController@teamMembers')
             ->where('team_members', '(team_members(\.php)?)')

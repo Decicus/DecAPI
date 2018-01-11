@@ -448,79 +448,6 @@ class TwitchController extends Controller
     }
 
     /**
-     * Returns the length a user has subscribed to a channel
-     *
-     * @param  Request $request
-     * @param  string  $channel
-     * @param  string  $user
-     * @return Response
-     */
-    public function subAge(Request $request, $channel = null, $user = null)
-    {
-        $channel = $channel ?: $request->input('channel', null);
-        $user = $user ?: $request->input('user', null);
-        $id = false;
-
-        $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
-
-        if ($request->exists('logout')) {
-            return redirect()->route('auth.twitch.logout');
-        }
-
-        if (empty($channel) || empty($user)) {
-            $nb = new Nightbot($request);
-            if (empty($nb->channel) || empty($nb->user)) {
-                return Helper::text('You need to specify both user and channel name');
-            }
-
-            $channel = $channel ?: $nb->channel['providerId'];
-            $user = $user ?: $nb->user['providerId'];
-            $id = true;
-        }
-
-        $channel = trim($channel);
-        $user = trim($user);
-
-        $reAuth = route('auth.twitch.base') . '?redirect=subage&scopes=user_read+channel_check_subscription';
-        $needToReAuth = sprintf('%s needs to authenticate to use subage (Subscription length): %s', $id === true ? $nb->channel['displayName'] : $channel, $reAuth);
-
-        try {
-            $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
-            if ($id === false) $user = $this->userByName($user)->id;
-        } catch (Exception $e) {
-            return Helper::text('An error occurred when trying to find channel or user.');
-        }
-
-        if (empty($channel)) {
-            return Helper::text($needToReAuth);
-        }
-
-        try {
-            $token = Crypt::decrypt($channel->access_token);
-        } catch (DecryptException $e) {
-            // Something weird happened with the encrypted token
-            // request channel owner to re-auth so it's encrypted properly
-            return Helper::text($needToReAuth);
-        }
-
-        if (empty($token)) {
-            return Helper::text($needToReAuth);
-        } else {
-            $tokenData = $this->twitchApi->base($token, $this->version)['token'];
-            if ($tokenData['valid'] === false) {
-                return Helper::text($needToReAuth);
-            }
-        }
-
-        $getSub = $this->twitchApi->subscriptionRelationship($channel->id, $user, $token, $this->version);
-        if (!empty($getSub['status'])) {
-            return Helper::text($getSub['message']);
-        }
-
-        return Helper::text(Helper::getDateDiff($getSub['created_at'], time(), $precision));
-    }
-
-    /**
      * Retrieves the specified channel's follower count.
      *
      * @param  Request $request
@@ -1298,6 +1225,91 @@ class TwitchController extends Controller
         shuffle($users);
         $rand = mt_rand(0, count($users) - 1);
         return Helper::text($users[$rand]);
+    }
+
+    /**
+     * Returns the length a user has subscribed to a channel
+     *
+     * @param  Request $request
+     * @param  string  $channel
+     * @param  string  $user
+     * @return Response
+     */
+    public function subAge(Request $request, $channel = null, $user = null)
+    {
+        $channel = $channel ?: $request->input('channel', null);
+        $user = $user ?: $request->input('user', null);
+        $id = false;
+
+        $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
+
+        if ($request->exists('logout')) {
+            return redirect()->route('auth.twitch.logout');
+        }
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userData = $this->twitchApi->users($user->id, $this->version);
+            $name = $userData['name'];
+
+            $data = [
+                'page' => 'Subscription Age',
+                'route' => route('twitch.subage', ['channel' => $name])
+            ];
+            return view('twitch.subage', $data);
+        }
+
+        if (empty($channel) || empty($user)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel) || empty($nb->user)) {
+                return Helper::text('You need to specify both user and channel name');
+            }
+
+            $channel = $channel ?: $nb->channel['providerId'];
+            $user = $user ?: $nb->user['providerId'];
+            $id = true;
+        }
+
+        $channel = trim($channel);
+        $user = trim($user);
+
+        $reAuth = route('auth.twitch.base') . '?redirect=subage&scopes=user_read+channel_check_subscription';
+        $needToReAuth = sprintf('%s needs to authenticate to use subage (Subscription length): %s', $id === true ? $nb->channel['displayName'] : $channel, $reAuth);
+
+        try {
+            $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
+            if ($id === false) $user = $this->userByName($user)->id;
+        } catch (Exception $e) {
+            return Helper::text('An error occurred when trying to find channel or user.');
+        }
+
+        if (empty($channel)) {
+            return Helper::text($needToReAuth);
+        }
+
+        try {
+            $token = Crypt::decrypt($channel->access_token);
+        } catch (DecryptException $e) {
+            // Something weird happened with the encrypted token
+            // request channel owner to re-auth so it's encrypted properly
+            return Helper::text($needToReAuth);
+        }
+
+        if (empty($token)) {
+            return Helper::text($needToReAuth);
+        } else {
+            $tokenData = $this->twitchApi->base($token, $this->version)['token'];
+            if ($tokenData['valid'] === false) {
+                return Helper::text($needToReAuth);
+            }
+        }
+
+        $getSub = $this->twitchApi->subscriptionRelationship($channel->id, $user, $token, $this->version);
+        if (!empty($getSub['status'])) {
+            return Helper::text($getSub['message']);
+        }
+
+        return Helper::text(Helper::getDateDiff($getSub['created_at'], time(), $precision));
     }
 
     /**

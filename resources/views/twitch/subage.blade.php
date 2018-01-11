@@ -8,13 +8,17 @@
             <p class="text text-warning">
                 Please keep in mind that the subscription age <strong>might not be accurate to the subscription anniversaries</strong> posted in chat (e.g. <code>Decicus has been subscribed for 21 months in a row!</code>).
                 <br>
+                <br>
                 This type of subscription only tracks when payment info was updated, while the anniversaries have a grace period of roughly 30 days before they expire.
+                <br>
                 <br>
                 What this means is that if someone temporarily cancels their subscription to renew it using different payment information (e.g. their old credit/debit card expires), the subscription age will be counted from the date they re-subscribed using the new payment information.
                 <br>
+                <br>
                 Another instance is Twitch Prime: If you have a subscriber that consistently uses their Twitch Prime to subscribe to your channel every month, <strong>the subscription age will reset every month</strong>.
                 <br>
-                This only serves as a "heads up".
+                <br>
+                This message only serves as a "heads up", to make sure people know the difference.
             </p>
 
             <h3>Ankhbot:</h3>

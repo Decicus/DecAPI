@@ -1247,7 +1247,7 @@ class TwitchController extends Controller
             return redirect()->route('auth.twitch.logout');
         }
 
-        if (Auth::check()) {
+        if (empty($channel) && empty($user) && Auth::check()) {
             $user = Auth::user();
             $userData = $this->twitchApi->users($user->id, $this->version);
             $name = $userData['name'];

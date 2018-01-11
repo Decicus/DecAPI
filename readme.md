@@ -34,7 +34,7 @@ The following things are required for setting this up:
 ## Setup
 **I only recommend setting this up for development purposes.**
 - Rename `.env.example` to `.env` and fill in the information. Primarly the database and Twitch information.
-    - You can create a Twitch application here: https://www.twitch.tv/settings/connections. The redirect URL has to be `http://your.url/auth/twitch/callback` and `TWITCH_REDIRECT_URI` in the `.env` file has to be set to the same URL.
+    - You can create a Twitch application here: https://dev.twitch.tv/dashboard/apps. The redirect URL has to be `http://your.url/auth/twitch/callback` and `TWITCH_REDIRECT_URI` in the `.env` file has to be set to the same URL.
 - Run `composer install` in the project directory.
 - Run `php artisan migrate` from the command line in the base project directory.
 - Point your web server to the `/public` directory of the repo.
@@ -47,6 +47,11 @@ Documentation is currently work in progress and can be found here:
 
 - [Website (docs.decapi.me)](https://docs.decapi.me/)
 - [Repository of website (Decicus/DecAPI-Docs)](https://github.com/Decicus/DecAPI-Docs)
+
+## Bugs & reports
+If you find a bug or an issue, please create an issue in this repository.
+
+If it's a security issue and you'd like to contact me privately, please send me an email at <alex@thomassen.xyz>.
 
 ## Rate limits
 Certain routes may have rate limiting applied to them to prevent abuse.  
@@ -67,3 +72,6 @@ Below is an overview over what routes are currently rate limited. If the route i
 
 ## License
 [MIT License](LICENSE)
+
+## Special thanks to
+- [xgerhard](https://github.com/xgerhard) - For implementing the /twitch/subage route.

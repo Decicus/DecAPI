@@ -195,6 +195,10 @@ Route::group(['middleware' => 'web'], function() {
         Route::get('subscriber_emotes/{channel?}', 'TwitchController@subEmotes')
             ->where('channel', $channelRegex);
 
+        Route::get('subage/{channel?}/{user?}', 'TwitchController@subAge')
+            ->where('channel', $channelRegex)
+            ->where('user', $channelRegex);
+
         Route::get('{team_members}/{team?}', 'TwitchController@teamMembers')
             ->where('team_members', '(team_members(\.php)?)')
             ->where('team', '([A-z0-9]{1,40})');

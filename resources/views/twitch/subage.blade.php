@@ -21,7 +21,7 @@
                 This message only serves as a "heads up", to make sure people know the difference.
             </p>
 
-            <h3>Ankhbot:</h3>
+            <h3>Streamlabs Chatbot (formerly Ankhbot):</h3>
             <p class="text text-muted">Add a command that includes the part below and it will be replaced with the age of the current subscription for the user using the command:</p>
             <pre>$readapi({{ $route }}/$user)</pre>
             <p class="text text-muted">For example, if you wanted to display this message whenever the user "Decicus" types in your chat:</p>

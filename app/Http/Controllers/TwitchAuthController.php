@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Socialite;
-use Socialite\Two\InvalidStateException;
+use Exception;
 use App\User;
 use App\Helpers\Helper;
 use Crypt;
@@ -131,12 +131,11 @@ class TwitchAuthController extends Controller
 
         try {
             $user = Socialite::with('twitch')->user();
-        } catch (InvalidStateException $e) {
-            // TODO: Remove this once the problem is properly identified.
-            Log::error('InvalidStateException: ' . json_encode($request->all()));
-            return view('auth.twitch', $viewData);
         } catch (Exception $e) {
-            return redirect()->route('home');
+            // TODO: Remove this once the problem is properly identified.
+            Log::error('Exception thrown on Twitch authencation: ' . $ex->getMessage());
+            Log::error('Request parameters: ' . json_encode($request->all()));
+            return view('auth.twitch', $viewData);
         }
 
         $auth = User::firstOrCreate([

@@ -5,8 +5,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 
 use Carbon\Carbon;
-use PHPHtmlParser\Dom;
 use Vinelab\Rss\Rss;
+use GuzzleHttp\Client as HttpClient;
+use Symfony\Component\DomCrawler\Crawler;
 
 use App\TwitchHelpArticle as Article;
 use App\TwitchHelpCategory as Category;
@@ -43,16 +44,27 @@ class UpdateTwitchHelp extends Command
      */
     public function handle()
     {
-        $dom = new Dom;
-        $base = 'https://help.twitch.tv';
+        $client = new HttpClient;
 
-        $dom->loadFromUrl($base);
-        $topics = $dom->find('.topic');
+        $settings = [
+            'headers' => [
+                'User-Agent' => env('DECAPI_USER_AGENT', null),
+            ],
+            'http_errors' => false,
+        ];
+
+        $base = 'https://help.twitch.tv/';
+        $request = $client->request('GET', $base, $settings);
+
+        $body = (string) $request->getBody();
+
+        $dom = new Crawler($body);
+        $topics = $dom->filter('.topic');
 
         $rss = new Rss;
-        foreach ($topics as $topic) {
-            $catId = str_replace('topic topic', null, $topic->class);
-            $catTitle = htmlspecialchars_decode($topic->find('h5.articles')->innerHtml);
+        $topics->each(function(Crawler $topic, $i) use($base, $rss) {
+            $catId = str_replace('topic topic', null, $topic->attr('class'));
+            $catTitle = htmlspecialchars_decode($topic->filter('h5.articles')->text());
 
             $this->info('Found help category/topic: ' . $catTitle);
 
@@ -75,6 +87,6 @@ class UpdateTwitchHelp extends Command
 
                 $this->info('Found help article: ' . $title);
             }
-        }
+        });
     }
 }

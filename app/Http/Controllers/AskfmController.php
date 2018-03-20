@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-use PHPHtmlParser;
 use Feed;
 use Carbon\Carbon;
+
+use GuzzleHttp\Client as HttpClient;
+use Symfony\Component\DomCrawler\Crawler;
 
 class AskfmController extends Controller
 {
@@ -28,9 +30,20 @@ class AskfmController extends Controller
             return $feed->render('atom');
         }
 
-        $dom = new PHPHtmlParser\Dom;
-        $dom->loadFromUrl('https://ask.fm/' . $user);
-        $answers = $dom->find('.item-pager')->find('.streamItem-answer');
+        $httpClient = new HttpClient;
+
+        $settings = [
+            'headers' => [
+                'User-Agent' => env('DECAPI_USER_AGENT', ''),
+            ],
+            'http_errors' => false,
+        ];
+
+        $httpRequest = $httpClient->request('GET', 'https://ask.fm/' . $user);
+        $body = (string) $httpRequest->getBody();
+
+        $dom = new Crawler($body);
+        $answers = $dom->filter('.streamItem.streamItem-answer');
 
         if (count($answers) === 0) {
             $feed->title = 'Ask.fm - RSS Feed';
@@ -47,20 +60,23 @@ class AskfmController extends Controller
         $feed->setDateFormat('datetime');
         $feed->lang = 'en';
 
-        $ageStr = '.streamItemsAge a';
-        $date = $answers[0]->find($ageStr)->getAttribute('title');
+        $ageStr = '.streamItem_meta';
+        $date = $answers->first()->filter($ageStr)->attr('title');
+
         $feed->pubdate = $date;
 
-        foreach ($answers as $a) {
-            $itemAge = $a->find($ageStr);
+        $answers->each(function(Crawler $a, $i) use($feed, $ageStr, $user) {
+            $itemAge = $a->filter($ageStr);
 
-            $question = trim($a->find('.streamItemContent-question')->firstChild()->text);
-            $answer = trim($a->find('.streamItemContent-answer')->firstChild()->text);
-            $link = "https://ask.fm" . $itemAge->getAttribute('href');
-            $date = $itemAge->getAttribute('title');
+            $question = $a->filter('.streamItem_header h2')->text();
+            // Remove "View more" text at the end
+            $answer = substr($a->filter('.streamItem_content')->text(), 0, -9);
+            $link = "https://ask.fm" . $itemAge->attr('href');
+            $date = $itemAge->attr('title');
 
             $feed->add($question, $user, $link, $date, $answer, $answer);
-        }
+        });
+
         return $feed->render('atom');
     }
 }

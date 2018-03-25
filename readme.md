@@ -22,12 +22,12 @@ What this means is that certain text output from endpoints might be changed, new
 
 Read [the documentation](https://docs.decapi.me/) to see how each endpoint functions.
 
-Anything that for some reason did not get included in this rewrite, will still be hosted under [old.decapi.me](https://old.decapi.me/).  
-There is also a fallback route setup to redirect all requests to the [old.decapi.me](https://old.decapi.me/) URL, if it cannot find a valid route in the rewrite.
+Anything that for some reason did not get included in this rewrite, will still be hosted under [v1.decapi.me](https://v1.decapi.me/).  
+There is also a fallback route setup to redirect all requests to the [old.decapi.me](https://v1.decapi.me/) URL, if it cannot find a valid route in the rewrite.
 
 ## Requirements
 The following things are required for setting this up:
-- [Laravel 5.2's requirements](https://laravel.com/docs/5.2/installation#server-requirements)
+- [Laravel 5.6's requirements](https://laravel.com/docs/5.6/installation#server-requirements)
 - [A database system that Laravel supports](https://laravel.com/docs/5.2/database#introduction)
 - [Composer](https://getcomposer.org/)
 
@@ -35,6 +35,11 @@ The following things are required for setting this up:
 **I only recommend setting this up for development purposes.**
 - Rename `.env.example` to `.env` and fill in the information. Primarly the database and Twitch information.
     - You can create a Twitch application here: https://dev.twitch.tv/dashboard/apps. The redirect URL has to be `http://your.url/auth/twitch/callback` and `TWITCH_REDIRECT_URI` in the `.env` file has to be set to the same URL.
+    - YouTube: Read the [Getting Started](https://developers.google.com/youtube/v3/getting-started#before-you-start) page and [Creating API keys](https://developers.google.com/youtube/registering_an_application#Create_API_Keys) section.
+    - Papertrail: This is used for logging, register on [Papertrail](https://papertrailapp.com/) and set the `PAPERTRAIL_LOG_DESTINATION` to whatever Papertrail gives you that's in the `logsX.papertrailapp.com:YYYY` format.
+        - `X` and `YYYY` are numbers, and are just placeholders.
+    - Steam: You can obtain a Steam API key here: https://steamcommunity.com/dev
+    - Twitter: Create a [developer application on Twitter](https://apps.twitter.com/) and insert the consumer key & consumer secret.
 - Run `composer install` in the project directory.
 - Run `php artisan migrate` from the command line in the base project directory.
 - Point your web server to the `/public` directory of the repo.

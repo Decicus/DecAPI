@@ -52,21 +52,4 @@ $app->singleton(
 |
 */
 
-/**
- * Fortrabbit error_log
- */
-$app->configureMonologUsing(function($monolog) {
-    $papertrail = env('PAPERTRAIL_LOG_DESTINATION', null);
-    if (!empty($papertrail)) {
-        $destination = explode(':', $papertrail);
-
-        $handler = new \Monolog\Handler\SyslogUdpHandler($destination[0], $destination[1]);
-    } else {
-        $handler = new \Monolog\Handler\ErrorLogHandler();
-    }
-
-    $handler->setFormatter(new \Monolog\Formatter\LineFormatter('%channel%.%level_name%: %message% %context% %extra%'));
-    $monolog->pushHandler($handler);
-});
-
 return $app;

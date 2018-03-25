@@ -51,7 +51,7 @@ class GeneralController extends Controller
      */
     public function fallback(Request $request)
     {
-        $format = 'https://old.decapi.me/%s%s';
+        $format = 'https://v1.decapi.me/%s%s';
         $path = $request->path();
         $query = str_replace($request->url(), "", $request->fullUrl());
         return redirect(sprintf($format, $path, $query));

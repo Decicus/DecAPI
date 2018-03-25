@@ -50,15 +50,18 @@ class LeverController extends Controller
         $api = 'https://api.lever.co/v0/postings/twitch?mode=json';
 
         $client = new Client;
-        $request = $client->request('GET', $api, ['http_errors' => false]);
+        $request = $client->request('GET', $api, [
+            'http_errors' => false,
+        ]);
+
         $feed = [
             0 => [
                 'id' => 'error_has_occurred',
                 'text' => 'An error has occurred',
                 'description' => 'An error has occurred attempting to retrieve the latest jobs',
                 'link' => 'https://jobs.lever.co/twitch/',
-                'timestamp' => time()
-            ]
+                'timestamp' => time(),
+            ],
         ];
 
         if ($request->getStatusCode() === 200) {
@@ -71,7 +74,7 @@ class LeverController extends Controller
                     'text' => $post['text'],
                     'description' => $post['descriptionPlain'],
                     'link' => $post['hostedUrl'],
-                    'timestamp' => intval($post['createdAt'] / 1000)
+                    'timestamp' => intval($post['createdAt'] / 1000),
                 ];
             }
         }

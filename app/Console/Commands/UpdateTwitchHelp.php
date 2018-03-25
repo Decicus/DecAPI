@@ -76,7 +76,7 @@ class UpdateTwitchHelp extends Command
             $feed = $rss->feed($feedUrl);
 
             foreach ($feed->articles() as $article) {
-                $id = str_replace($base . '/customer/en/portal/articles/', null, $article->link);
+                $id = str_replace($base . 'customer/en/portal/articles/', null, $article->link);
                 $title = htmlspecialchars_decode($article->title);
 
                 $helpArticle = Article::firstOrNew(['id' => $id]);

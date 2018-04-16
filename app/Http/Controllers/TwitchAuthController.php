@@ -133,8 +133,9 @@ class TwitchAuthController extends Controller
             $user = Socialite::with('twitch')->user();
         } catch (Exception $ex) {
             // TODO: Remove this once the problem is properly identified.
-            Log::error('Exception thrown on Twitch authencation: ' . $ex->getMessage());
+            Log::error('Exception thrown on Twitch authentication: ' . $ex->getMessage());
             Log::error('Request parameters: ' . json_encode($request->all()));
+            Log::error('Session data: ' . json_encode($request->session()->all()));
             return view('auth.twitch', $viewData);
         }
 

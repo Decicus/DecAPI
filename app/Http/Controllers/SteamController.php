@@ -253,7 +253,7 @@ class SteamController extends Controller
             $game = $games->first();
 
             if (empty($game)) {
-                return Helper::text('The player does not seem to own the specified game.');
+                return Helper::text('The player does not seem to own the specified game, or the Steam privacy setting for "Game details" is not set to public.');
             }
 
             if ($readable === true) {

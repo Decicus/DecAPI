@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        Commands\DecryptString::class,
         Commands\ImportSubcountTokens::class,
         Commands\UpdateCachedTwitchUsers::class,
         Commands\UpdateTwitchAuthUsers::class,

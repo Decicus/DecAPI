@@ -1422,7 +1422,7 @@ class TwitchController extends Controller
         if (!empty($channel)) {
             $channel = strtolower($channel);
             $reAuth = route('auth.twitch.base') . '?redirect=subpoints&scopes=user_read+channel_subscriptions';
-            $reAuth = sprintf('%s needs to authenticate to use subpoints: %s', $channel, $reAuth);
+            $needToReAuth = sprintf('%s needs to authenticate to use subpoints: %s', $channel, $reAuth);
 
             try {
                 $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;

@@ -1433,7 +1433,7 @@ class TwitchController extends Controller
             }
 
             if (empty($user)) {
-                return Helper::text($reAuth);
+                return Helper::text($needToReAuth);
             }
 
             $scopes = explode('+', $user->scopes);

@@ -56,7 +56,7 @@ class LeverController extends Controller
 
         $feed = [
             0 => [
-                'id' => 'error_has_occurred',
+                'guid' => 'error_has_occurred',
                 'text' => 'An error has occurred',
                 'description' => 'An error has occurred attempting to retrieve the latest jobs',
                 'link' => 'https://jobs.lever.co/twitch/',

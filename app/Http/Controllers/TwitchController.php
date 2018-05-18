@@ -656,8 +656,8 @@ class TwitchController extends Controller
 
         $getGame = $this->twitchApi->channels($channel, $this->version);
 
-        if (!empty($getGame['message'])) {
-            return Helper::text($getGame['message']);
+        if (isset($getGame['message'])) {
+            return Helper::text(sprintf('%s - %s', $getGame['error'], $getGame['message']));
         }
 
         $text = $getGame[$route];

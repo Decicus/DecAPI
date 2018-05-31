@@ -70,6 +70,8 @@ Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
         ->where('currency', '(currency(\.php)?)');
     Route::get('{time}', ['as' => 'time', 'uses' => 'MiscController@time'])
         ->where('time', '(time(\.php)?)');
+
+    Route::get('timezones', ['as' => 'timezones', 'uses' => 'MiscController@timezones']);
 });
 
 Route::group(['prefix' => 'r6', 'as' => 'r6.'], function() {

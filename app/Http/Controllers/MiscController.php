@@ -95,4 +95,21 @@ class MiscController extends Controller
                 ->format($format);
         return Helper::text($time);
     }
+
+    /**
+     * Lists the supported timezones.
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function timezones(Request $request)
+    {
+        $timezones = DateTimeZone::listIdentifiers();
+
+        if ($request->wantsJson()) {
+            return Helper::json($timezones);
+        }
+
+        return Helper::text(implode(PHP_EOL, $timezones));
+    }
 }

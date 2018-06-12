@@ -1104,31 +1104,75 @@ class TwitchController extends Controller
      * @param  Request $request
      * @return Response
      */
-    public function randomSub(Request $request)
+    public function subList(Request $request, $channel = null)
     {
+        $actions = array('random', 'latest');
+        $action = isset($request->route()->getAction()['action']) ? $request->route()->getAction()['action'] : 'random';
+
+        if (!in_array($action, $actions)) {
+            return Helper::text(sprintf('Invalid action specified, available actions: %s.', implode(", ", $actions)));
+        }
+
+        $id = false;
+        $channel = $channel ?: $request->input('channel', null);
         $token = $request->input('token', null);
         $amount = intval($request->input('count', 1));
         $field = $request->input('field', 'name');
         $separator = $request->input('separator', ', ');
 
-        if (empty($token)) {
-            return Helper::text('An OAuth token has to be specified.');
+        if (!empty($token)) {
+            $tokenData = $this->twitchApi->base($token, $this->version)['token'];
+            if ($tokenData['valid'] === false) {
+                return Helper::text('The specified OAuth token is invalid.');
+            }
+        } else {
+            if (empty($channel)) {
+                $nb = new Nightbot($request);
+                if (empty($nb->channel)) {
+                    return Helper::text('You need to specify a channel name or an OAuth token');
+                }
+                $channel = $nb->channel['providerId'];
+                $id = true;
+            }
+
+            $channel = trim($channel);
+            $reAuth = route('auth.twitch.base') . sprintf('?redirect=%ssub&scopes=user_read+channel_subscriptions', $action);
+            $needToReAuth = sprintf('%s needs to authenticate to use %sSub (%s sub): %s', $id === true ? $nb->channel['displayName'] : $channel, $action, $action, $reAuth);
+
+            try {
+                $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
+            } catch (Exception $e) {
+                return Helper::text('An error occurred when trying to find channel or user.');
+            }
+
+            if (empty($channel)) {
+                return Helper::text($needToReAuth);
+            }
+
+            try {
+                $token = Crypt::decrypt($channel->access_token);
+            } catch (DecryptException $e) {
+                // Something weird happened with the encrypted token
+                // request channel owner to re-auth so it's encrypted properly
+                return Helper::text($needToReAuth);
+            }
+
+            if (empty($token)) {
+                return Helper::text($needToReAuth);
+            } else {
+                $tokenData = $this->twitchApi->base($token, $this->version)['token'];
+                if ($tokenData['valid'] === false) {
+                    return Helper::text($needToReAuth);
+                }
+            }
         }
 
-        $tokenData = $this->twitchApi->base($token, $this->version)['token'];
-
-        if ($tokenData['valid'] === false) {
-            return Helper::text('The specified OAuth token is invalid.');
-        }
-
-        $scopes = $tokenData['authorization']['scopes'];
-
-        if (!in_array('channel_subscriptions', $scopes)) {
+        if (!in_array('channel_subscriptions', $tokenData['authorization']['scopes'])) {
             return Helper::text('The OAuth token is missing a required scope: channel_subscriptions');
         }
 
         $limit = 100;
-        $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'asc', $this->version);
+        $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'desc', $this->version);
 
         if (!empty($data['message'])) {
             return Helper::text('An error occurred retrieving data from the API: ' . $data['message']);
@@ -1141,29 +1185,33 @@ class TwitchController extends Controller
         }
 
         $subscriptions = $data['subscriptions'];
-        $offset = 0;
-        if ($count > $limit) {
-            while ($offset < $count) {
-                $offset += 100;
-                $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, $offset, $direction = 'asc', $this->version);
-                $subscriptions = array_merge($subscriptions, $data['subscriptions']);
-            }
-        }
-
-        shuffle($subscriptions);
         $output = [];
 
-        for ($i = 0; $i < $amount; $i++) {
-            $count = count($subscriptions);
-            $index = mt_rand(0, $count - 1);
-            $sub = $subscriptions[$index]['user'];
-
-            if (isset($sub[$field])) {
-                $output[] = $sub[$field];
+        if ($action == 'random') {
+            $offset = 0;
+            if ($count > $limit) {
+                while ($offset < $count) {
+                    $offset += 100;
+                    $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, $offset, 'desc', $this->version);
+                    $subscriptions = array_merge($subscriptions, $data['subscriptions']);
+                }
             }
+            shuffle($subscriptions);
 
-            unset($subscriptions[$index]);
-            shuffle($subscriptions); // Reset array keys
+            for ($i = 0; $i < $amount; $i++) {
+                $index = mt_rand(0, count($subscriptions) - 1);
+
+                if (isset($subscriptions[$index]['user'][$field])) $output[] = $subscriptions[$index]['user'][$field];
+
+                unset($subscriptions[$index]);
+                shuffle($subscriptions); // Reset array keys
+            }
+        }
+        elseif ($action == 'latest') {
+            $subscriptions = array_slice($subscriptions, 0, $amount);
+            foreach ($subscriptions as $subscription) {
+                if (isset($subscription['user'][$field])) $output[] = $subscription['user'][$field];
+            }
         }
 
         return Helper::text(implode($separator, $output));

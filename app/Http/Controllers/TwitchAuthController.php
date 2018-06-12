@@ -31,6 +31,8 @@ class TwitchAuthController extends Controller
         'subage' => '/twitch/subage',
         'subcount' => '/twitch/subcount',
         'subpoints' => '/twitch/subpoints',
+        'randomsub' => '/twitch/random_sub',
+        'latestsub' => '/twitch/latest_sub'
     ];
 
     /**

@@ -179,7 +179,11 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'throttle
     Route::get('multi/{streams?}', ['as' => 'multi', 'uses' => 'TwitchController@multi'])
         ->where('streams', '([A-z0-9_\s])+');
 
-    Route::get('random_sub', ['as' => 'random_sub', 'uses' => 'TwitchController@randomSub']);
+    Route::get('random_sub/{channel?}', ['as' => 'random_sub', 'uses' => 'TwitchController@subList', 'action' => 'random'])
+        ->where('channel', $channelRegex);
+
+    Route::get('latest_sub/{channel?}', ['as' => 'latest_sub', 'uses' => 'TwitchController@subList', 'action' => 'latest'])
+        ->where('channel', $channelRegex);
 
     Route::get('random_user/{channel?}', ['as' => 'random_viewer', 'uses' => 'TwitchController@randomUser'])
         ->where('channel', $channelRegex);

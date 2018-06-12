@@ -1099,9 +1099,10 @@ class TwitchController extends Controller
     }
 
     /**
-     * Get a random subscriber based on the OAuth token.
+     * Get a random / latest subscriber from the channel that belongs to the OAuth token if provided, otherwise the specified channel
      *
      * @param  Request $request
+     * @param  string  $channel
      * @return Response
      */
     public function subList(Request $request, $channel = null)

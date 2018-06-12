@@ -1107,11 +1107,11 @@ class TwitchController extends Controller
      */
     public function subList(Request $request, $channel = null)
     {
-        $actions = array('random', 'latest');
+        $actions = ['random', 'latest'];
         $action = isset($request->route()->getAction()['action']) ? $request->route()->getAction()['action'] : 'random';
 
         if (!in_array($action, $actions)) {
-            return Helper::text(sprintf('Invalid action specified, available actions: %s.', implode(", ", $actions)));
+            return Helper::text(sprintf('Invalid action specified, available actions: %s.', implode(', ', $actions)));
         }
 
         $id = false;

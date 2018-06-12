@@ -79,4 +79,4 @@ Below is an overview over what routes are currently rate limited. If the route i
 [MIT License](LICENSE)
 
 ## Special thanks to
-- [xgerhard](https://github.com/xgerhard) - For implementing the /twitch/subage route.
+- [xgerhard](https://github.com/xgerhard) - For implementing the /twitch/subage & /twitch/latest_sub routes.

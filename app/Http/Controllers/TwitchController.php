@@ -1134,13 +1134,12 @@ class TwitchController extends Controller
         } elseif(empty($channel) && Auth::check()) {
             $user = Auth::user();
             $userData = $this->twitchApi->users($user->id, $this->version);
-            $name = $userData['name'];
 
             $data = [
                 'page' => ucfirst($action) . ' subscriber',
                 'route' => route('twitch.' . $action . '_sub'),
                 'action' => $action,
-                'channel' => $name
+                'channel' => $userData['name']
             ];
             return view('twitch.sublist', $data);
         } else {

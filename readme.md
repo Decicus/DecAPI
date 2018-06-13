@@ -34,12 +34,14 @@ The following things are required for setting this up:
 ## Setup
 **I only recommend setting this up for development purposes.**
 - Rename `.env.example` to `.env` and fill in the information. Primarly the database and Twitch information.
-    - **Twitch**: You can create a Twitch application here: https://dev.twitch.tv/dashboard/apps. The redirect URL has to be `http://your.url/auth/twitch/callback` and `TWITCH_REDIRECT_URI` in the `.env` file has to be set to the same URL.
+    - **Twitch**: You can create a Twitch application here: https://glass.twitch.tv/console/apps. The redirect URL has to be `http://your.url/auth/twitch/callback` and `TWITCH_REDIRECT_URI` in the `.env` file has to be set to the same URL.
     - **YouTube**: Read the [Getting Started](https://developers.google.com/youtube/v3/getting-started#before-you-start) page and [Creating API keys](https://developers.google.com/youtube/registering_an_application#Create_API_Keys) section.
     - **Papertrail**: This is (optionally) used for logging. If you wish to use it, register on [Papertrail](https://papertrailapp.com/) and set the `PAPERTRAIL_LOG_DESTINATION` to whatever Papertrail gives you that's in the `logsX.papertrailapp.com:YYYY` format.
         - `X` and `YYYY` are numbers, and are just **placeholders**.
     - **Steam**: You can obtain a Steam API key here: https://steamcommunity.com/dev
     - **Twitter**: Create a [developer application on Twitter](https://apps.twitter.com/) and insert the consumer key & consumer secret.
+    - **Fixer** - Currency API: To have access to all the currencies, you need to have a pain plan from [fixer.io](https://fixer.io/).
+        - For a limited time you can also register for the legacy plan, which is a better version of the free plan: https://github.com/fixerAPI/fixer#fixer----important-announcement (bottom of the section)
 - Run `composer install` in the project directory.
 - Run `php artisan migrate` from the command line in the base project directory.
 - Point your web server to the `/public` directory of the repo.

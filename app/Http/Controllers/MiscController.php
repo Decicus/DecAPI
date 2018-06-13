@@ -9,6 +9,7 @@ use App\Http\Requests;
 use App\Helpers\Helper;
 use Carbon\Carbon;
 use DateTimeZone;
+use Log;
 
 class MiscController extends Controller
 {
@@ -24,9 +25,9 @@ class MiscController extends Controller
         $from = $request->input('from', null);
         $to = $request->input('to', null);
         $round = intval($request->input('round', 2));
-        $currencies = ["AUD", "BGN", "BRL", "CAD", "CHF", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HRK", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PLN", "RON", "RUB", "SEK", "SGD", "THB", "TRY", "USD", "ZAR"];
+        $currencies = config('fixer.currencies');
 
-        $listUrl = route('misc.currency', 'currency') . "?list";
+        $listUrl = route('misc.currency', 'currency') . '?list';
 
         if ($request->exists('list')) {
             return Helper::text('Available currencies: ' . implode(', ', $currencies));
@@ -48,8 +49,8 @@ class MiscController extends Controller
         $from = strtoupper(trim($from));
         $to = strtoupper(trim($to));
 
-        if ($value === 0) {
-            $value = 1.00;
+        if ((int) $value === 0) {
+            $value = 1;
         }
 
         if (!in_array($from, $currencies)) {
@@ -60,10 +61,22 @@ class MiscController extends Controller
             return Helper::text('Invalid "to" currency specified - Available currencies can be found here: ' . $listUrl);
         }
 
-        $convert = Helper::get('http://api.fixer.io/latest?base=' . $from . '&symbols=' . $to);
-
-        if (empty($convert['rates'][$to])) {
+        $apiKey = config('fixer.api_key');
+        $apiUrl = sprintf('https://data.fixer.io/api/latest?base=%s&symbols=%s&access_key=%s', $from, $to, $apiKey);
+        try {
+            $convert = Helper::get($apiUrl);
+        }
+        catch (Exception $ex) {
+            Log::error('/misc/currency request error: ' . $ex->getMessage());
             return Helper::text('An error has occurred retrieving exchange rates');
+        }
+
+        if ($convert['success'] === false) {
+            if (!empty($convert['error'])) {
+                return Helper::text('An error occurred retrieving exchange rates: ' . $convert['error']['type']);
+            }
+
+            return Helper::text('An error has occurred retrieving exchange rates.');
         }
 
         $calculate = round($value * $convert['rates'][$to], $round);

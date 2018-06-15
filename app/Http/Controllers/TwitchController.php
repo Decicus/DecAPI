@@ -1114,18 +1114,34 @@ class TwitchController extends Controller
             return Helper::text(sprintf('Invalid action specified, available actions: %s.', implode(', ', $actions)));
         }
 
+         if ($request->exists('logout')) {
+            return redirect()->route('auth.twitch.logout');
+        }
+
         $id = false;
         $channel = $channel ?: $request->input('channel', null);
         $token = $request->input('token', null);
         $amount = intval($request->input('count', 1));
         $field = $request->input('field', 'name');
         $separator = $request->input('separator', ', ');
+        $needToReAuth = "";
 
         if (!empty($token)) {
             $tokenData = $this->twitchApi->base($token, $this->version)['token'];
             if ($tokenData['valid'] === false) {
                 return Helper::text('The specified OAuth token is invalid.');
             }
+        } elseif(empty($channel) && Auth::check()) {
+            $user = Auth::user();
+            $userData = $this->twitchApi->users($user->id, $this->version);
+
+            $data = [
+                'page' => ucfirst($action) . ' subscriber',
+                'route' => route('twitch.' . $action . '_sub'),
+                'action' => $action,
+                'channel' => $userData['name']
+            ];
+            return view('twitch.sublist', $data);
         } else {
             if (empty($channel)) {
                 $nb = new Nightbot($request);
@@ -1169,7 +1185,7 @@ class TwitchController extends Controller
         }
 
         if (!in_array('channel_subscriptions', $tokenData['authorization']['scopes'])) {
-            return Helper::text('The OAuth token is missing a required scope: channel_subscriptions');
+            return Helper::text('The OAuth token is missing a required scope: channel_subscriptions. ' . $needToReAuth);
         }
 
         $limit = 100;

@@ -750,7 +750,7 @@ class TwitchController extends Controller
             return Helper::json($data);
         }
 
-        return Helper::text($title . " - " . $url);
+        return Helper::text($title . ' - ' . $url);
     }
 
     /**
@@ -800,7 +800,7 @@ class TwitchController extends Controller
         $highlight = $fetchHighlight['videos'][0];
         $title = $highlight['title'];
         $url = $highlight['url'];
-        return Helper::text($title . " - " . $url);
+        return Helper::text($title . ' - ' . $url);
     }
 
     /**
@@ -1021,12 +1021,12 @@ class TwitchController extends Controller
             return $this->error('An error occurred attempting to load the data.');
         }
 
-        $info = "";
-        $pad = "    ";
+        $info = '';
+        $pad = '    ';
         foreach ($ingests['ingests'] as $server) {
-            $info .= "Name: " . $server['name'] . PHP_EOL;
-            $info .= $pad . "Template: " . $server['url_template'] . PHP_EOL;
-            $info .= $pad . "Availability: " . ($server['availability'] ? "Yes" : "No") . PHP_EOL . PHP_EOL;
+            $info .= 'Name: ' . $server['name'] . PHP_EOL;
+            $info .= $pad . 'Template: ' . $server['url_template'] . PHP_EOL;
+            $info .= $pad . 'Availability: ' . ($server['availability'] ? 'Yes' : 'No') . PHP_EOL . PHP_EOL;
         }
 
         return Helper::text($info);
@@ -1047,7 +1047,7 @@ class TwitchController extends Controller
 
         $services = [
             'multitwitch' => [
-                'link' => "http://multitwitch.tv"
+                'link' => 'http://multitwitch.tv'
             ],
             'kadgar' => [
                 'link' => 'http://kadgar.net/live'
@@ -1069,7 +1069,7 @@ class TwitchController extends Controller
         $services['multistre.am'] = $services['multistream'];
 
         if (empty($services[$service])) {
-            return Helper::text('Invalid service specified - Available services: ' . implode(", ", array_keys($services)));
+            return Helper::text('Invalid service specified - Available services: ' . implode(', ', array_keys($services)));
         }
 
         if (empty($streams)) {
@@ -1077,7 +1077,7 @@ class TwitchController extends Controller
         }
 
         $service = $services[$service];
-        $streams = explode(" ", $streams);
+        $streams = explode(' ', $streams);
         $link = $service['link'];
         $prefix = empty($service['prefix']) ? '/' : $service['prefix'];
         $suffix = empty($service['suffix']) ? '' : $service['suffix'];
@@ -1124,7 +1124,7 @@ class TwitchController extends Controller
         $amount = intval($request->input('count', 1));
         $field = $request->input('field', 'name');
         $separator = $request->input('separator', ', ');
-        $needToReAuth = "";
+        $needToReAuth = '';
 
         if (!empty($token)) {
             $tokenData = $this->twitchApi->base($token, $this->version)['token'];

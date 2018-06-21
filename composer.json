@@ -20,7 +20,8 @@
         "syntax/steam-api": "dev-master",
         "socialiteproviders/twitch": "^3.0",
         "doctrine/dbal": "^2.5",
-        "fideloper/proxy": "~4.0"
+        "fideloper/proxy": "~4.0",
+        "tom-lingham/searchy": "^2.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

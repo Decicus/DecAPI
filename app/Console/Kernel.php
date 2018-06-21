@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\DecryptString::class,
         Commands\ImportSubcountTokens::class,
+        Commands\RefreshIzurviveLocations::class,
         Commands\UpdateCachedTwitchUsers::class,
         Commands\UpdateTwitchAuthUsers::class,
         Commands\UpdateTwitchHelp::class,

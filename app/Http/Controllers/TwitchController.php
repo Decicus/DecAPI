@@ -14,6 +14,7 @@ use App\Helpers\Nightbot;
 use App\TwitchHelpArticle as HelpArticle;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use DateTimeZone;
 
 use Symfony\Component\DomCrawler\Crawler;
@@ -1870,5 +1871,63 @@ class TwitchController extends Controller
 
         $viewers = $stream['stream']['viewers'];
         return Helper::text($viewers);
+    }
+
+    /**
+     * Retrieves the latest broadcast (VOD), takes the current date and subtracts a specified amount of time.
+     * Takes the result and returns a formatted URL to a specific timestamp in the VOD.
+     *
+     * @param Request $request
+     * @param string $channel
+     * @return void
+     */
+    public function vodReplay(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('A channel has to be specified.');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately for potential messages and override $channel
+                $channelName = $channel;
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        // The amount of minutes to go back in the VOD.
+        $minutes = intval($request->input('minutes', 5));
+
+        if ($minutes < 1) {
+            return Helper::text('Invalid amount of minutes specified: ' . $minutes);
+        }
+
+        $video = $this->twitchApi->videos($request, $channel, ['archive'], 1, 0, $this->version);
+
+        if (!empty($video['status'])) {
+            return Helper::text($video['message']);
+        }
+
+        if (empty($video['videos'])) {
+            return Helper::text(($channelName ?: $channel) . ' has no available VODs.');
+        }
+
+        $vod = $video['videos'][0];
+        $vodStart = Carbon::parse($vod['created_at']);
+        $now = Carbon::now();
+        $difference = $vodStart->diffAsCarbonInterval($now->subMinutes($minutes));
+
+        $url = sprintf('%s?t=%dh%dm%ds', $vod['url'], $difference->hours, $difference->minutes, $difference->seconds);
+        return Helper::text($url);
     }
 }

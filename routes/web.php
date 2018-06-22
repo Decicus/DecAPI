@@ -218,6 +218,9 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'throttle
 
     Route::get('viewercount/{channel?}', 'TwitchController@viewercount')
         ->where('channel', $channelRegex);
+
+    Route::get('vod_replay/{channel?}', 'TwitchController@vodReplay')
+        ->where('channel', $channelRegex);
 });
 
 Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {

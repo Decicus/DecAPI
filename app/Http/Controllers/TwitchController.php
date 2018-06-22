@@ -1907,12 +1907,13 @@ class TwitchController extends Controller
 
         // The amount of minutes to go back in the VOD.
         $minutes = intval($request->input('minutes', 5));
+        $offset = intval($request->input('offset', 0));
 
         if ($minutes < 1) {
             return Helper::text('Invalid amount of minutes specified: ' . $minutes);
         }
 
-        $video = $this->twitchApi->videos($request, $channel, ['archive'], 1, 0, $this->version);
+        $video = $this->twitchApi->videos($request, $channel, ['archive'], 1, $offset, $this->version);
 
         if (!empty($video['status'])) {
             return Helper::text($video['message']);
@@ -1923,9 +1924,17 @@ class TwitchController extends Controller
         }
 
         $vod = $video['videos'][0];
+
+        if (($minutes * 60) > $vod['length']) {
+            return Helper::text('The minutes (' . $minutes . ') specified is longer than the length of the VOD.');
+        }
+
         $vodStart = Carbon::parse($vod['created_at']);
-        $now = Carbon::now();
-        $difference = $vodStart->diffAsCarbonInterval($now->subMinutes($minutes));
+        $vodEnd = $vodStart
+                  ->copy()
+                  ->addSeconds($vod['length']);
+
+        $difference = $vodStart->diffAsCarbonInterval($vodEnd->subMinutes($minutes));
 
         $url = sprintf('%s?t=%dh%dm%ds', $vod['url'], $difference->hours, $difference->minutes, $difference->seconds);
         return Helper::text($url);

@@ -14,6 +14,7 @@ use App\Helpers\Nightbot;
 use App\TwitchHelpArticle as HelpArticle;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use DateTimeZone;
 
 use Symfony\Component\DomCrawler\Crawler;
@@ -131,6 +132,8 @@ class TwitchController extends Controller
             'emoteslots' => 'emoteslots/{CHANNEL}',
             'followage' => 'followage/{CHANNEL}/{USER}',
             'followed' => 'followed/{USER}/{CHANNEL}',
+            'followers' => 'followed/{CHANNEL}',
+            'following' => 'following/{USER}',
             'game' => 'game/{CHANNEL}',
             'help' => 'help/{SEARCH}',
             'highlight' => 'highlight/{CHANNEL}',
@@ -146,7 +149,8 @@ class TwitchController extends Controller
             'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
             'upload' => 'upload/{CHANNEL}',
-            'uptime' => 'uptime/{CHANNEL}'
+            'uptime' => 'uptime/{CHANNEL}',
+            'vod_replay' => 'vod_replay/{CHANNEL}',
         ];
 
         foreach ($urls as $name => $endpoint) {
@@ -561,6 +565,7 @@ class TwitchController extends Controller
         $direction = $request->input('direction', 'desc');
         $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
         $separator = $request->input('separator', ', ');
+        $useUsernames = $request->exists('username');
 
         $id = $request->input('id', 'false');
 
@@ -608,7 +613,7 @@ class TwitchController extends Controller
             $user = $user['user'];
 
             $name = $user['name'];
-            if (!empty($user['display_name'])) {
+            if (!$useUsernames && !empty($user['display_name'])) {
                 $name = $user['display_name'];
             }
 
@@ -617,6 +622,108 @@ class TwitchController extends Controller
         }
 
         return Helper::text(implode($separator, $users));
+    }
+
+    /**
+     * Returns a list of the channels a user is following.
+     *
+     * @param Request $request
+     * @param string $user
+     * @return void
+     */
+    public function following(Request $request, $user = null)
+    {
+        $id = $request->input('id', 'false');
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately for potential messages and override $channel
+                $username = $user;
+                $user = $this->userByName($user)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $direction = $request->input('direction', 'desc');
+        $limit = intval($request->input('limit', 25));
+        $offset = intval($request->input('offset', 0));
+        $separator = $request->input('separator', ', ');
+
+        // Fields inside the `channels` object that will be returned in the JSON response.
+        // See: https://dev.twitch.tv/docs/v5/reference/users/#get-user-follows for reference
+        // `created_at` in the root object is always included.
+        $inputFields = $request->input('fields', 'name,_id');
+
+        // Similar to $inputFields, except this is the single field used from the
+        // `channel` object whenever a text response is returned (default).
+        $textField = $request->input('field', 'name');
+
+        if ($limit < 0 || $limit > 100) {
+            $errorText = 'Invalid "limit" specified: ' . $limit;
+            if ($request->wantsJson()) {
+                return Helper::json(['error' => $errorText], 400);
+            }
+
+            return Helper::text($errorText);
+        }
+
+        if ($offset < 0) {
+            $errorText = 'Invalid "offset" specified: ' . $offset;
+            if ($request->wantsJson()) {
+                return Helper::json(['error' => $errorText], 400);
+            }
+
+            return Helper::text($errorText);
+        }
+
+        $channels = $this->twitchApi->userFollowsChannels($user, $limit, $offset, $direction, $this->version);
+
+        if (isset($channels['error'])) {
+            if ($request->wantsJson()) {
+                return Helper::json($channels, $channels['status']);
+            }
+
+            return Helper::text($channels['error'] . ' - ' . $channels['message']);
+        }
+
+        $follows = $channels['follows'];
+
+        if (count($follows) === 0) {
+            if ($request->wantsJson()) {
+                return Helper::json($follows);
+            }
+
+            return Helper::text('End of following list.');
+        }
+
+        $list = [];
+        if ($request->wantsJson()) {
+            $fields = array_map('trim', explode(',', $inputFields));
+            $availableFields = array_keys($follows[0]['channel']);
+            $validFields = array_filter($fields, function ($field) use ($availableFields) {
+                return in_array($field, $availableFields);
+            });
+
+            foreach ($follows as $follow) {
+                $currentFollow = [
+                    'follow_created' => $follow['created_at'],
+                ];
+
+                foreach ($validFields as $field) {
+                    $currentFollow[$field] = $follow['channel'][$field];
+                }
+
+                $list[] = $currentFollow;
+            }
+
+            return Helper::json($list);
+        }
+
+        foreach ($follows as $follow) {
+            $list[] = $follow['channel'][$textField];
+        }
+
+        return Helper::text(implode($separator, $list));
     }
 
     /**
@@ -1870,5 +1977,72 @@ class TwitchController extends Controller
 
         $viewers = $stream['stream']['viewers'];
         return Helper::text($viewers);
+    }
+
+    /**
+     * Retrieves the latest broadcast (VOD), takes the current date and subtracts a specified amount of time.
+     * Takes the result and returns a formatted URL to a specific timestamp in the VOD.
+     *
+     * @param Request $request
+     * @param string $channel
+     * @return void
+     */
+    public function vodReplay(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('A channel has to be specified.');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately for potential messages and override $channel
+                $channelName = $channel;
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        // The amount of minutes to go back in the VOD.
+        $minutes = intval($request->input('minutes', 5));
+        $offset = intval($request->input('offset', 0));
+
+        if ($minutes < 1) {
+            return Helper::text('Invalid amount of minutes specified: ' . $minutes);
+        }
+
+        $video = $this->twitchApi->videos($request, $channel, ['archive'], 1, $offset, $this->version);
+
+        if (!empty($video['status'])) {
+            return Helper::text($video['message']);
+        }
+
+        if (empty($video['videos'])) {
+            return Helper::text(($channelName ?: $channel) . ' has no available VODs.');
+        }
+
+        $vod = $video['videos'][0];
+
+        if (($minutes * 60) > $vod['length']) {
+            return Helper::text('The minutes (' . $minutes . ') specified is longer than the length of the VOD.');
+        }
+
+        $vodStart = Carbon::parse($vod['created_at']);
+        $vodEnd = $vodStart
+                  ->copy()
+                  ->addSeconds($vod['length']);
+
+        $difference = $vodStart->diffAsCarbonInterval($vodEnd->subMinutes($minutes));
+
+        $url = sprintf('%s?t=%dh%dm%ds', $vod['url'], $difference->hours, $difference->minutes, $difference->seconds);
+        return Helper::text($url);
     }
 }

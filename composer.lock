@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "686d57a04f3ede54eceefd9270d44615",
+    "content-hash": "35efeb55bce829d8f8cb8b0f7531e8c8",
     "packages": [
         {
             "name": "alaouy/youtube",
@@ -999,16 +999,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v5.6.25",
+            "version": "v5.6.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "a15efe4fbcd6b38ea76edc5c8939ffde4f4c7b7f"
+                "reference": "fcdbc791bc3e113ada38ab0a1147141fb9ec2b16"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/a15efe4fbcd6b38ea76edc5c8939ffde4f4c7b7f",
-                "reference": "a15efe4fbcd6b38ea76edc5c8939ffde4f4c7b7f",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/fcdbc791bc3e113ada38ab0a1147141fb9ec2b16",
+                "reference": "fcdbc791bc3e113ada38ab0a1147141fb9ec2b16",
                 "shasum": ""
             },
             "require": {
@@ -1019,7 +1019,7 @@
                 "ext-openssl": "*",
                 "league/flysystem": "^1.0.8",
                 "monolog/monolog": "~1.12",
-                "nesbot/carbon": "1.25.*",
+                "nesbot/carbon": "^1.24.1",
                 "php": "^7.1.3",
                 "psr/container": "~1.0",
                 "psr/simple-cache": "^1.0",
@@ -1134,7 +1134,7 @@
                 "framework",
                 "laravel"
             ],
-            "time": "2018-06-12T14:39:24+00:00"
+            "time": "2018-04-09T16:07:04+00:00"
         },
         {
             "name": "laravel/socialite",
@@ -1425,16 +1425,16 @@
         },
         {
             "name": "nesbot/carbon",
-            "version": "1.25.0",
+            "version": "1.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/briannesbitt/Carbon.git",
-                "reference": "cbcf13da0b531767e39eb86e9687f5deba9857b4"
+                "reference": "863a1a651ea324e1838da3a52753a4239b9d4bea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/cbcf13da0b531767e39eb86e9687f5deba9857b4",
-                "reference": "cbcf13da0b531767e39eb86e9687f5deba9857b4",
+                "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/863a1a651ea324e1838da3a52753a4239b9d4bea",
+                "reference": "863a1a651ea324e1838da3a52753a4239b9d4bea",
                 "shasum": ""
             },
             "require": {
@@ -1446,14 +1446,9 @@
                 "phpunit/phpunit": "^4.8.35 || ^5.7"
             },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.23-dev"
-                }
-            },
             "autoload": {
                 "psr-4": {
-                    "Carbon\\": "src/Carbon/"
+                    "": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1474,7 +1469,7 @@
                 "datetime",
                 "time"
             ],
-            "time": "2018-03-19T15:50:49+00:00"
+            "time": "2018-06-15T11:52:26+00:00"
         },
         {
             "name": "nukacode/database",
@@ -3076,12 +3071,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/syntaxerrors/Steam.git",
-                "reference": "99b1de0e93fcab3de7ceef32fdf8e5e15facc609"
+                "reference": "3d8339b07f3bf04c2aff5cec7ac6cbaa4988fdd2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/syntaxerrors/Steam/zipball/99b1de0e93fcab3de7ceef32fdf8e5e15facc609",
-                "reference": "99b1de0e93fcab3de7ceef32fdf8e5e15facc609",
+                "url": "https://api.github.com/repos/syntaxerrors/Steam/zipball/3d8339b07f3bf04c2aff5cec7ac6cbaa4988fdd2",
+                "reference": "3d8339b07f3bf04c2aff5cec7ac6cbaa4988fdd2",
                 "shasum": ""
             },
             "require": {
@@ -3112,7 +3107,7 @@
                 }
             ],
             "description": "A steam-api client for Laravel 5.",
-            "time": "2018-03-12T21:19:52+00:00"
+            "time": "2018-06-14T20:06:14+00:00"
         },
         {
             "name": "themattharris/tmhoauth",
@@ -4389,16 +4384,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.2.4",
+            "version": "7.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "00bc0b93f0ff4f557e9ea766557fde96da9a03dd"
+                "reference": "400a3836ee549ae6f665323ac3f21e27eac7155f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/00bc0b93f0ff4f557e9ea766557fde96da9a03dd",
-                "reference": "00bc0b93f0ff4f557e9ea766557fde96da9a03dd",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/400a3836ee549ae6f665323ac3f21e27eac7155f",
+                "reference": "400a3836ee549ae6f665323ac3f21e27eac7155f",
                 "shasum": ""
             },
             "require": {
@@ -4414,7 +4409,7 @@
                 "php": "^7.1",
                 "phpspec/prophecy": "^1.7",
                 "phpunit/php-code-coverage": "^6.0.7",
-                "phpunit/php-file-iterator": "^2.0",
+                "phpunit/php-file-iterator": "^2.0.1",
                 "phpunit/php-text-template": "^1.2.1",
                 "phpunit/php-timer": "^2.0",
                 "sebastian/comparator": "^3.0",
@@ -4469,7 +4464,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2018-06-05T03:40:05+00:00"
+            "time": "2018-06-21T13:13:39+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -4518,16 +4513,16 @@
         },
         {
             "name": "sebastian/comparator",
-            "version": "3.0.0",
+            "version": "3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "ed5fd2281113729f1ebcc64d101ad66028aeb3d5"
+                "reference": "591a30922f54656695e59b1f39501aec513403da"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/ed5fd2281113729f1ebcc64d101ad66028aeb3d5",
-                "reference": "ed5fd2281113729f1ebcc64d101ad66028aeb3d5",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/591a30922f54656695e59b1f39501aec513403da",
+                "reference": "591a30922f54656695e59b1f39501aec513403da",
                 "shasum": ""
             },
             "require": {
@@ -4578,7 +4573,7 @@
                 "compare",
                 "equality"
             ],
-            "time": "2018-04-18T13:33:00+00:00"
+            "time": "2018-06-14T15:05:28+00:00"
         },
         {
             "name": "sebastian/diff",

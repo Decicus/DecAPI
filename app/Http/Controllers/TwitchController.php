@@ -562,6 +562,7 @@ class TwitchController extends Controller
         $direction = $request->input('direction', 'desc');
         $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
         $separator = $request->input('separator', ', ');
+        $useUsernames = $request->exists('username');
 
         $id = $request->input('id', 'false');
 
@@ -609,7 +610,7 @@ class TwitchController extends Controller
             $user = $user['user'];
 
             $name = $user['name'];
-            if (!empty($user['display_name'])) {
+            if (!$useUsernames && !empty($user['display_name'])) {
                 $name = $user['display_name'];
             }
 

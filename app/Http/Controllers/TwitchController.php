@@ -646,6 +646,16 @@ class TwitchController extends Controller
         $direction = $request->input('direction', 'desc');
         $limit = intval($request->input('limit', 25));
         $offset = intval($request->input('offset', 0));
+        $separator = $request->input('separator', ', ');
+
+        // Fields inside the `channels` object that will be returned in the JSON response.
+        // See: https://dev.twitch.tv/docs/v5/reference/users/#get-user-follows for reference
+        // `created_at` in the root object is always included.
+        $inputFields = $request->input('fields', 'name,_id');
+
+        // Similar to $inputFields, except this is the single field used from the
+        // `channel` object whenever a text response is returned (default).
+        $textField = $request->input('field', 'name');
 
         if ($limit < 0 || $limit > 100) {
             $errorText = 'Invalid "limit" specified: ' . $limit;
@@ -674,6 +684,45 @@ class TwitchController extends Controller
 
             return Helper::text($channels['error'] . ' - ' . $channels['message']);
         }
+
+        $follows = $channels['follows'];
+
+        if (count($follows) === 0) {
+            if ($request->wantsJson()) {
+                return Helper::json($follows);
+            }
+
+            return Helper::text('End of following list.');
+        }
+
+        $list = [];
+        if ($request->wantsJson()) {
+            $fields = array_map('trim', explode(',', $inputFields));
+            $availableFields = array_keys($follows[0]['channel']);
+            $validFields = array_filter($fields, function ($field) use ($availableFields) {
+                return in_array($field, $availableFields);
+            });
+
+            foreach ($follows as $follow) {
+                $currentFollow = [
+                    'follow_created' => $follow['created_at'],
+                ];
+
+                foreach ($validFields as $field) {
+                    $currentFollow[$field] = $follow['channel'][$field];
+                }
+
+                $list[] = $currentFollow;
+            }
+
+            return Helper::json($list);
+        }
+
+        foreach ($follows as $follow) {
+            $list[] = $follow['channel'][$textField];
+        }
+
+        return Helper::text(implode($separator, $list));
     }
 
     /**

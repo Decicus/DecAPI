@@ -132,6 +132,8 @@ class TwitchController extends Controller
             'emoteslots' => 'emoteslots/{CHANNEL}',
             'followage' => 'followage/{CHANNEL}/{USER}',
             'followed' => 'followed/{USER}/{CHANNEL}',
+            'followers' => 'followed/{CHANNEL}',
+            'following' => 'following/{USER}',
             'game' => 'game/{CHANNEL}',
             'help' => 'help/{SEARCH}',
             'highlight' => 'highlight/{CHANNEL}',
@@ -147,7 +149,8 @@ class TwitchController extends Controller
             'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
             'upload' => 'upload/{CHANNEL}',
-            'uptime' => 'uptime/{CHANNEL}'
+            'uptime' => 'uptime/{CHANNEL}',
+            'vod_replay' => 'vod_replay/{CHANNEL}',
         ];
 
         foreach ($urls as $name => $endpoint) {
@@ -618,6 +621,59 @@ class TwitchController extends Controller
         }
 
         return Helper::text(implode($separator, $users));
+    }
+
+    /**
+     * Returns a list of the channels a user is following.
+     *
+     * @param Request $request
+     * @param string $user
+     * @return void
+     */
+    public function following(Request $request, $user = null)
+    {
+        $id = $request->input('id', 'false');
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately for potential messages and override $channel
+                $username = $user;
+                $user = $this->userByName($user)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $direction = $request->input('direction', 'desc');
+        $limit = intval($request->input('limit', 25));
+        $offset = intval($request->input('offset', 0));
+
+        if ($limit < 0 || $limit > 100) {
+            $errorText = 'Invalid "limit" specified: ' . $limit;
+            if ($request->wantsJson()) {
+                return Helper::json(['error' => $errorText], 400);
+            }
+
+            return Helper::text($errorText);
+        }
+
+        if ($offset < 0) {
+            $errorText = 'Invalid "offset" specified: ' . $offset;
+            if ($request->wantsJson()) {
+                return Helper::json(['error' => $errorText], 400);
+            }
+
+            return Helper::text($errorText);
+        }
+
+        $channels = $this->twitchApi->userFollowsChannels($user, $limit, $offset, $direction, $this->version);
+
+        if (isset($channels['error'])) {
+            if ($request->wantsJson()) {
+                return Helper::json($channels, $channels['status']);
+            }
+
+            return Helper::text($channels['error'] . ' - ' . $channels['message']);
+        }
     }
 
     /**

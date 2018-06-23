@@ -106,7 +106,9 @@ Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
 });
 
 Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'throttle:100'], function() {
-    $channelRegex = '([$A-z0-9]{1,50})';
+    // Include some extra characters that are used in examples quite often.
+    // The error returned should hopefully clear up any confusion as to why it doesn't work.
+    $channelRegex = '([$:{}A-z0-9]{1,50})';
 
     Route::get('/', 'TwitchController@base');
 
@@ -147,6 +149,9 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'throttle
     Route::get('{followers}/{channel?}', 'TwitchController@followers')
         ->where('followers', '(followers(\.php)?)')
         ->where('channel', $channelRegex);
+
+    Route::get('following/{user?}', 'TwitchController@following')
+        ->where('user', $channelRegex);
 
     Route::get('{gameOrStatus}/{channel?}', 'TwitchController@gameOrStatus')
         ->where('gameOrStatus', '(game|status|title)')

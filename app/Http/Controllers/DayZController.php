@@ -11,6 +11,12 @@ use GuzzleHttp\Client;
 use Vinelab\Rss\Rss;
 use App\Helpers\Helper;
 use GameQ\GameQ;
+use Log;
+use Searchy;
+
+use App\IzurviveLocation as Location;
+use App\IzurviveLocationSpelling as Spelling;
+
 
 class DayZController extends Controller
 {
@@ -50,16 +56,29 @@ class DayZController extends Controller
      */
     public function izurvive(Request $request)
     {
-        // Location names => coordinates + zoom level
-        // config/dayz.php
-        $locations = config('dayz.izurvive');
         $prefix = 'https://www.izurvive.com/';
+        $maxResults = intval($request->input('max_results', 1));
+        $separator = $request->input('separator', ' | ');
+        $zoom = intval($request->input('zoom_level', 7));
 
         if ($request->exists('list')) {
+            $locations = [];
+            $spellings = [];
+
+            foreach (Location::all() as $location) {
+                $name = $location->name_en;
+                $locations[$name] = sprintf('#c=%s;%s', $location->latitude, $location->longitude);
+                $spellings[$name] = $location
+                                    ->spellings
+                                    ->pluck('spelling')
+                                    ->all();
+            }
+
             if ($request->wantsJson()) {
                 $data = [
                     'url_template' => $prefix . '{location}',
-                    'locations' => $locations
+                    'locations' => $locations,
+                    'spellings' => $spellings,
                 ];
 
                 return Helper::json($data);
@@ -68,7 +87,7 @@ class DayZController extends Controller
             $data = [
                 'list' => $locations,
                 'prefix' => $prefix,
-                'page' => 'Available Search Locations'
+                'page' => 'Available Search Locations',
             ];
 
             return view('shared.list', $data);
@@ -80,16 +99,25 @@ class DayZController extends Controller
         }
 
         $search = urldecode(trim($search));
-        $names = array_keys($locations);
+        $results = Searchy::izurvive_location_spellings('location_id', 'spelling')
+                ->query($search)
+                ->get();
 
-        $check = preg_grep('/(' . $search . ')/i', $names);
-
-        if (empty($check)) {
-            return Helper::text('No results found.');
+        if ($results->isEmpty()) {
+            return Helper::text('No results found for search: ' . $search);
         }
 
-        $name = array_values($check)[0];
-        return Helper::text($name . ' - ' . $prefix . str_replace(';', '%3B', $locations[$name]));
+        $results = Spelling::hydrate($results->all());
+        $spellingResults = $results->take($maxResults);
+
+        $locations = [];
+        foreach ($spellingResults as $spelling) {
+            $location = $spelling->location;
+            $url = sprintf('%s - %s#c=%d;%d;%d', $location->name_en, $prefix, intval($location->latitude), intval($location->longitude), $zoom);
+            $locations[] = str_replace(';', '%3B', $url);
+        }
+
+        return Helper::text(implode($separator, $locations));
     }
 
     /**
@@ -116,13 +144,14 @@ class DayZController extends Controller
             'type' => 'dayz',
             'host' => $address,
             'options' => [
-                'query_port' => $query_port
-            ]
+                'query_port' => $query_port,
+            ],
         ]);
         $query->setOption('timeout', 30);
 
         $result = $query->process();
         if (empty($result[$address])) {
+            Log::error('Unable to query gameserver address: ' . $address);
             return Helper::text('[Error: Unable to query server.]');
         }
 

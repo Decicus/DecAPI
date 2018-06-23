@@ -25,6 +25,6 @@ class IzurviveLocationSpelling extends Model
      */
     public function location()
     {
-        return $this->belongsTo('App\IzurviveLocation', 'id', 'location_id');
+        return $this->belongsTo('App\IzurviveLocation', 'location_id', 'id');
     }
 }

@@ -58,6 +58,8 @@ class DayZController extends Controller
     {
         $prefix = 'https://www.izurvive.com/';
         $maxResults = intval($request->input('max_results', 1));
+        $separator = $request->input('separator', ' | ');
+        $zoom = intval($request->input('zoom_level', 7));
 
         if ($request->exists('list')) {
             $locations = [];
@@ -108,9 +110,14 @@ class DayZController extends Controller
         $results = Spelling::hydrate($results->all());
         $spellingResults = $results->take($maxResults);
 
-        // * TODO: Support multiple responses.
-        $name = array_values($checkNames)[0];
-        return Helper::text($name . ' - ' . $prefix . str_replace(';', '%3B', $locations[$name]));
+        $locations = [];
+        foreach ($spellingResults as $spelling) {
+            $location = $spelling->location;
+            $url = sprintf('%s - %s#c=%d;%d;%d', $location->name_en, $prefix, intval($location->latitude), intval($location->longitude), $zoom);
+            $locations[] = str_replace(';', '%3B', $url);
+        }
+
+        return Helper::text(implode($separator, $locations));
     }
 
     /**

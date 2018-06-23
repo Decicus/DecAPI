@@ -288,6 +288,21 @@ class TwitchApiController extends Controller
     }
 
     /**
+     * Returns a list of the channels a user is following.
+     *
+     * @param string $user
+     * @param integer $limit
+     * @param integer $offset
+     * @param array $headers
+     * @return void
+     */
+    public function userFollowsChannels($user = '', $limit = 25, $offset = 0, $direction = 'desc', $headers = [])
+    {
+        $url = sprintf('users/%s/follows/channels?limit=%d&offset=%d&direction=%s', $user, $limit, $offset, $direction);
+        return $this->get($url, false, $headers);
+    }
+
+    /**
      * Returns result of the Kraken API for videos.
      *
      * @param  Request $request

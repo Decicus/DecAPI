@@ -4,7 +4,7 @@
             <a href="/bttv/" class="navbar-brand">BetterTTV Channel Emotes</a>
         </div>
         <ul class="nav navbar-nav">
-            <li <?php echo ( $page === 'home' ? 'class="active"' : '' ); ?>><a href="{{ route('bttv.home') }}"><i class="fa fa-home fa-1x"></i> Home</a></li>
+            <li <?php echo ( $page === 'home' ? 'class="active"' : '' ); ?>><a href="{{ route('bttv.home') }}"><i class="far fa-home fa-1x"></i> Home</a></li>
         </ul>
     </div>
 </nav>

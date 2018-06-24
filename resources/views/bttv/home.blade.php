@@ -5,7 +5,7 @@
         <title>BetterTTV Channel Emotes - Home</title>
         <link rel="stylesheet" href="/css/bootstrap.min.css" type="text/css" />
         <link rel="stylesheet" href="/css/united.css" type="text/css" />
-        <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css" />
+        <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-87DrmpqHRiY8hPLIr7ByqhPIywuSsjuQAfMXAE0sMUpY3BM7nXjf+mLIUSvhDArs" crossorigin="anonymous">
     </head>
     <body>
         @include('bttv.nav')
@@ -54,7 +54,7 @@
 
         <nav class="navbar navbar-default navbar-fixed-bottom" role="navigation">
             <div class="container-fluid">
-                <p class="navbar-text">Created with <i class="fa fa-heart fa-1x" style="color: #ff0000;"></i> by <a href="https://www.thomassen.xyz/" class="navbar-link">Alex Thomassen</a>.</p>
+                <p class="navbar-text">Created with <i class="fas fa-heart" style="color: #ff0000;"></i> by <a href="https://www.thomassen.xyz/" class="navbar-link">Alex Thomassen</a>.</p>
 
                 <p class="navbar-text pull-right">Powered by the <a href="https://nightdev.com/betterttv/" class="navbar-link">BetterTTV</a> API.</p>
             </div>

@@ -562,10 +562,16 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $count = intval($request->input('count', 1));
         $offset = intval($request->input('offset', 0));
+        $cursor = $request->input('cursor', '');
         $direction = $request->input('direction', 'desc');
         $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
         $separator = $request->input('separator', ', ');
         $useUsernames = $request->exists('username');
+
+        // Fields inside the `user` object that will be returned in the JSON response.
+        // See: https://dev.twitch.tv/docs/v5/reference/channels/#get-channel-followers for reference
+        // `created_at` in the root object for each follow is always included.
+        $inputFields = $request->input('fields', 'name,_id');
 
         $id = $request->input('id', 'false');
 
@@ -588,31 +594,77 @@ class TwitchController extends Controller
         }
 
         if ($count > 100) {
+            if ($request->wantsJson()) {
+                return Helper::json(['error' => 'Count cannot be more than 100.'], 400);
+            }
+
             return Helper::text('Count cannot be more than 100.');
         }
 
-        $followers = $this->twitchApi->channelFollows($channel, $count, $offset, $direction, $this->version);
+        $followers = $this->twitchApi->channelFollows($channel, $count, $offset, $direction, $this->version, $cursor);
 
         if (!empty($followers['status'])) {
+            if ($request->wantsJson()) {
+                return Helper::json($followers, $followers['status']);
+            }
+
             return Helper::text($followers['message']);
         }
 
         if (!isset($followers['follows'])) {
+            if ($request->wantsJson()) {
+                return Helper::json(['error' => 'An error occurred retrieving your followers.', 500]);
+            }
+
             return Helper::text('An error occurred retrieving your followers.');
         }
 
         $follows = $followers['follows'];
 
-        if (count($followers['follows']) === 0) {
+        if (count($follows) === 0) {
+            if ($request->wantsJson()) {
+                return Helper::json([
+                    'cursor' => null,
+                    'total' => $followers['_total'],
+                    'followers' => [],
+                ]);
+            }
+
             return Helper::text('You do not have any followers :(');
         }
 
         $users = [];
+        if ($request->wantsJson()) {
+            $fields = array_map('trim', explode(',', $inputFields));
+            $availableFields = array_keys($follows[0]['user']);
+            $validFields = array_filter($fields, function ($field) use ($availableFields) {
+                return in_array($field, $availableFields);
+            });
+
+            foreach ($follows as $follow) {
+                $currentFollow = [
+                    'follow_created' => $follow['created_at'],
+                ];
+
+                foreach ($validFields as $field) {
+                    $currentFollow[$field] = $follow['user'][$field];
+                }
+
+                $users[] = $currentFollow;
+            }
+
+            return Helper::json([
+                'cursor' => (isset($followers['_cursor']) ? $followers['_cursor'] : null),
+                'total' => $followers['_total'],
+                'followers' => $users,
+            ]);
+        }
+
         $currentNumber = 0;
         foreach ($follows as $user) {
             $user = $user['user'];
-
             $name = $user['name'];
+
             if (!$useUsernames && !empty($user['display_name'])) {
                 $name = $user['display_name'];
             }

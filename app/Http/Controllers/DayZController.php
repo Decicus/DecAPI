@@ -156,7 +156,7 @@ class DayZController extends Controller
         }
 
         $result = $result[$address];
-        if (empty($result['num_players']) || empty($result['max_players'])) {
+        if (!isset($result['num_players'], $result['max_players'])) {
             return Helper::text('[Error: Unable to retrieve player count.]');
         }
 

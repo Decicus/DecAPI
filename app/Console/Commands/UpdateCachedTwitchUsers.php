@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use App\CachedTwitchUser;
 use GuzzleHttp\Client;
 
+use Log;
+
 class UpdateCachedTwitchUsers extends Command
 {
     /**
@@ -40,6 +42,13 @@ class UpdateCachedTwitchUsers extends Command
      */
     public function handle()
     {
+        $oneMonthAgo = Carbon::now()->subMonths(1);
+        $deletedUsers = CachedTwitchUser::where('created_at', '<', $oneMonthAgo)->delete();
+
+        if ($deletedUsers > 0) {
+            Log::info(sprintf('Deleted %d cached users older than %s', $deletedUsers, $oneMonthAgo));
+        }
+
         $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHours(1))->get();
         $client = new Client;
         $settings = [
@@ -56,11 +65,11 @@ class UpdateCachedTwitchUsers extends Command
             $body = json_decode($request->getBody(), true);
             $status = $request->getStatusCode();
             if ($status !== 200) {
-                $this->info($body['status'] . ' - ' . $body['message']);
+                Log::info($body['status'] . ' - ' . $body['message']);
 
                 // Delete banned/deleted/non-existing users.
                 if ($status === 422 || $status === 404) {
-                    $this->info('Deleting user: ' . $user->id);
+                    Log::info('Deleting user: ' . $user->id);
                     $user->delete();
                 }
 

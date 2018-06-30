@@ -2077,7 +2077,6 @@ class TwitchController extends Controller
 
         $offset = intval($request->input('offset', 0));
         $limit = intval($request->input('limit', 1));
-        $direction = $request->input('direction', 'desc');
         $broadcastTypes = $request->input('broadcast_type', 'archive');
         $separator = $request->input('separator', ' | ');
         $format = $request->input('video_format', '${title} - ${url}');

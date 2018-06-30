@@ -740,6 +740,19 @@ class TwitchController extends Controller
 
         $follows = $channels['follows'];
 
+        if (!is_array($follows)) {
+            Log:error(sprintf('/twitch/following: `Follows` key for user %s invalid. Array expected, got: %s', $user, gettype($follows)));
+
+            if ($request->wantsJson()) {
+                return Helper::json([
+                    'error' => 'Twitch API returned invalid data.',
+                    'status' => 500,
+                ], 500);
+            }
+
+            return Helper::text('Unable to get follow data for the specified user.');
+        }
+
         if (count($follows) === 0) {
             if ($request->wantsJson()) {
                 return Helper::json($follows);
@@ -2029,6 +2042,114 @@ class TwitchController extends Controller
 
         $viewers = $stream['stream']['viewers'];
         return Helper::text($viewers);
+    }
+
+    /**
+     * Returns a video list (by default only "VODs" also known as archives) for the specified channel.
+     *
+     * @param Request $request
+     * @param string $channel
+     * @return void
+     */
+    public function videos(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text('A channel has to be specified.');
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                // Store channel name separately for potential messages and override $channel
+                $channelName = $channel;
+                $channel = $this->userByName($channel)->id;
+            } catch (Exception $e) {
+                return Helper::text($e->getMessage());
+            }
+        }
+
+        $offset = intval($request->input('offset', 0));
+        $limit = intval($request->input('limit', 1));
+        $direction = $request->input('direction', 'desc');
+        $broadcastTypes = $request->input('broadcast_type', 'archive');
+        $separator = $request->input('separator', ' | ');
+        $format = $request->input('video_format', '${title} - ${url}');
+
+        if ($limit > 100 || $limit < 1) {
+            if ($request->wantsJson()) {
+                return Helper::json([
+                    'error' => 'Invalid "limit" parameter specified. Minimum 1, maximum 100.',
+                    'status' => 400,
+                ], 400);
+            }
+
+            return Helper::text('Invalid "limit" parameter specified. Minimum 1, maximum 100.');
+        }
+
+        if ($offset < 0) {
+            if ($request->wantsJson()) {
+                return Helper::json([
+                    'error' => 'Invalid "offset" parameter specified. Minimum 0.',
+                    'status' => 400,
+                ], 400);
+            }
+
+            return Helper::text('Invalid "offset" parameter specified. Minimum 0.');
+        }
+
+        $videos = $this->twitchApi->videos($request, $channel, explode(',', $broadcastTypes), $limit, $offset, $this->version);
+
+        if (!empty($videos['status'])) {
+            if ($request->wantsJson()) {
+                return Helper::json($videos, $videos['status']);
+            }
+
+            return Helper::text($videos['status'] . ' - ' . $videos['message']);
+        }
+
+        if (!isset($videos['videos'])) {
+            if ($request->wantsJson()) {
+                return Helper::json([
+                    'error' => 'Twitch API returned invalid data.',
+                    'status' => 503,
+                ], 503);
+            }
+
+            return Helper::text('Twitch API returned invalid data.');
+        }
+
+        $videoList = $videos['videos'];
+        if (count($videoList) === 0) {
+            if ($request->wantsJson()) {
+                return Helper::json([
+                    'total' => $videos['_total'],
+                    'videos' => $videoList,
+                ]);
+            }
+
+            return Helper::text('Reached the end of the video list!');
+        }
+
+        if ($request->wantsJson()) {
+            return Helper::json([
+                'total' => $videos['_total'],
+                'videos' => $videoList,
+            ]);
+        }
+
+        $formattedVideos = [];
+        foreach ($videoList as $video) {
+            $formattedVideos[] = str_replace(['${title}', '${url}'], [$video['title'], $video['url']], $format);
+        }
+
+        return Helper::text(implode($separator, $formattedVideos));
     }
 
     /**

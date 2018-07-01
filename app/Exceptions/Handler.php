@@ -34,8 +34,8 @@ class Handler extends ExceptionHandler
     public function report(Exception $e)
     {
         if (!empty(env('SENTRY_LARAVEL_DSN', null))) {
-            if (app()->bound('sentry') && $this->shouldReport($exception)) {
-                app('sentry')->captureException($exception);
+            if (app()->bound('sentry') && $this->shouldReport($e)) {
+                app('sentry')->captureException($e);
             }
         }
 

@@ -67,7 +67,7 @@ class DayZController extends Controller
 
             foreach (Location::all() as $location) {
                 $name = $location->name_en;
-                $locations[$name] = sprintf('#c=%s;%s', $location->latitude, $location->longitude);
+                $locations[$name] = sprintf('#c=%s;%s', intval($location->latitude), intval($location->longitude));
                 $spellings[$name] = $location
                                     ->spellings
                                     ->pluck('spelling')
@@ -86,11 +86,12 @@ class DayZController extends Controller
 
             $data = [
                 'list' => $locations,
+                'spellings' => $spellings,
                 'prefix' => $prefix,
                 'page' => 'Available Search Locations',
             ];
 
-            return view('shared.list', $data);
+            return view('dayz.izurvive', $data);
         }
 
         $search = $request->input('search', null);

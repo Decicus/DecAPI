@@ -105,7 +105,7 @@ Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
         ->where('id', '([0-9]+)');
 });
 
-Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'throttle:100'], function() {
+Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'throttle:' . env('THROTTLE_RATE_LIMIT', '100,1')], function() {
     // Include some extra characters that are used in examples quite often.
     // The error returned should hopefully clear up any confusion as to why it doesn't work.
     $channelRegex = '([$:{}A-z0-9]{1,50})';

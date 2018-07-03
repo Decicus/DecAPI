@@ -15,8 +15,11 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\DecryptString::class,
+        Commands\GenerateNewRateLimitApiKey::class,
         Commands\ImportSubcountTokens::class,
+        Commands\ListRateLimitApiKeys::class,
         Commands\RefreshIzurviveLocations::class,
+        Commands\SetRateLimitApiKeyStatus::class,
         Commands\UpdateCachedTwitchUsers::class,
         Commands\UpdateTwitchAuthUsers::class,
         Commands\UpdateTwitchHelp::class,

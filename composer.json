@@ -22,7 +22,8 @@
         "doctrine/dbal": "^2.5",
         "fideloper/proxy": "~4.0",
         "tom-lingham/searchy": "^2.0",
-        "sentry/sentry-laravel": "^0.9.0"
+        "sentry/sentry-laravel": "^0.9.0",
+        "ramsey/uuid": "^3.7"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        Commands\AddBlacklistedIp::class,
         Commands\DecryptString::class,
         Commands\GenerateNewRateLimitApiKey::class,
         Commands\ImportSubcountTokens::class,

@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use Closure;
+
 use App\IpBlacklist;
+use Log;
 
 class IPBasedBlacklist
 {
@@ -25,6 +27,7 @@ class IPBasedBlacklist
             return $next($request);
         }
 
+        Log::Error(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklist->reason));
         abort(503);
     }
 }

@@ -15,7 +15,7 @@ class MathController extends Controller
      *
      * @var string
      */
-    private $mathBaseUrl = 'http://api.mathjs.org/v1/?expr=';
+    private $mathBaseUrl = 'http://api.mathjs.org/v4?expr=';
 
     /**
      * Evaluates a math expression.
@@ -30,6 +30,20 @@ class MathController extends Controller
 
         if (empty($exp)) {
             return Helper::text('A math expression (exp) has to be specified.');
+        }
+
+        $decimalSeparator = $request->input('separator', '.');
+
+        // Spaces are unnecessary in the expression, and will actually error the evaluation
+        // if spaces are used as a 'thousand separator'
+        $exp = str_replace(' ', '', $exp);
+
+        if ($decimalSeparator === '.') {
+            // API does not like comma used as a thousand separator
+            $exp = str_replace(',', '', $exp);
+        } else {
+            $exp = str_replace('.', '', $exp);
+            $exp = str_replace($decimalSeparator, '.', $exp);
         }
 
         try {

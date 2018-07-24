@@ -19,6 +19,8 @@ class Helper
      * From: http://www.if-not-true-then-false.com/2010/php-calculate-real-differences-between-two-dates-or-timestamps/
      * Code snippet credit: https://gist.github.com/ozh/8169202
      *
+     * Modified to support localization strings in Laravel.
+     *
      * @param mixed $time1 a time (string or timestamp)
      * @param mixed $time2 a time (string or timestamp)
      * @param integer $precision Optional precision
@@ -69,11 +71,8 @@ class Helper
             }
             // Add value and interval if value is bigger than 0
             if($value > 0) {
-                if($value != 1){
-                    $interval .= "s";
-                }
                 // Add value and interval to times array
-                $times[] = $value . " " . $interval;
+                $times[] = trans_choice('time.' . $interval, $value, ['value' => $value]);
                 $count++;
             }
         }

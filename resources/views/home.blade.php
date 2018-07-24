@@ -19,10 +19,10 @@
                 <h1 class="text-success">{{ env('SITE_TITLE', 'DecAPI') }}</h1>
                 <div class="container">
                     <div class="list-group">
-                        <a href="https://docs.decapi.me/" class="list-group-item" target="_blank"><i class="far fa-book fa-fw"></i> Documentation (docs.decapi.me)</a>
+                        <a href="https://docs.decapi.me/" class="list-group-item" target="_blank"><i class="fas fa-book fa-fw"></i> Documentation (docs.decapi.me)</a>
                         <a href="https://links.decapi.me/discord" class="list-group-item" target="_blank"><i class="fab fa-discord fa-fw"></i> Discord</a>
                         <a href="mailto:alex@thomassen.xyz" class="list-group-item"><i class="fas fa-envelope fa-fw"></i> E-mail (alex@thomassen.xyz)</a>
-                        <a href="https://blog.decicus.com/" class="list-group-item" target="_blank"><i class="far fa-pen-square fa-fw"></i> Website/blog (blog.decicus.com)</a>
+                        <a href="https://blog.decicus.com/" class="list-group-item" target="_blank"><i class="fas fa-pen-square fa-fw"></i> Website/blog (blog.decicus.com)</a>
                         <a href="https://twitter.com/Decicus" target="_blank" class="list-group-item"><i class="fab fa-twitter fa-fw"></i> Twitter (@Decicus)</a>
                         <a href="https://github.com/Decicus" target="_blank" class="list-group-item"><i class="fab fa-github fa-fw"></i> GitHub (Decicus)</a>
                         <a href="https://www.twitch.tv/Decicus" target="_blank" class="list-group-item"><i class="fab fa-twitch fa-fw"></i> Twitch (Decicus)</a>

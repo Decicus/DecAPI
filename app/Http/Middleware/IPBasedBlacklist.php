@@ -19,11 +19,13 @@ class IPBasedBlacklist
     public function handle($request, Closure $next)
     {
         $ip = $request->ip();
-        $blacklist = IpBlacklist
+        /*$blacklist = IpBlacklist
                 ::where('ip_address', $ip)
-                ->first();
+                ->first();*/
 
-        if (empty($blacklist)) {
+        $blacklistedIps = explode(',', env('BLACKLISTED_IPS', ''));
+
+        if (!in_array($ip, $blacklistedIps)) {
             return $next($request);
         }
 

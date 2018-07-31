@@ -29,7 +29,7 @@ class IPBasedBlacklist
             return $next($request);
         }
 
-        Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklist->reason));
+        Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), 'Not set.'));
         abort(503);
     }
 }

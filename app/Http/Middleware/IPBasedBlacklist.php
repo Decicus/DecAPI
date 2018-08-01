@@ -19,17 +19,15 @@ class IPBasedBlacklist
     public function handle($request, Closure $next)
     {
         $ip = $request->ip();
-        /*$blacklist = IpBlacklist
+        $blacklist = IpBlacklist
                 ::where('ip_address', $ip)
-                ->first();*/
+                ->first();
 
-        $blacklistedIps = explode(',', env('BLACKLISTED_IPS', ''));
-
-        if (!in_array($ip, $blacklistedIps)) {
+        if (empty($blacklist)) {
             return $next($request);
         }
 
-        Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), 'Not set.'));
+        Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklist->reason));
         abort(503);
     }
 }

@@ -24,7 +24,8 @@
         "tom-lingham/searchy": "^2.0",
         "sentry/sentry-laravel": "^0.9.0",
         "ramsey/uuid": "^3.7",
-        "predis/predis": "^1.1"
+        "predis/predis": "^1.1",
+        "laravel/tinker": "^1.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

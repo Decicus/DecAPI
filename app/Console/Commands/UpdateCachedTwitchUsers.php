@@ -66,7 +66,10 @@ class UpdateCachedTwitchUsers extends Command
             $body = json_decode($request->getBody(), true);
             $status = $request->getStatusCode();
             if ($status !== 200) {
-                Log::info($body['status'] . ' - ' . $body['message']);
+                $errorMessage = $body['message'];
+                if (!empty($errorMessage)) {
+                    Log::info($body['status'] . ' - ' . $errorMessage);
+                }
 
                 // Delete banned/deleted/non-existing users.
                 if ($status === 422 || $status === 404) {

@@ -11,4 +11,5 @@ return [
     'hour' => ':value hour|:value hours',
     'minute' => ':value minute|:value minutes',
     'second' => ':value second|:value seconds',
+    'invalid_timezone' => 'Invalid timezone specified: :timezone',
 ];

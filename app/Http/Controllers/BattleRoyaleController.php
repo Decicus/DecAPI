@@ -14,7 +14,7 @@ class BattleRoyaleController extends Controller
      *
      * @var string
      */
-    public $baseUrl = 'https://leaderboard.battleroyalegames.com/api';
+    public $baseUrl = 'https://battleroyalemod.com/api';
 
     /**
      * Retrieves the information from the specified endpoint in the Battle Royale API

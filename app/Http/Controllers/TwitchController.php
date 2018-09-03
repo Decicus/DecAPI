@@ -1148,7 +1148,7 @@ class TwitchController extends Controller
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
-            return Helper::text('Channel name cannot be empty.');
+            return Helper::text(__('generic.channel_name_required'));
         }
 
         if ($id !== 'true') {
@@ -1175,7 +1175,7 @@ class TwitchController extends Controller
         $user = $user ?: $request->input('user', null);
 
         if (empty($user)) {
-            return Helper::text('Username has to be specified.');
+            return Helper::text(__('generic.username_required'));
         }
 
         try {
@@ -1195,7 +1195,7 @@ class TwitchController extends Controller
     {
         $ingests = $this->twitchApi->ingests();
         if (empty($ingests['ingests'])) {
-            return $this->error('An error occurred attempting to load the data.');
+            return $this->error(__('generic.error_loading_data'));
         }
 
         $info = '';
@@ -1246,11 +1246,13 @@ class TwitchController extends Controller
         $services['multistre.am'] = $services['multistream'];
 
         if (empty($services[$service])) {
-            return Helper::text('Invalid service specified - Available services: ' . implode(', ', array_keys($services)));
+            return Helper::text(__('twitch.multi_invalid_service', [
+                'services' => implode(', ', array_keys($services)),
+            ]));
         }
 
         if (empty($streams)) {
-            return Helper::text('You have to specify which streams to create a multi link for (space-separated list).');
+            return Helper::text(__('twitch.multi_empty_list'));
         }
 
         $service = $services[$service];
@@ -1288,7 +1290,9 @@ class TwitchController extends Controller
         $action = isset($request->route()->getAction()['action']) ? $request->route()->getAction()['action'] : 'random';
 
         if (!in_array($action, $actions)) {
-            return Helper::text(sprintf('Invalid action specified, available actions: %s.', implode(', ', $actions)));
+            return Helper::text(__('twitch.sub_invalid_action', [
+                'actions' => implode(', ', $actions),
+            ]));
         }
 
          if ($request->exists('logout')) {
@@ -1323,7 +1327,7 @@ class TwitchController extends Controller
             if (empty($channel)) {
                 $nb = new Nightbot($request);
                 if (empty($nb->channel)) {
-                    return Helper::text('You need to specify a channel name or an OAuth token');
+                    return Helper::text(__('generic.user_channel_name_required'));
                 }
                 $channel = $nb->channel['providerId'];
                 $id = true;

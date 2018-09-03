@@ -37,4 +37,15 @@ return [
      */
     'no_hosts' => 'No one is currently hosting :channel',
     'multiple_hosts' => ':channels and :amount other|:channels and :amount others',
+
+    /**
+     * Multi
+     */
+    'multi_invalid_service' => 'Invalid service specified - Available services: :services',
+    'multi_empty_list' => 'You have to specify which streams to create a multi link for (space-separated list).',
+
+    /**
+     * Subscriber-related stuff
+     */
+    'sub_invalid_action' => 'Invalid action specified. Available actions: :actions',
 ];

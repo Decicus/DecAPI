@@ -10,4 +10,5 @@ return [
     'max_count' => 'Count cannot be more than :value.',
     'invalid_limit' => 'Invalid "limit" specified: :limit',
     'invalid_offset' => 'Invalid "offset" specified: :offset',
+    'error_loading_data' => 'An error occurred loading the requested data.',
 ];

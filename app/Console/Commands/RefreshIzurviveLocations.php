@@ -51,6 +51,8 @@ class RefreshIzurviveLocations extends Command
     {
         $locations = Helper::get($this->currentMap);
 
+        // Delete all spellings and re-add them.
+        Spelling::truncate();
         foreach ($locations as $loc) {
             /**
              * Example format:
@@ -89,8 +91,6 @@ class RefreshIzurviveLocations extends Command
                 $spellings[] = $nameRU;
             }
 
-            // Delete all spellings and re-add them.
-            Spelling::truncate();
             foreach ($spellings as $spelling) {
                 $newSpelling = Spelling::create([
                     'location_id' => $locationId,

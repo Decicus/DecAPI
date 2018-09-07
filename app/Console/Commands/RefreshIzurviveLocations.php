@@ -30,7 +30,7 @@ class RefreshIzurviveLocations extends Command
      *
      * @var string
      */
-    private $currentMap = 'https://maps.izurvive.com/maps/CH-Top/1.10.5/citycoords.json';
+    private $currentMap = 'https://maps.izurvive.com/maps/CH-Sat/1.9.3/citycoords.json';
 
     /**
      * Create a new command instance.
@@ -89,11 +89,9 @@ class RefreshIzurviveLocations extends Command
                 $spellings[] = $nameRU;
             }
 
+            // Delete all spellings and re-add them.
+            Spelling::truncate();
             foreach ($spellings as $spelling) {
-                if ($location->spellings->contains($spelling)) {
-                    continue;
-                }
-
                 $newSpelling = Spelling::create([
                     'location_id' => $locationId,
                     'spelling' => $spelling,

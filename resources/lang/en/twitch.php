@@ -9,6 +9,9 @@ return [
      */
     'no_chat_rules' => ':channel does not have any chat rules set.',
     'error_occurred_chat_clusters' => 'An error occurred retrieving chat clusters.',
+    'error_retrieving_chat_users' => 'There was an error retrieving users for channel: ',
+    'empty_chat_user_list' => 'The list of users is empty.',
+    'channel_missing_subemotes' => 'This channel does not have any subscriber emotes.',
 
     /**
      * Related to followers
@@ -31,6 +34,13 @@ return [
      * Media (highlights, VODs, uploads)
      */
     'no_highlights' => ':channel has no saved highlights.',
+    'no_uploads' => ':channel has no uploaded videos.',
+    'no_vods' => ':channel has no available VODs.',
+    'invalid_limit_parameter' => 'Invalid "limit" parameter specified. Minimum :min, maximum :max.',
+    'invalid_offset_parameter' => 'Invalid "offset" parameter specified. Minimum :min.',
+    'end_of_video_list' => 'Reached the end of the video list!',
+    'invalid_minutes_parameter' => 'Invalid amount of minutes specified: :min',
+    'vodreplay_minutes_too_high' => 'The minutes (:min) specified is longer than the length of the VOD.',
 
     /**
      * Hosting
@@ -48,4 +58,21 @@ return [
      * Subscriber-related stuff
      */
     'sub_invalid_action' => 'Invalid action specified. Available actions: :actions',
+    'sub_needs_authentication' => '%s needs to authenticate to use %sSub (%s sub): %s',
+    'sub_count_too_high' => 'Count specified (%d) is higher than the amount of subscribers (%d)',
+    'subage_needs_authentication' => '%s needs to authenticate to use subage (Subscription length): %s',
+    'subcount_missing_channel' => 'Use ?channel=CHANNEL_NAME or /twitch/subcount/CHANNEL_NAME to get subcount.',
+    'subcount_needs_authentication' => '%s needs to authenticate to use subcount: %s',
+    'subpoints_missing_channel' => 'Please specify a channel name at the end of the URL - For example: /twitch/subpoints/CHANNEL_NAME',
+    'subpoints_needs_authentication' => '%s needs to authenticate to use subpoints: %s',
+
+    /**
+     * Authentication
+     */
+    'auth_missing_scopes' => 'The OAuth token is missing a required scope(s):',
+
+    /**
+     * Teams
+     */
+    'teams_missing_identifier' => 'Team identifier is empty',
 ];

@@ -11,4 +11,5 @@ return [
     'invalid_limit' => 'Invalid "limit" specified: :limit',
     'invalid_offset' => 'Invalid "offset" specified: :offset',
     'error_loading_data' => 'An error occurred loading the requested data.',
+    'error_loading_data_api' => 'An error occurred retrieving data from the API.',
 ];

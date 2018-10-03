@@ -177,7 +177,7 @@ class TwitchController extends Controller
         if (empty($user)) {
             $nb = new Nightbot($request);
             if (empty($nb->user)) {
-                return Helper::text('You need to specify a username!');
+                return Helper::text(__('generic.username_required'));
             }
 
             $user = $user ?: $nb->user['providerId'];
@@ -214,7 +214,7 @@ class TwitchController extends Controller
     public function avatar(Request $request, $user = null)
     {
         if (empty($user)) {
-            return Helper::text('No user specified');
+            return Helper::text(__('generic.username_required'));
         }
 
         $id = $request->input('id', 'false');
@@ -251,7 +251,7 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
 
         if (empty($channel)) {
-            return Helper::text('Channel name has to be specified.');
+            return Helper::text(__('generic.channel_name_required'));
         }
 
         $url = sprintf('https://api.twitch.tv/api/channels/%s/chat_properties', $channel);
@@ -264,7 +264,7 @@ class TwitchController extends Controller
         $rules = $data['chat_rules'];
 
         if (empty($rules)) {
-            return Helper::text($channel . ' does not have any rules set.');
+            return Helper::text(__('twitch.no_chat_rules', ['channel' => $channel]));
         }
 
         $rules = implode(PHP_EOL, $rules);
@@ -284,7 +284,7 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
 
         if (empty($channel)) {
-            return $this->error('A channel has to be specified');
+            return $this->error(__('generic.channel_name_required'));
         }
 
         $cluster = Helper::get('https://tmi.twitch.tv/servers?channel=' . $channel, [
@@ -292,7 +292,7 @@ class TwitchController extends Controller
         ]);
 
         if (empty($cluster)) {
-            return $this->error('An error occurred retrieving cluster.');
+            return $this->error(__('twitch.error_occurred_chat_clusters'));
         }
 
         return Helper::text($cluster['cluster']);
@@ -316,13 +316,13 @@ class TwitchController extends Controller
         $allTimezones = DateTimeZone::listIdentifiers();
 
         if (!in_array($tz, $allTimezones)) {
-            return Helper::text('Invalid timezone specified: ' . $tz);
+            return Helper::text(__('time.invalid_timezone', ['timezone' => $tz]));
         }
 
         if (empty($user)) {
             $nb = new Nightbot($request);
             if (empty($nb->user)) {
-                return Helper::text('You need to specify a username!');
+                return Helper::text(__('generic.username_required'));
             }
 
             $user = $user ?: $nb->user['providerId'];
@@ -352,6 +352,8 @@ class TwitchController extends Controller
 
     /**
      * Uses the specified subscriber count to see how many subscribers are needed to open a certain amount of emoteslots.
+     *
+     * ! NOTE: Scheduled for deprecation/removal.
      *
      * @param  Request $request
      * @param  string  $channel The channel name
@@ -418,7 +420,7 @@ class TwitchController extends Controller
         if (empty($channel) || empty($user)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel) || empty($nb->user)) {
-                return Helper::text('You need to specify both user and channel name');
+                return Helper::text(__('generic.user_channel_name_required'));
             }
 
             $channel = $channel ?: $nb->channel['providerId'];
@@ -430,7 +432,7 @@ class TwitchController extends Controller
         $user = trim($user);
 
         if (strtolower($channel) === strtolower($user)) {
-            return Helper::text('A user cannot follow themself.');
+            return Helper::text(__('twitch.cannot_follow_self'));
         }
 
         if ($id !== 'true') {
@@ -465,7 +467,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('A channel has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -511,7 +513,7 @@ class TwitchController extends Controller
         if (empty($user) || empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel) || empty($nb->user)) {
-                return Helper::text('You need to specify both user and channel name');
+                return Helper::text(__('twitch.user_channel_name_required'));
             }
 
             $channel = $channel ?: $nb->channel['providerId'];
@@ -520,11 +522,11 @@ class TwitchController extends Controller
         }
 
         if (!in_array($tz, $allTimezones)) {
-            return Helper::text('Invalid timezone specified: ' . $tz);
+            return Helper::text(__('time.invalid_timezone', ['timezone' => $tz]));
         }
 
         if (strtolower($user) === strtolower($channel)) {
-            return Helper::text('A user cannot follow themself.');
+            return Helper::text(__('twitch.cannot_follow_self'));
         }
 
         if ($id !== 'true') {
@@ -578,7 +580,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('A channel has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -595,10 +597,10 @@ class TwitchController extends Controller
 
         if ($count > 100) {
             if ($request->wantsJson()) {
-                return Helper::json(['error' => 'Count cannot be more than 100.'], 400);
+                return Helper::json(['error' => __('generic.max_count', ['value' => 100])], 400);
             }
 
-            return Helper::text('Count cannot be more than 100.');
+            return Helper::text(__('generic.max_count', ['value' => 100]));
         }
 
         $followers = $this->twitchApi->channelFollows($channel, $count, $offset, $direction, $this->version, $cursor);
@@ -613,10 +615,10 @@ class TwitchController extends Controller
 
         if (!isset($followers['follows'])) {
             if ($request->wantsJson()) {
-                return Helper::json(['error' => 'An error occurred retrieving your followers.', 500]);
+                return Helper::json(['error' => __('twitch.error_followers'), 500]);
             }
 
-            return Helper::text('An error occurred retrieving your followers.');
+            return Helper::text(__('twitch.error_followers'));
         }
 
         $follows = $followers['follows'];
@@ -630,7 +632,7 @@ class TwitchController extends Controller
                 ]);
             }
 
-            return Helper::text('You do not have any followers :(');
+            return Helper::text(__('twitch.no_followers'));
         }
 
         $users = [];
@@ -711,7 +713,7 @@ class TwitchController extends Controller
         $textField = $request->input('field', 'name');
 
         if ($limit < 0 || $limit > 100) {
-            $errorText = 'Invalid "limit" specified: ' . $limit;
+            $errorText = __('generic.invalid_limit', ['limit' => $limit]);
             if ($request->wantsJson()) {
                 return Helper::json(['error' => $errorText], 400);
             }
@@ -720,7 +722,7 @@ class TwitchController extends Controller
         }
 
         if ($offset < 0) {
-            $errorText = 'Invalid "offset" specified: ' . $offset;
+            $errorText = __('generic.invalid_offset', ['offset' => $offset]);
             if ($request->wantsJson()) {
                 return Helper::json(['error' => $errorText], 400);
             }
@@ -745,12 +747,12 @@ class TwitchController extends Controller
 
             if ($request->wantsJson()) {
                 return Helper::json([
-                    'error' => 'Twitch API returned invalid data.',
+                    'error' => __('twitch.invalid_api_data'),
                     'status' => 500,
                 ], 500);
             }
 
-            return Helper::text('Unable to get follow data for the specified user.');
+            return Helper::text(__('twitch.unable_get_following'));
         }
 
         if (count($follows) === 0) {
@@ -758,7 +760,7 @@ class TwitchController extends Controller
                 return Helper::json($follows);
             }
 
-            return Helper::text('End of following list.');
+            return Helper::text(__('twitch.end_following_list'));
         }
 
         $list = [];
@@ -811,7 +813,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('Channel name has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -833,7 +835,7 @@ class TwitchController extends Controller
         }
 
         $text = $getGame[$route];
-        return Helper::text($text ?: 'Not set');
+        return Helper::text($text ?: __('generic.not_set'));
     }
 
     /**
@@ -872,7 +874,7 @@ class TwitchController extends Controller
 
             $data = [
                 'list' => $data['articles'],
-                'page' => 'Help Articles',
+                'page' => __('twitch.help_articles'),
                 'prefix' => $prefix
             ];
             return view('shared.list', $data);
@@ -882,7 +884,7 @@ class TwitchController extends Controller
         $code = null;
 
         if (empty($search) || $search === 'list') {
-            return Helper::text('List of available help articles with titles: ' . route('twitch.help') . '?list');
+            return Helper::text(__('help_available_list', ['url' => route('twitch.help') . '?list']));
         }
 
         $articles = HelpArticle::search($search)
@@ -892,7 +894,7 @@ class TwitchController extends Controller
                     ->get();
 
         if ($articles->isEmpty()) {
-            $msg = 'No results found.';
+            $msg = __('twitch.help_no_results');
             $code = 404;
         }
 
@@ -942,7 +944,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('You have to specify a channel');
+                return Helper::text('generic.channel_name_required');
             }
 
             $channel = $nb->channel['providerId'];
@@ -966,7 +968,9 @@ class TwitchController extends Controller
         }
 
         if (empty($fetchHighlight['videos'])) {
-            return Helper::text(($channelName ?: $channel) . ' has no saved highlights');
+            return Helper::text(__('twitch.no_highlights', [
+                'channel' => ($channelName ?: $channel)
+            ]));
         }
 
         $highlight = $fetchHighlight['videos'][0];
@@ -994,7 +998,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('A channel name has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -1018,7 +1022,7 @@ class TwitchController extends Controller
         }
 
         if (empty($data['videos'])) {
-            return Helper::text(($channelName ?: $channel) . ' has no saved highlights.');
+            return Helper::text(__('twitch.no_highlights', ['channel' => ($channelName ?: $channel)]));
         }
 
         $highlights = $data['videos'];
@@ -1062,7 +1066,7 @@ class TwitchController extends Controller
 
         $nb = new Nightbot($request);
         if (empty($channel)) {
-            $message = 'Channel cannot be empty';
+            $message = __('generic.channel_name_required');
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message, 'status' => 404], 404);
             }
@@ -1102,7 +1106,7 @@ class TwitchController extends Controller
                 return Helper::json([]); // just send an empty host list
             }
 
-            return Helper::text('No one is currently hosting ' . ($channelName ?: $channel));
+            return Helper::text(__('twitch.no_hosts', ['channel' => ($channelName ?: $channel)]));
         }
 
         $hostList = [];
@@ -1125,8 +1129,11 @@ class TwitchController extends Controller
 
         $names = array_slice($hostList, 0, $limit);
         $others = count($hostList) - $limit;
-        $format = '%s and %d other' . ($others > 1 ? 's' : '');
-        $text = sprintf($format, implode($separator, $names), $others);
+        $text = __('twitch.multiple_hosts', [
+            'channels' => implode($separator, $names),
+            'amount' => $others,
+        ]);
+
         return Helper::text($text);
     }
 
@@ -1143,7 +1150,7 @@ class TwitchController extends Controller
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
-            return Helper::text('Channel name cannot be empty.');
+            return Helper::text(__('generic.channel_name_required'));
         }
 
         if ($id !== 'true') {
@@ -1170,7 +1177,7 @@ class TwitchController extends Controller
         $user = $user ?: $request->input('user', null);
 
         if (empty($user)) {
-            return Helper::text('Username has to be specified.');
+            return Helper::text(__('generic.username_required'));
         }
 
         try {
@@ -1190,7 +1197,7 @@ class TwitchController extends Controller
     {
         $ingests = $this->twitchApi->ingests();
         if (empty($ingests['ingests'])) {
-            return $this->error('An error occurred attempting to load the data.');
+            return $this->error(__('generic.error_loading_data'));
         }
 
         $info = '';
@@ -1241,11 +1248,13 @@ class TwitchController extends Controller
         $services['multistre.am'] = $services['multistream'];
 
         if (empty($services[$service])) {
-            return Helper::text('Invalid service specified - Available services: ' . implode(', ', array_keys($services)));
+            return Helper::text(__('twitch.multi_invalid_service', [
+                'services' => implode(', ', array_keys($services)),
+            ]));
         }
 
         if (empty($streams)) {
-            return Helper::text('You have to specify which streams to create a multi link for (space-separated list).');
+            return Helper::text(__('twitch.multi_empty_list'));
         }
 
         $service = $services[$service];
@@ -1283,7 +1292,9 @@ class TwitchController extends Controller
         $action = isset($request->route()->getAction()['action']) ? $request->route()->getAction()['action'] : 'random';
 
         if (!in_array($action, $actions)) {
-            return Helper::text(sprintf('Invalid action specified, available actions: %s.', implode(', ', $actions)));
+            return Helper::text(__('twitch.sub_invalid_action', [
+                'actions' => implode(', ', $actions),
+            ]));
         }
 
          if ($request->exists('logout')) {
@@ -1318,7 +1329,7 @@ class TwitchController extends Controller
             if (empty($channel)) {
                 $nb = new Nightbot($request);
                 if (empty($nb->channel)) {
-                    return Helper::text('You need to specify a channel name or an OAuth token');
+                    return Helper::text(__('generic.user_channel_name_required'));
                 }
                 $channel = $nb->channel['providerId'];
                 $id = true;
@@ -1326,7 +1337,7 @@ class TwitchController extends Controller
 
             $channel = trim($channel);
             $reAuth = route('auth.twitch.base') . sprintf('?redirect=%ssub&scopes=user_read+channel_subscriptions', $action);
-            $needToReAuth = sprintf('%s needs to authenticate to use %sSub (%s sub): %s', $id === true ? $nb->channel['displayName'] : $channel, $action, $action, $reAuth);
+            $needToReAuth = sprintf(__('twitch.sub_needs_authentication'), $id === true ? $nb->channel['displayName'] : $channel, $action, $action, $reAuth);
 
             try {
                 $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
@@ -1357,20 +1368,20 @@ class TwitchController extends Controller
         }
 
         if (!in_array('channel_subscriptions', $tokenData['authorization']['scopes'])) {
-            return Helper::text('The OAuth token is missing a required scope: channel_subscriptions. ' . $needToReAuth);
+            return Helper::text(__('twitch.auth_missing_scopes') . ' channel_subscriptions. ' . $needToReAuth);
         }
 
         $limit = 100;
         $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'desc', $this->version);
 
         if (!empty($data['message'])) {
-            return Helper::text('An error occurred retrieving data from the API: ' . $data['message']);
+            return Helper::text(__('generic.error_loading_data_api') . ' ' . $data['message']);
         }
 
         $count = $data['_total'];
 
         if ($amount > $count) {
-            return Helper::text(sprintf('Count specified (%d) is higher than the amount of subscribers (%d) this channel has!', $amount, $count));
+            return Helper::text(sprintf(__('twitch.sub_count_too_high'), $amount, $count));
         }
 
         $subscriptions = $data['subscriptions'];
@@ -1416,7 +1427,7 @@ class TwitchController extends Controller
     public function randomUser(Request $request, $channel = null)
     {
         if (empty($channel)) {
-            return Helper::text('Channel name cannot be empty.');
+            return Helper::text(__('generic.channel_name_required'));
         }
 
         // Specific _users_ to exclude.
@@ -1430,7 +1441,7 @@ class TwitchController extends Controller
         $data = $this->twitchApi->get('https://tmi.twitch.tv/group/user/' . $channel . '/chatters', true);
 
         if (empty($data) || empty($data['chatters'])) {
-            return Helper::text('There was an error retrieving users for channel: ' . $channel);
+            return Helper::text(__('twitch.error_retrieving_chat_users') . $channel);
         }
 
         $users = [];
@@ -1441,7 +1452,7 @@ class TwitchController extends Controller
         }
 
         if (empty($users)) {
-            return Helper::text('The list of users is empty.');
+            return Helper::text(__('twitch.empty_chat_user_list'));
         }
 
         foreach ($exclude as $user) {
@@ -1456,7 +1467,7 @@ class TwitchController extends Controller
         }
 
         if (empty($users)) {
-            return Helper::text('The list of users is empty.');
+            return Helper::text(__('twitch.empty_chat_user_list'));
         }
 
         shuffle($users);
@@ -1499,7 +1510,7 @@ class TwitchController extends Controller
         if (empty($channel) || empty($user)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel) || empty($nb->user)) {
-                return Helper::text('You need to specify both user and channel name');
+                return Helper::text(__('generic.user_channel_name_required'));
             }
 
             $channel = $channel ?: $nb->channel['providerId'];
@@ -1511,7 +1522,7 @@ class TwitchController extends Controller
         $user = trim($user);
 
         $reAuth = route('auth.twitch.base') . '?redirect=subage&scopes=user_read+channel_check_subscription';
-        $needToReAuth = sprintf('%s needs to authenticate to use subage (Subscription length): %s', $id === true ? $nb->channel['displayName'] : $channel, $reAuth);
+        $needToReAuth = sprintf(__('twitch.subage_needs_authentication'), $id === true ? $nb->channel['displayName'] : $channel, $reAuth);
 
         try {
             $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
@@ -1575,13 +1586,13 @@ class TwitchController extends Controller
         }
 
         if (empty($channel) && !Auth::check()) {
-            return Helper::text('Use ?channel=CHANNEL_NAME or /twitch/subcount/CHANNEL_NAME to get subcount.');
+            return Helper::text(__('twitch.subcount_missing_channel'));
         }
 
         if (!empty($channel)) {
             $channel = strtolower($channel);
             $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=user_read+channel_subscriptions';
-            $needToReAuth = sprintf('%s needs to authenticate to use subcount: %s', $channel, $reAuth);
+            $needToReAuth = sprintf(__('twitch.subcount_needs_authentication'), $channel, $reAuth);
 
             try {
                 $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
@@ -1653,13 +1664,13 @@ class TwitchController extends Controller
         $include = empty($include) ? [] : explode(',', $include);
 
         if (empty($channel) && !Auth::check()) {
-            return Helper::text('Please specify a channel name at the end of the URL - For example: /twitch/subpoints/CHANNEL_NAME');
+            return Helper::text(__('twitch.subpoints_missing_channel'));
         }
 
         if (!empty($channel)) {
             $channel = strtolower($channel);
             $reAuth = route('auth.twitch.base') . '?redirect=subpoints&scopes=user_read+channel_subscriptions';
-            $needToReAuth = sprintf('%s needs to authenticate to use subpoints: %s', $channel, $reAuth);
+            $needToReAuth = sprintf(__('twitch.subpoints_needs_authentication'), $channel, $reAuth);
 
             try {
                 $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
@@ -1734,7 +1745,7 @@ class TwitchController extends Controller
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
-            $message = 'Channel name is not specified';
+            $message = __('generic.channel_name_required');
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message, 'status' => 404], 404);
             }
@@ -1780,7 +1791,7 @@ class TwitchController extends Controller
         }
 
         if (empty($emotes)) {
-            $message = 'This channel does not have any subscriber emotes.';
+            $message = __('twitch.channel_missing_subemotes');
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message], 404);
             }
@@ -1812,7 +1823,7 @@ class TwitchController extends Controller
         $team = $team ?: $request->input('team', null);
 
         if (empty($team)) {
-            $message = 'Team identifier is empty';
+            $message = __('twitch.teams_missing_identifier');
 
             if ($wantsJson) {
                 return Helper::json(['message' => $message, 'status' => 404], 404);
@@ -1869,7 +1880,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('A channel has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -1910,7 +1921,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('A channel has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -1934,7 +1945,9 @@ class TwitchController extends Controller
         }
 
         if (empty($video['videos'])) {
-            return Helper::text(($channelName ?: $channel) . ' has no uploaded videos.');
+            return Helper::text(__('twitch.no_uploads', [
+                'channel' => ($channelName ?: $channel),
+            ]));
         }
 
         $upload = $video['videos'][0];
@@ -1960,7 +1973,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('Channel cannot be empty');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -2012,7 +2025,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('Channel cannot be empty');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -2058,7 +2071,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('A channel has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -2082,25 +2095,34 @@ class TwitchController extends Controller
         $format = $request->input('video_format', '${title} - ${url}');
 
         if ($limit > 100 || $limit < 1) {
+            $limitError = __('twitch.invalid_limit_parameter', [
+                'min' => '1',
+                'max' => '100',
+            ]);
+
             if ($request->wantsJson()) {
                 return Helper::json([
-                    'error' => 'Invalid "limit" parameter specified. Minimum 1, maximum 100.',
+                    'error' => $limitError,
                     'status' => 400,
                 ], 400);
             }
 
-            return Helper::text('Invalid "limit" parameter specified. Minimum 1, maximum 100.');
+            return Helper::text($limitError);
         }
 
         if ($offset < 0) {
+            $offsetError = __('twitch.invalid_offset_parameter', [
+                'min' => '0',
+            ]);
+
             if ($request->wantsJson()) {
                 return Helper::json([
-                    'error' => 'Invalid "offset" parameter specified. Minimum 0.',
+                    'error' => $offsetError,
                     'status' => 400,
                 ], 400);
             }
 
-            return Helper::text('Invalid "offset" parameter specified. Minimum 0.');
+            return Helper::text($offsetError);
         }
 
         $videos = $this->twitchApi->videos($request, $channel, explode(',', $broadcastTypes), $limit, $offset, $this->version);
@@ -2116,12 +2138,12 @@ class TwitchController extends Controller
         if (!isset($videos['videos'])) {
             if ($request->wantsJson()) {
                 return Helper::json([
-                    'error' => 'Twitch API returned invalid data.',
+                    'error' => __('generic.error_loading_data_api'),
                     'status' => 503,
                 ], 503);
             }
 
-            return Helper::text('Twitch API returned invalid data.');
+            return Helper::text(__('generic.error_loading_data_api'));
         }
 
         $videoList = $videos['videos'];
@@ -2133,7 +2155,7 @@ class TwitchController extends Controller
                 ]);
             }
 
-            return Helper::text('Reached the end of the video list!');
+            return Helper::text(__('twitch.end_of_video_list'));
         }
 
         if ($request->wantsJson()) {
@@ -2166,7 +2188,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('A channel has to be specified.');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -2188,7 +2210,9 @@ class TwitchController extends Controller
         $offset = intval($request->input('offset', 0));
 
         if ($minutes < 1) {
-            return Helper::text('Invalid amount of minutes specified: ' . $minutes);
+            return Helper::text(__('twitch.invalid_minutes_parameter', [
+                'min' => $minutes,
+            ]));
         }
 
         $video = $this->twitchApi->videos($request, $channel, ['archive'], 1, $offset, $this->version);
@@ -2198,13 +2222,17 @@ class TwitchController extends Controller
         }
 
         if (empty($video['videos'])) {
-            return Helper::text(($channelName ?: $channel) . ' has no available VODs.');
+            return Helper::text(__('twitch.no_vods', [
+                'channel' => ($channelName ?: $channel),
+            ]));
         }
 
         $vod = $video['videos'][0];
 
         if (($minutes * 60) > $vod['length']) {
-            return Helper::text('The minutes (' . $minutes . ') specified is longer than the length of the VOD.');
+            return Helper::text(__('twitch.vodreplay_minutes_too_high', [
+                'min' => $minutes,
+            ]));
         }
 
         $vodStart = Carbon::parse($vod['created_at']);

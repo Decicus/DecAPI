@@ -70,14 +70,14 @@ class Helper
                 break;
             }
             // Add value and interval if value is bigger than 0
-            if($value > 0) {
+            //if($value > 0) {
                 // Add value and interval to times array
                 $times[] = trans_choice('time.' . $interval, $value, [
                     'value' => $value,
                 ]);
 
                 $count++;
-            }
+            //}
         }
         // Return string with times
         return implode(", ", $times);

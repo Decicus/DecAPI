@@ -6,7 +6,7 @@
  */
 return [
     'year' => ':value année|:value années',
-    'month' => ':value mois|:value mois', //there's no variation on this word in french
+    'month' => ':value mois', //there's no variation on this word in french
     'week' => ':value semaine|:value semaines',
     'day' => ':value jour|:value jours',
     'hour' => ':value heure|:value heures',

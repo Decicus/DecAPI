@@ -884,7 +884,7 @@ class TwitchController extends Controller
         $code = null;
 
         if (empty($search) || $search === 'list') {
-            return Helper::text(__('help_available_list', ['url' => route('twitch.help') . '?list']));
+            return Helper::text(__('twitch.help_available_list', ['url' => route('twitch.help') . '?list']));
         }
 
         $articles = HelpArticle::search($search)
@@ -944,7 +944,7 @@ class TwitchController extends Controller
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
-                return Helper::text('generic.channel_name_required');
+                return Helper::text(__('generic.channel_name_required'));
             }
 
             $channel = $nb->channel['providerId'];
@@ -2021,6 +2021,7 @@ class TwitchController extends Controller
     public function viewercount(Request $request, $channel = null)
     {
         $id = $request->input('id', 'false');
+        $channelName = null;
 
         if (empty($channel)) {
             $nb = new Nightbot($request);

@@ -218,23 +218,34 @@ class DayZController extends Controller
     }
 
     /**
-     * Retrieves the latest DayZ "status report" from their blog.
+     * Retrieves the latest DayZ "status report" from their blog/website.
      *
      * @return Response
      */
     public function statusReport()
     {
         $client = new Client;
-        $result = $client->request('GET', 'https://dayz.com/loadNews?page=1', [
+        $result = $client->request('GET', 'https://dayz.com/api/article?rowsPerPage=10', [
             'http_errors' => false
         ]);
 
         $data = json_decode($result->getBody(), true);
 
-        foreach ($data as $post) {
+        if (empty($data['rows'])) {
+            return Helper::text('There was an error retrieving the latest DayZ status report.');
+        }
+
+        $rows = $data['rows'];
+
+        foreach ($rows as $post) {
             $title = $post['title'];
             if (strpos(strtolower($title), 'status report') !== false) {
-                return Helper::text($title . ' - https://dayz.com/blog/' . $post['slug']);
+                $articleSlug = $post['ArticleCategory']['slug'];
+                $postSlug = $post['slug'];
+
+                $output = sprintf('%s - https://dayz.com/article/%s/%s', $title, $articleSlug, $postSlug);
+
+                return Helper::text($output);
             }
         }
 

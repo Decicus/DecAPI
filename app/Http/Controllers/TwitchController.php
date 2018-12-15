@@ -513,7 +513,7 @@ class TwitchController extends Controller
         if (empty($user) || empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel) || empty($nb->user)) {
-                return Helper::text(__('twitch.user_channel_name_required'));
+                return Helper::text(__('generic.user_channel_name_required'));
             }
 
             $channel = $channel ?: $nb->channel['providerId'];

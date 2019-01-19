@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Http\Requests;
+use App\Helpers\Helper;
+use Log;
 
 class GeneralController extends Controller
 {
@@ -43,17 +45,19 @@ class GeneralController extends Controller
     }
 
     /**
-     * Redirects all routes that have not been added
-     * to the new DecAPI, back to the old one.
+     * As of 2019-01-19 this no longer redirects to V1 of DecAPI.
+     * I doubt anyone still relies on it anyways. Shouldn't be necessary to keep around.
+     *
+     * The new fallback should just be a basic 404 plaintext page (to limit character spam due to bad bot implementation).
      *
      * @param  Request $request
      * @return Response
      */
     public function fallback(Request $request)
     {
-        $format = 'https://v1.decapi.me/%s%s';
-        $path = $request->path();
-        $query = str_replace($request->url(), "", $request->fullUrl());
-        return redirect(sprintf($format, $path, $query));
+        // Log requests that would normally fallback, in case there's an endpoint
+        // I still haven't re-implemented all this time.
+        Log::info('Attempt to access non-existing path: ' . $request->path());
+        return Helper::text('404 Page Not Found', 404);
     }
 }

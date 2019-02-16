@@ -54,7 +54,7 @@ class TwitterController extends Controller
         $tweet = Twitter::getUserTimeline([
             'screen_name' => $name,
             'count' => 200,
-            'exclude_replies' => 'true',
+            'exclude_replies' => $exclude_replies,
             'include_rts' => $retweets,
             'tweet_mode' => 'extended',
         ]);

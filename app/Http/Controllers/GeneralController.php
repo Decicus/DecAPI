@@ -55,9 +55,6 @@ class GeneralController extends Controller
      */
     public function fallback(Request $request)
     {
-        // Log requests that would normally fallback, in case there's an endpoint
-        // I still haven't re-implemented all this time.
-        Log::info('Attempt to access non-existing path: ' . $request->path());
         return Helper::text('404 Page Not Found', 404);
     }
 }

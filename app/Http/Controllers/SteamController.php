@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\Helper;
 use Steam;
 use Exception;
+use Log;
 use Redirect;
 
 class SteamController extends Controller
@@ -221,8 +222,10 @@ class SteamController extends Controller
         $readable = ($readable === 'readable' ? true : false);
         $round = intval($request->input('round', 2));
 
-        if ($request->has('key')) {
-            config(['steam-api.steamApiKey' => $request->input('key')]);
+        $hasApiKey = $request->has('key');
+        $customApiKey = $request->input('key', null);
+        if ($hasApiKey) {
+            config(['steam-api.steamApiKey' => $customApiKey]);
         }
 
         if (empty($playerId)) {
@@ -264,7 +267,11 @@ class SteamController extends Controller
             $hours = round($game->playtimeForever / 60, $round);
             return Helper::text(sprintf($hoursFormat, $hours));
         } catch (Exception $e) {
-            return Helper::text($e->getMessage());
+            Log::error('Error occurred in /steam/hours:');
+            Log::error($e);
+
+            $errorFormat = 'An error occurred retrieving hours for Steam ID: %s with app ID: %s%s';
+            return Helper::text(sprintf($errorFormat, $playerId, $appId, ($hasApiKey ? ' - Using custom Steam API key.' : '')));
         }
     }
 
@@ -284,8 +291,10 @@ class SteamController extends Controller
             return Helper::text('You have to specify a Steam ID.');
         }
 
-        if ($request->has('key')) {
-            config(['steam-api.steamApiKey' => $request->input('key')]);
+        $hasApiKey = $request->has('key');
+        $customApiKey = $request->input('key', null);
+        if ($hasApiKey) {
+            config(['steam-api.steamApiKey' => $customApiKey]);
         }
 
         $key = config('steam-api.steamApiKey');
@@ -312,7 +321,11 @@ class SteamController extends Controller
 
             return Helper::text($player['gameserverip']);
         } catch (Exception $e) {
-            return Helper::text($e->getMessage());
+            Log::error('Error occurred in /steam/server_ip:');
+            Log::error($e);
+
+            $errorFormat = 'An error occurred retrieving gameserver IP for Steam ID: %s%s';
+            return Helper::text(sprintf($errorFormat, $id, ($hasApiKey ? ' - Using custom Steam API key.' : '')));
         }
     }
 }

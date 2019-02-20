@@ -96,13 +96,13 @@ Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
 
     Route::get('{hours}/{player_id?}/{app_id?}/{readable?}', ['as' => 'hours', 'uses' => 'SteamController@hours'])
         ->where('hours', '(hours(\.php)?)')
-        ->where('player_id', '([0-9]+)')
+        ->where('player_id', '([A-z:0-9]+)')
         ->where('app_id', '([0-9]+)')
         ->where('readable', 'readable');
 
     Route::get('{server_ip}/{id?}', ['as' => 'server_ip', 'uses' => 'SteamController@serverIp'])
         ->where('server_ip', '(server_ip(.php)?)')
-        ->where('id', '([0-9]+)');
+        ->where('id', '([A-z:0-9]+)');
 });
 
 Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'ratelimit:' . env('THROTTLE_RATE_LIMIT', '100,1')], function() {

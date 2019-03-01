@@ -1,6 +1,6 @@
 <?php
 /**
- * German translation strings for time, for example: /twitch/followage & /twitch/uptime
+ * Deutsche Übersetzung der Zeit- und Datumsformate, zum Beispiel für: /twitch/followage & /twitch/uptime
  */
 return [
     'year' => ':value Jahr|:value Jahre',

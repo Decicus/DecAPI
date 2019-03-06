@@ -80,7 +80,10 @@ class YouTubeController extends Controller
             }
 
             $video = $results[$skip];
-            return Helper::text($video->snippet->title . ' - https://youtu.be/' . $video->id->videoId);
+
+            // Title can sometimes includes HTML entities (such as '&amp;' instead of '&')
+            $title = htmlspecialchars_decode($video->snippet->title);
+            return Helper::text($title . ' - https://youtu.be/' . $video->id->videoId);
         } catch (Exception $ex) {
             Log::error('An error occurred in /youtube/latest_video: ' . (string) $ex);
             return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));

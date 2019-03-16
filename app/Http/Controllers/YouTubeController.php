@@ -56,17 +56,13 @@ class YouTubeController extends Controller
                 return Helper::text('The specified identifier is invalid.');
             }
 
-            $id = $channel->id;
+            $uploadsPlaylist = $channel
+                ->contentDetails
+                ->relatedPlaylists
+                ->uploads;
 
-            $searchParams = [
-                'part' => 'snippet',
-                'channelId' => $id,
-                'maxResults' => $max,
-                'order' => 'date',
-                'type' => 'video',
-                'q' => ''
-            ];
-            $results = YouTube::searchAdvanced($searchParams);
+            $results = YouTube::getPlaylistItemsByPlaylistId($uploadsPlaylist);
+            $results = $results['results'];
 
             if (empty($results)) {
                 return Helper::text('This channel has no public videos.');
@@ -83,7 +79,7 @@ class YouTubeController extends Controller
 
             // Title can sometimes includes HTML entities (such as '&amp;' instead of '&')
             $title = htmlspecialchars_decode($video->snippet->title, ENT_QUOTES);
-            return Helper::text($title . ' - https://youtu.be/' . $video->id->videoId);
+            return Helper::text($title . ' - https://youtu.be/' . $video->contentDetails->videoId);
         } catch (Exception $ex) {
             Log::error('An error occurred in /youtube/latest_video: ' . (string) $ex);
             return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));

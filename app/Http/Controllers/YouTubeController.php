@@ -61,8 +61,23 @@ class YouTubeController extends Controller
                 ->relatedPlaylists
                 ->uploads;
 
-            $results = YouTube::getPlaylistItemsByPlaylistId($uploadsPlaylist);
-            $results = $results['results'];
+            $apiResults = YouTube::getPlaylistItemsByPlaylistId($uploadsPlaylist);
+            $results = $apiResults['results'];
+
+            /**
+             * Seems that YouTube sorts the API response for uploaded videos
+             * by their upload timestamp, instead of their
+             * "published publicly to YouTube" timestamp.
+             *
+             * With scheduled uploads, this can become an issue, so we're re-sorting
+             * the whole array to take this into account.
+             */
+            usort($results, function($a, $b) {
+                $publishOne = $a->contentDetails->videoPublishedAt;
+                $publishTwo = $b->contentDetails->videoPublishedAt;
+
+                return strtotime($publishTwo) - strtotime($publishOne);
+            });
 
             if (empty($results)) {
                 return Helper::text('This channel has no public videos.');

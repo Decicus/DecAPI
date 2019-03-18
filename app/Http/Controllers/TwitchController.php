@@ -35,6 +35,13 @@ class TwitchController extends Controller
     private $defaultAvatar = 'https://static-cdn.jtvnw.net/jtv-static/404_preview-300x300.png';
 
     /**
+     * Scopes required for routes like 'subcount' and 'subage'
+     *
+     * @var string
+     */
+    private $subScopes = 'user_read+channel_subscriptions+channel:read:subscriptions+user:read:email';
+
+    /**
      * @var array
      */
     private $headers = [
@@ -1298,7 +1305,7 @@ class TwitchController extends Controller
             }
 
             $channel = trim($channel);
-            $reAuth = route('auth.twitch.base') . sprintf('?redirect=%ssub&scopes=user_read+channel_subscriptions', $action);
+            $reAuth = route('auth.twitch.base') . sprintf('?redirect=%ssub&scopes=%s', $action, $this->subScopes);
             $needToReAuth = sprintf(__('twitch.sub_needs_authentication'), $id === true ? $nb->channel['displayName'] : $channel, $action, $action, $reAuth);
 
             try {
@@ -1553,7 +1560,7 @@ class TwitchController extends Controller
 
         if (!empty($channel)) {
             $channel = strtolower($channel);
-            $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=user_read+channel_subscriptions';
+            $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=' . $this->subScopes;
             $needToReAuth = sprintf(__('twitch.subcount_needs_authentication'), $channel, $reAuth);
 
             try {
@@ -1631,7 +1638,7 @@ class TwitchController extends Controller
 
         if (!empty($channel)) {
             $channel = strtolower($channel);
-            $reAuth = route('auth.twitch.base') . '?redirect=subpoints&scopes=user_read+channel_subscriptions';
+            $reAuth = route('auth.twitch.base') . '?redirect=subpoints&scopes=' . $this->subScopes;
             $needToReAuth = sprintf(__('twitch.subpoints_needs_authentication'), $channel, $reAuth);
 
             try {

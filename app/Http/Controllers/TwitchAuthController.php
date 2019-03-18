@@ -41,6 +41,7 @@ class TwitchAuthController extends Controller
      * @var array
      */
     private $scopes = [
+        // Kraken scopes
         'user_read',
         'user_blocks_edit',
         'user_blocks_read',
@@ -58,7 +59,18 @@ class TwitchAuthController extends Controller
         'collections_edit',
         'communities_edit',
         'communities_moderate',
-        'viewing_activity_read'
+        'viewing_activity_read',
+
+        // Helix scopes
+        'analytics:read:extensions',
+        'analytics:read:games',
+        'bits:read',
+        'channel:read:subscriptions',
+        'clips:edit',
+        'user:edit',
+        'user:edit:broadcast',
+        'user:read:broadcast',
+        'user:read:email',
     ];
 
     /**

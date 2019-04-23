@@ -293,15 +293,8 @@ class TwitchController extends Controller
             return $this->error(__('generic.channel_name_required'));
         }
 
-        $cluster = Helper::get('https://tmi.twitch.tv/servers?channel=' . $channel, [
-            'Client-ID' => env('TWITCH_CLIENT_ID')
-        ]);
-
-        if (empty($cluster)) {
-            return $this->error(__('twitch.error_occurred_chat_clusters'));
-        }
-
-        return Helper::text($cluster['cluster']);
+        // TODO: Just remove this route completely.
+        return Helper::text('aws');
     }
 
     /**
@@ -804,7 +797,7 @@ class TwitchController extends Controller
         }
 
         $text = $getGame[$route];
-        return Helper::text($text ?: __('generic.not_set'));
+        return Helper::text($text ?: '');
     }
 
     /**
@@ -1343,8 +1336,8 @@ class TwitchController extends Controller
         $limit = 100;
         $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'desc', $this->version);
 
-        if (!empty($data['message'])) {
-            return Helper::text(__('generic.error_loading_data_api') . ' ' . $data['message']);
+        if (!empty($data['error'])) {
+            return Helper::text(sprintf('%s - %s (%s)', __('generic.error_loading_data_api'), $data['error'], $data['message']));
         }
 
         $count = $data['_total'];
@@ -1739,6 +1732,18 @@ class TwitchController extends Controller
         }
 
         $emoticons = $this->twitchApi->emoticons($channel);
+
+        if (empty($emoticons)) {
+            if ($wantsJson) {
+                return $this->errorJson([
+                    'error' => 'API error',
+                    'message' => 'Error loading the requested data.',
+                    'status' => 500,
+                ], 500);
+            }
+
+            return __('generic.error_loading_data_api');
+        }
 
         if (!empty($emoticons['error'])) {
             $status = $emoticons['status'];

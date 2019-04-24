@@ -9,6 +9,13 @@ use Cache;
 class TwitchApiClient
 {
     /**
+     * Base URL for the Twitch 'Helix' API.
+     *
+     * @var string
+     */
+    protected $baseUrl = 'https://api.twitch.tv/helix';
+
+    /**
      * An instance of GuzzleHttp\Client
      *
      * @var GuzzleHttp\Client
@@ -29,6 +36,13 @@ class TwitchApiClient
      */
     private $twitchClientSecret = null;
 
+    /**
+     * OAuth token to use in requests where user authentication is required.
+     *
+     * @var string
+     */
+    private $authToken = null;
+
     public function __construct(HttpClient $client)
     {
         $this->twitchClientId = env('TWITCH_CLIENT_ID');
@@ -41,10 +55,10 @@ class TwitchApiClient
      *
      * @return string
      */
-    public function appToken()
+    public function getAppToken()
     {
         if (!Cache::has('TWITCH_APP_TOKEN')) {
-            $this->renewAppToken();
+            $this->refreshAppToken();
         }
 
         return Cache::get('TWITCH_APP_TOKEN');
@@ -55,7 +69,7 @@ class TwitchApiClient
      *
      * @return void
      */
-    public function renewAppToken()
+    public function refreshAppToken()
     {
         $url = 'https://id.twitch.tv/oauth2/token';
         $response = $this->client->request('POST', $url, [
@@ -72,5 +86,51 @@ class TwitchApiClient
                                ->resolve();
 
         Cache::put('TWITCH_APP_TOKEN', $token['access_token'], $token['expires']);
+    }
+
+    /**
+     * Returns the relevant OAuth token for user authentication.
+     *
+     * @return string
+     */
+    public function getAuthToken()
+    {
+        return $this->authToken;
+    }
+
+    /**
+     * Sets the relevant OAuth token for user authentication.
+     *
+     * @param string $token
+     *
+     * @return void
+     */
+    public function setAuthToken($token)
+    {
+        $this->authToken = $token;
+    }
+
+    /**
+     * Sends a GET request to a Helix API endpoint.
+     * Returns the decoded JSON response.
+     *
+     * @param string $url API endpoint (e.g. /streams)
+     * @param array $parameters Query parameters to pass along with the request.
+     *
+     * @return array
+     */
+    public function get($url = '', $parameters = [])
+    {
+        $token = $this->getAuthToken() ?? $this->getAppToken();
+
+        $clientParams = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+            ],
+            'query' => $parameters,
+        ];
+
+        $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
+        return json_decode($response->getBody(), true);
     }
 }

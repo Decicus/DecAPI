@@ -16,7 +16,6 @@ class TwitchStream extends JsonResource
     {
         // https://dev.twitch.tv/docs/api/reference/#get-streams
         $stream = $this->resource;
-
         return [
             'id' => $stream['id'],
             'user' => [

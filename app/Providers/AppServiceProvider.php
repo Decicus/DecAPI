@@ -25,7 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('GuzzleHttp\Client', function() {
+        // Register a generic HTTP client with a preset user agent.
+        $this->app->singleton(HttpClient::class, function() {
             return new HttpClient([
                 'headers' => [
                     'User-Agent' => env('DECAPI_USER_AGENT', 'DecAPI/1.0.0 (https://github.com/Decicus/DecAPI)'),
@@ -33,8 +34,8 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        $this->app->singleton('App\Services\TwitchApiClient', function() {
-            return new TwitchApiClient(app('GuzzleHttp\Client'));
+        $this->app->singleton(TwitchApiClient::class, function() {
+            return new TwitchApiClient(app(HttpClient::class));
         });
     }
 }

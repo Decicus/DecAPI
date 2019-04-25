@@ -163,6 +163,8 @@ return [
         SocialiteProviders\Manager\ServiceProvider::class,
         Vinelab\Rss\RssServiceProvider::class,
         TomLingham\Searchy\SearchyServiceProvider::class,
+
+        App\Providers\TwitchApiProvider::class,
     ],
 
     /*

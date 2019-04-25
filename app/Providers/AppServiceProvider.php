@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use GuzzleHttp\Client as HttpClient;
-use App\Services\TwitchApiClient;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,10 +31,6 @@ class AppServiceProvider extends ServiceProvider
                     'User-Agent' => env('DECAPI_USER_AGENT', 'DecAPI/1.0.0 (https://github.com/Decicus/DecAPI)'),
                 ],
             ]);
-        });
-
-        $this->app->singleton(TwitchApiClient::class, function() {
-            return new TwitchApiClient(app(HttpClient::class));
         });
     }
 }

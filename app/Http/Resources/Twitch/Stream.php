@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Twitch;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TwitchStream extends JsonResource
+class Stream extends JsonResource
 {
     /**
      * Transform the resource into an array.

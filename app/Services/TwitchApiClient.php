@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use GuzzleHttp\Client as HttpClient;
-use App\Http\Resources\TwitchAppToken;
+use App\Http\Resources\Twitch\AppToken as TwitchAppToken;
 use Cache;
 
 class TwitchApiClient

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use GuzzleHttp\Client as HttpClient;
 use App\Services\TwitchApiClient;
+use App\Repositories\TwitchApiRepository;
 
 class TwitchApiProvider extends ServiceProvider
 {

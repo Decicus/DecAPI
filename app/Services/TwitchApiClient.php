@@ -115,20 +115,22 @@ class TwitchApiClient
      * Returns the decoded JSON response.
      *
      * @param string $url API endpoint (e.g. /streams)
-     * @param array $parameters Query parameters to pass along with the request.
+     * @param array $parameters Query (HTTP GET) parameters to pass along with the request.
+     * @param array $headers Extra HTTP headers to send with the request.
      *
      * @return array
      */
-    public function get($url = '', $parameters = [])
+    public function get($url = '', $parameters = [], $headers = [])
     {
         $token = $this->getAuthToken() ?? $this->getAppToken();
 
         $clientParams = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $token,
-            ],
+            'headers' => $headers,
             'query' => $parameters,
         ];
+
+        // Override with token, regardless of what was previously input.
+        $clientParams['headers']['Authorization'] = 'Bearer ' . $token;
 
         $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
         return json_decode($response->getBody(), true);

@@ -122,15 +122,15 @@ class TwitchApiClient
      */
     public function get($url = '', $parameters = [], $headers = [])
     {
-        $token = $this->getAuthToken() ?? $this->getAppToken();
-
         $clientParams = [
             'headers' => $headers,
             'query' => $parameters,
         ];
 
         // Override with token, regardless of what was previously input.
+        $token = $this->getAuthToken() ?? $this->getAppToken();
         $clientParams['headers']['Authorization'] = 'Bearer ' . $token;
+        $clientParams['headers']['Client-ID'] = $this->twitchClientId;
 
         $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
         return json_decode($response->getBody(), true);

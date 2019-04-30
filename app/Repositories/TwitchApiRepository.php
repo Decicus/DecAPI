@@ -22,6 +22,46 @@ class TwitchApiRepository
     }
 
     /**
+     * Set the OAuth token that should be used for requests.
+     *
+     * @param string $token
+     *
+     * @return void
+     */
+    public function setToken($token = '')
+    {
+        $this->client->setAuthToken($token);
+    }
+
+    /**
+     * Retrieve a broadcaster's subscribers, or a specific subscription based on user ID.
+     * https://dev.twitch.tv/docs/api/reference/#get-broadcaster-subscriptions
+     *
+     * `setToken()` should be used prior to requesting subscription information.
+     *
+     * @param string $broadcasterId User ID for channel/broadcaster
+     * @param string $userId User ID for user.
+     *
+     * @return void
+     */
+    public function subscriptions($broadcasterId = '', $userId = '')
+    {
+        $params = [
+            'broadcaster_id' => $broadcasterId,
+        ];
+
+        if (!empty($userId)) {
+            $params['user_id'] = $userId;
+        }
+
+        $request = $this->client->get('/subscriptions', $params);
+        $subscriptions = collect($request['data']);
+
+        return Resource\SubscriptionCollection::make($subscriptions)
+                                              ->resolve();
+    }
+
+    /**
      * Requests the user resource: https://dev.twitch.tv/docs/api/reference/#get-users
      *
      * @param array $users

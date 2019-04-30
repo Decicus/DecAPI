@@ -75,4 +75,9 @@ return [
      * Teams
      */
     'teams_missing_identifier' => 'Team identifier is empty',
+
+    /**
+     * User
+     */
+    'user_not_found' => 'User not found: :user',
 ];

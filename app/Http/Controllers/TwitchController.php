@@ -13,6 +13,8 @@ use App\Helpers\Helper;
 use App\Helpers\Nightbot;
 use App\TwitchHelpArticle as HelpArticle;
 
+use App\Repositories\TwitchApiRepository;
+
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use DateTimeZone;
@@ -55,6 +57,11 @@ class TwitchController extends Controller
     private $twitchApi;
 
     /**
+     * @var TwitchApiRepository
+     */
+    private $api;
+
+    /**
      * The 'Accept' header to receive Twitch API V5 responses.
      *
      * @var array
@@ -64,8 +71,9 @@ class TwitchController extends Controller
     /**
      * Initiliazes the controller with a reference to TwitchApiController.
      */
-    public function __construct()
+    public function __construct(TwitchApiRepository $apiRepository)
     {
+        $this->api = $apiRepository;
         $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
     }
 
@@ -219,30 +227,25 @@ class TwitchController extends Controller
      */
     public function avatar(Request $request, $user = null)
     {
+        $user = $user ?? $request->input('user', null);
         if (empty($user)) {
             return Helper::text(__('generic.username_required'));
         }
 
         $id = $request->input('id', 'false');
-        if ($id !== 'true') {
-            try {
-                $user = $this->userByName($user)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
+        $data = $id === 'true' ? $this->api->userById($user) : $this->api->userByUsername($user);
+
+        if (empty($data)) {
+            return Helper::text(__('twitch.user_not_found', [
+                'user' => $user,
+            ]));
         }
 
-        $data = $this->twitchApi->users($user, $this->version);
-
-        if (!empty($data['error'])) {
-            return Helper::text($data['status'] . ' - ' . $data['message']);
-        }
-
-        if (empty($data['logo'])) {
+        if (empty($data['avatar'])) {
             return Helper::text($this->defaultAvatar);
         }
 
-        return Helper::text($data['logo']);
+        return Helper::text($data['avatar']);
     }
 
     /**
@@ -1136,18 +1139,21 @@ class TwitchController extends Controller
      */
     public function id(Request $request, $user = null)
     {
-        $user = $user ?: $request->input('user', null);
+        $user = $user ?? $request->input('user', null);
 
         if (empty($user)) {
             return Helper::text(__('generic.username_required'));
         }
 
-        try {
-            $data = $this->userByName($user);
-            return Helper::text($data->id);
-        } catch (Exception $e) {
-            return Helper::text($e->getMessage());
+        $data = $this->api->userByUsername($user);
+
+        if (empty($data)) {
+            return Helper::text(__('twitch.user_not_found', [
+                'user' => $user,
+            ]));
         }
+
+        return Helper::text($data['id']);
     }
 
     /**
@@ -1849,8 +1855,8 @@ class TwitchController extends Controller
     public function totalViews(Request $request, $channel = null)
     {
         $id = $request->input('id', 'false');
-        $channelName = null;
 
+        $channel = $channel ?? $request->input('channel', null);
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
@@ -1861,23 +1867,15 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately and override $channel
-                $channelName = $channel;
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
+        $data = $id === 'true' ? $this->api->userById($channel) : $this->api->userByUsername($channel);
+
+        if (empty($data)) {
+            return Helper::text(__('twitch.user_not_found', [
+                'user' => $channel,
+            ]));
         }
 
-        $data = $this->twitchApi->channels($channel, $this->version);
-
-        if (!empty($data['views'])) {
-            return Helper::text($data['views']);
-        }
-
-        return Helper::text($data['error'] . ' - ' . $data['message']);
+        return Helper::text($data['view_count']);
     }
 
     /**

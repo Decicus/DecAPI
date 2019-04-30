@@ -52,7 +52,9 @@ class TwitchApiRepository
         }
 
         $ids = [$id];
-        return $this->usersByIds($ids);
+        $user = $this->usersByIds($ids);
+
+        return $user[0] ?? [];
     }
 
     /**
@@ -87,8 +89,8 @@ class TwitchApiRepository
             throw new TwitchFormatException('String expected, got: ' . $type);
         }
 
-        $users = [$username];
-        return $this->usersByUsernames($users);
+        $users = $this->usersByUsernames([$username]);
+        return $users[0] ?? [];
     }
 
     /**

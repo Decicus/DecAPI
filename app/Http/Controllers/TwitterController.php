@@ -74,6 +74,7 @@ class TwitterController extends Controller
     {
         $name = $name ?: $request->input('name', null);
         $search = $request->input('search', null);
+        $onlyMedia = $request->input('only_media', null);
         $skip = intval($request->input('skip', 0));
 
         if (empty($name)) {
@@ -133,6 +134,22 @@ class TwitterController extends Controller
 
                     if (strpos($text, $search) !== false) {
                         if ($searchSkip === $skip) {
+                            /**
+                             * Makes sure that if the `$onlyMedia` parameter is included with
+                             * the request, that the first tweet that matches the search query also
+                             * includes some form of media (e.g. image or video).
+                             */
+                            if (!empty($onlyMedia)) {
+                                if (empty($current->extended_entities)) {
+                                    continue;
+                                }
+
+                                $ext = $current->extended_entities;
+                                if (empty($ext->media)) {
+                                    continue;
+                                }
+                            }
+
                             $tweet = $current;
                             break;
                         } else {

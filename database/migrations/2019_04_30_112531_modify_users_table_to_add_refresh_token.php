@@ -17,6 +17,9 @@ class ModifyUsersTableToAddRefreshToken extends Migration
             $table->string('refresh_token')
                   ->nullable()
                   ->after('access_token');
+
+            $table->timestamp('expires')
+                  ->nullable();
         });
     }
 

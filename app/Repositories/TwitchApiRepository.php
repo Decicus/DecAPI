@@ -34,6 +34,36 @@ class TwitchApiRepository
     }
 
     /**
+     * Retrieves the channel's followers, as well as the total number of followers.
+     *
+     * @param string $toId Twitch user ID of the channel
+     * @param integer $first Maximum number of objects to return. Maximum: 100. Default: 20.
+     * @param string $after Cursor used for pagination.
+     *
+     * @return void
+     */
+    public function followsChannel($toId = '', $first = 20, $after = null)
+    {
+        $params = [
+            'to_id' => $toId,
+            'first' => $first,
+            'after' => null,
+        ];
+
+        $request = $this->client->get('/users/follows', $params);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $followData = collect($request);
+
+        return Resource\Follow::make($followData)
+                              ->resolve();
+    }
+
+    /**
      * Retrieve a broadcaster's subscribers, or a specific subscription based on user ID.
      * https://dev.twitch.tv/docs/api/reference/#get-broadcaster-subscriptions
      *
@@ -55,6 +85,12 @@ class TwitchApiRepository
         }
 
         $request = $this->client->get('/subscriptions', $params);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
         $subscriptions = collect($request['data']);
 
         return Resource\SubscriptionCollection::make($subscriptions)
@@ -71,6 +107,12 @@ class TwitchApiRepository
     public function users($users = [])
     {
         $request = $this->client->get('/users', $users);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
         $users = collect($request['data']);
 
         return Resource\UserCollection::make($users)

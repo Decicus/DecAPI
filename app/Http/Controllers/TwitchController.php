@@ -29,6 +29,8 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Exception;
 use Log;
 
+use App\Exceptions\TwitchApiException;
+
 class TwitchController extends Controller
 {
     /**
@@ -57,7 +59,7 @@ class TwitchController extends Controller
     private $twitchApi;
 
     /**
-     * @var TwitchApiRepository
+     * @var App\Repositories\TwitchApiRepository
      */
     private $api;
 
@@ -447,13 +449,20 @@ class TwitchController extends Controller
             }
         }
 
-        $getFollowers = $this->twitchApi->channelFollows($channel, 1, 0, 'desc', $this->version);
-
-        if (!empty($getFollowers['status'])) {
-            return Helper::text($getFollowers['message']);
+        try {
+            $getFollowers = $this->api->followsChannel($channel);
+        }
+        catch (TwitchApiException $ex)
+        {
+            // ¯\_(ツ)_/¯
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text('An error has occurred requesting followcount for: ' . $channel);
         }
 
-        return Helper::text($getFollowers['_total']);
+        return Helper::text($getFollowers['total']);
     }
 
     /**

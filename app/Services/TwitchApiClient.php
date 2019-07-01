@@ -125,6 +125,8 @@ class TwitchApiClient
         $clientParams = [
             'headers' => $headers,
             'query' => $parameters,
+            // Forward HTTP responses on API errors.
+            'http_errors' => false,
         ];
 
         // Override with token, regardless of what was previously input.

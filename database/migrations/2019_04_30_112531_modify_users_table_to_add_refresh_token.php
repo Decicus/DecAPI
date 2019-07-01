@@ -14,7 +14,7 @@ class ModifyUsersTableToAddRefreshToken extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('refresh_token')
+            $table->string('refresh_token', 400)
                   ->nullable()
                   ->after('access_token');
 

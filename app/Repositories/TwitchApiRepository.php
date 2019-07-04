@@ -40,7 +40,7 @@ class TwitchApiRepository
      * @param integer $first Maximum number of objects to return. Maximum: 100. Default: 20.
      * @param string $after Cursor used for pagination.
      *
-     * @return void
+     * @return App\Http\Resources\Twitch\Follow
      */
     public function followsChannel($toId = '', $first = 20, $after = null)
     {
@@ -64,6 +64,33 @@ class TwitchApiRepository
     }
 
     /**
+     * Returns the follow relationship between a channel ($toId) and user ($fromId).
+     *
+     * @param string $toId User ID of the channel
+     * @param string $fromId User ID of the user.
+     *
+     * @return App\Http\Resources\Twitch\FollowUserCollection
+     */
+    public function followRelationship($toId = '', $fromId = '')
+    {
+        $params = [
+            'to_id' => $toId,
+            'from_id' => $fromId,
+        ];
+
+        $request = $this->client->get('/users/follows', $params);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $followData = collect($request['data']);
+        return Resource\FollowUserCollection::make($followData)
+                                            ->resolve();
+    }
+
+    /**
      * Retrieve a broadcaster's subscribers, or a specific subscription based on user ID.
      * https://dev.twitch.tv/docs/api/reference/#get-broadcaster-subscriptions
      *
@@ -72,7 +99,7 @@ class TwitchApiRepository
      * @param string $broadcasterId User ID for channel/broadcaster
      * @param string $userId User ID for user.
      *
-     * @return void
+     * @return App\Http\Resources\Twitch\SubscriptionCollection
      */
     public function subscriptions($broadcasterId = '', $userId = '')
     {

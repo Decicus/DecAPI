@@ -505,6 +505,12 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                /**
+                 * Set different variables for error messages (usernames instead of IDs).
+                 */
+                $channelName = $channel;
+                $userName = $user;
+
                 $channel = $this->userByName($channel)->id;
                 $user = $this->userByName($user)->id;
             } catch (Exception $e) {
@@ -512,14 +518,30 @@ class TwitchController extends Controller
             }
         }
 
-        $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->version);
-
-        // If $user isn't following $channel, a 404 is returned.
-        if (!empty($getFollow['status'])) {
-            return Helper::text($getFollow['message']);
+        try {
+            $getFollow = $this->api->followRelationship($channel, $user);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.unable_get_following'));
         }
 
-        $time = Carbon::parse($getFollow['created_at']);
+        /**
+         * Information from API was valid, but empty.
+         */
+        if (empty($getFollow)) {
+            return Helper::text(__('twitch.follow_not_found', [
+                'user' => $userName ?? $user,
+                'channel' => $channelName ?? $channel,
+            ]));
+        }
+
+        $follow = $getFollow[0];
+        $time = Carbon::parse($follow['followed_at']);
         $time->setTimezone($tz);
 
         return Helper::text($time->format($format));

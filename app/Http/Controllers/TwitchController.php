@@ -1983,33 +1983,34 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately and override $channel
-                $channelName = $channel;
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
+        try {
+            if ($id === 'true') {
+                $streams = $this->api->streamById($channel);
+            }
+            else {
+                $streams = $this->api->streamByName($channel);
             }
         }
-
-        $stream = $this->twitchApi->streams($channel, $this->version);
-
-        if (!empty($stream['status'])) {
-            return Helper::text($stream['message']);
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.stream_get_error', [
+                'channel' => $channel,
+            ]));
         }
 
-        if (empty($stream['stream'])) {
-            $channel = $channelName ?: $channel;
-            $offline = $channel . ' is offline';
-            if (!empty($request->input('offline_msg', null))) {
-                $offline = $request->input('offline_msg');
-            }
+        $defaultOffline = __('twitch.stream_offline', ['channel' => $channel]);
+        $offline = $request->input('offline_msg', $defaultOffline);
 
+        if (empty($streams['streams'])) {
             return Helper::text($offline);
         }
 
-        $start = $stream['stream']['created_at'];
+        $stream = $streams['streams'][0];
+        $start = $stream['created_at'];
         $diff = Helper::getDateDiff($start, time(), $precision);
         return Helper::text($diff);
     }

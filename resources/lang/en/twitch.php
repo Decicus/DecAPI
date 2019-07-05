@@ -56,6 +56,12 @@ return [
     'multi_empty_list' => 'You have to specify which streams to create a multi link for (space-separated list).',
 
     /**
+     * Stream
+     */
+    'stream_offline' => ':channel is offline',
+    'stream_get_error' => 'Unable to get stream information for :channel',
+
+    /**
      * Subscriber-related stuff
      */
     'sub_invalid_action' => 'Invalid action specified. Available actions: :actions',

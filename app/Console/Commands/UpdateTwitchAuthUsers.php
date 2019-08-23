@@ -8,6 +8,9 @@ use App\User;
 use Carbon\Carbon;
 use Crypt;
 use GuzzleHttp\Client;
+use Exception;
+
+use App\Http\Resources\Twitch\AuthToken as TwitchAuthToken;
 
 class UpdateTwitchAuthUsers extends Command
 {
@@ -26,11 +29,11 @@ class UpdateTwitchAuthUsers extends Command
     protected $description = 'Updates the users table to make sure all tokens are valid, removes if invalid.';
 
     /**
-     * Twitch API base URL.
+     * Twitch API token URL.
      *
      * @var string
      */
-    protected $baseUrl = 'https://api.twitch.tv/kraken';
+    protected $tokenUrl = 'https://id.twitch.tv/oauth2/token';
 
     /**
      * Create a new command instance.
@@ -49,45 +52,53 @@ class UpdateTwitchAuthUsers extends Command
      */
     public function handle()
     {
-        $timeDiff = Carbon::now()->subHours(24);
-        $users = User::where('updated_at', '<', $timeDiff)
-                ->get();
+        $timeDiff = Carbon::now();
+        $users = User::where('expires', '<', $timeDiff)
+                     ->get();
 
         if ($users->isEmpty()) {
             return $this->info('No authenticated Twitch users to check.');
         }
 
         $settings = [
-            'headers' => [
-                'Accept' => 'application/vnd.twitchtv.v5+json',
-                'Client-ID' => env('TWITCH_CLIENT_ID'),
-            ],
             'http_errors' => false,
+            'form_params' => [
+                'grant_type' => 'refresh_token',
+                'client_id' => env('TWITCH_CLIENT_ID', null),
+                'client_secret' => env('TWITCH_CLIENT_SECRET', null),
+            ],
         ];
 
         $client = new Client;
 
         foreach ($users as $user) {
-            $token = Crypt::decrypt($user->access_token);
-            $settings['headers']['Authorization'] = 'OAuth ' . $token;
-            $request = $client->request('GET', $this->baseUrl, $settings);
+            $token = Crypt::decrypt($user->refresh_token);
+            $settings['form_params']['refresh_token'] = $token;
+
+            $request = $client->request('POST', $this->tokenUrl, $settings);
 
             $body = json_decode($request->getBody(), true);
 
-            if (empty($body['token']) || $body['token']['valid'] === false) {
+            if (isset($body['status']) && $body['status'] === 400) {
                 $user->delete();
-
-                if (empty($user->twitch)) {
-                    $this->info(sprintf('Removed user: %s', $user->id));
-                    continue;
-                }
-
-                $this->info(sprintf('Removed user: %s (%s)', $user->twitch->username, $user->id));
+                $this->info('Deleting user because of invalid refresh token: ' . $user->id);
                 continue;
             }
 
-            $user->updated_at = Carbon::now();
-            $user->save();
+            try {
+                $newToken = TwitchAuthToken::make($body)
+                                           ->resolve();
+
+                $user->access_token = Crypt::encrypt($newToken['access_token']);
+                $user->refresh_token = Crypt::encrypt($newToken['refresh_token']);
+                $user->expires = $newToken['expires'];
+                $user->save();
+                $this->info('Refreshed token for ID: ' . $user->id);
+            }
+            catch (Exception $ex)
+            {
+                $this->error('Error occurred refreshing token for ID: ' . $user->id);
+            }
         }
     }
 }

@@ -18,6 +18,7 @@ return [
      */
     'cannot_follow_self' => 'A user cannot follow themself.',
     'error_followers' => 'An error occurred retrieving your followers.',
+    'follow_not_found' => ':user does not follow :channel',
     'no_followers' => 'You do not have any followers :(',
     'invalid_api_data' => 'Twitch API returned invalid data.',
     'unable_get_following' => 'Unable to get follow data for the specified user.',
@@ -55,6 +56,12 @@ return [
     'multi_empty_list' => 'You have to specify which streams to create a multi link for (space-separated list).',
 
     /**
+     * Stream
+     */
+    'stream_offline' => ':channel is offline',
+    'stream_get_error' => 'Unable to get stream information for :channel',
+
+    /**
      * Subscriber-related stuff
      */
     'sub_invalid_action' => 'Invalid action specified. Available actions: :actions',
@@ -75,4 +82,9 @@ return [
      * Teams
      */
     'teams_missing_identifier' => 'Team identifier is empty',
+
+    /**
+     * User
+     */
+    'user_not_found' => 'User not found: :user',
 ];

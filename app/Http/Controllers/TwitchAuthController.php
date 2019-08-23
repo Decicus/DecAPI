@@ -17,6 +17,10 @@ use App\Helpers\Helper;
 use Crypt;
 use Log;
 
+use App\Repositories\TwitchApiRepository;
+use GuzzleHttp\Client as HttpClient;
+use App\Http\Resources\Twitch\AuthToken as TwitchAuthToken;
+
 class TwitchAuthController extends Controller
 {
     use ThrottlesLogins;
@@ -74,6 +78,41 @@ class TwitchAuthController extends Controller
     ];
 
     /**
+     * Helix scopes that should be included when Kraken scopes are requested.
+     *
+     * @var array
+     */
+    private $krakenToHelixScopes = [
+        'channel_subscriptions' => 'channel:read:subscriptions',
+        'channel_check_subscription' => 'channel:read:subscriptions',
+        'user_read' => 'user:read:email',
+    ];
+
+    /**
+     * OAuth URLs for Twitch.
+     *
+     * @var string
+     */
+    private $authUrl = 'https://id.twitch.tv/oauth2/authorize';
+    private $tokenUrl = 'https://id.twitch.tv/oauth2/token';
+
+    /**
+     * @var GuzzleHttp\Client
+     */
+    private $httpClient;
+
+    /**
+     * @var TwitchApiRepository
+     */
+    private $api;
+
+    public function __construct(HttpClient $client, TwitchApiRepository $repository)
+    {
+        $this->httpClient = $client;
+        $this->api = $repository;
+    }
+
+    /**
      * Redirect the user to the Twitch authentication page.
      *
      * @param  Request $request
@@ -84,20 +123,6 @@ class TwitchAuthController extends Controller
         $scopes = $request->input('scopes', null);
         $redirect = $request->input('redirect', 'home');
 
-        /**
-         * This block is a bit of a dirty hotfix, to fix an issue with users using beta.decapi.me instead of decapi.me
-         * Normally (according to various internet sources), changing the session cookie domain should've worked to fix this, but apparently not.
-         *
-         * Hopefully this doesn't have to linger around for months before I am able to look at this issue again.
-         *
-         * TODO: See the catch block for InvalidStateException inside callback().
-         */
-        $requestUrl = parse_url($request->url());
-        $authUrl = parse_url(env('TWITCH_REDIRECT_URI', 'https://example.com/auth/twitch/callback'));
-        if ($authUrl['host'] !== $requestUrl['host']) {
-            return redirect($authUrl['scheme'] . '://' . $authUrl['host'] . '/auth/twitch?scopes=' . $scopes . '&redirect=' . $redirect);
-        }
-
         if (empty($scopes)) {
             return Helper::message('missing_scopes');
         }
@@ -107,6 +132,18 @@ class TwitchAuthController extends Controller
             foreach ($scopes as $scope) {
                 if (!in_array($scope, $this->scopes)) {
                     return Helper::message('invalid_scope');
+                }
+
+                /**
+                 * Make sure the Helix scope is included (for a smoother transition).
+                 */
+                if (!array_key_exists($scope, $this->krakenToHelixScopes)) {
+                    continue;
+                }
+
+                $helixScope = $this->krakenToHelixScopes[$scope];
+                if (!in_array($helixScope, $scopes)) {
+                    $scopes[] = $helixScope;
                 }
             }
         }
@@ -119,7 +156,16 @@ class TwitchAuthController extends Controller
         session()->put('redirect', $redirect);
         session()->put('scopes', implode('+', $scopes));
 
-        return Socialite::with('twitch')->scopes($scopes)->redirect();
+        $query = http_build_query([
+            'client_id' => env('TWITCH_CLIENT_ID', null),
+            'redirect_uri' => env('TWITCH_REDIRECT_URI', null),
+            'response_type' => 'code',
+            'scope' => implode(' ', $scopes),
+            'force_verify' => 'true',
+        ]);
+
+        $url = sprintf('%s?%s', $this->authUrl, $query);
+        return redirect()->away($url);
     }
 
     /**
@@ -132,19 +178,33 @@ class TwitchAuthController extends Controller
     {
         $redirect = session()->get('redirect', 'home');
         $scopes = session()->get('scopes');
+        $code = $request->input('code', null);
+
         $authUrl = sprintf('%s?redirect=%s&scopes=%s', route('auth.twitch.base'), $redirect, $scopes);
         $viewData = [
             'authUrl' => $authUrl,
             'error' => null,
         ];
 
-        if (empty($request->input('code', null))) {
+        if (empty($code)) {
             $viewData['error'] = $request->input('error_description', null);
             return view('auth.twitch', $viewData);
         }
 
         try {
-            $user = Socialite::with('twitch')->user();
+            $response = $this->httpClient->request('POST', $this->tokenUrl, [
+                'query' => [
+                    'client_id' => env('TWITCH_CLIENT_ID', null),
+                    'client_secret' => env('TWITCH_CLIENT_SECRET', null),
+                    'redirect_uri' => env('TWITCH_REDIRECT_URI', null),
+                    'grant_type' => 'authorization_code',
+                    'code' => $code,
+                ],
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            $token = TwitchAuthToken::make($data)
+                                    ->resolve();
         } catch (Exception $ex) {
             // TODO: Remove this once the problem is properly identified.
             Log::error('Exception thrown on Twitch authentication: ' . $ex->getMessage());
@@ -153,11 +213,17 @@ class TwitchAuthController extends Controller
             return view('auth.twitch', $viewData);
         }
 
+        $this->api->setToken($token['access_token']);
+        $users = $this->api->users();
+        $user = $users[0];
+
         $auth = User::firstOrCreate([
-            'id' => $user->id
+            'id' => $user['id'],
         ]);
-        $auth->access_token = Crypt::encrypt($user->token);
-        $auth->scopes = implode('+', $user->accessTokenResponseBody['scope']);
+        $auth->access_token = Crypt::encrypt($token['access_token']);
+        $auth->refresh_token = Crypt::encrypt($token['refresh_token']);
+        $auth->scopes = implode('+', $token['scope']);
+        $auth->expires = $token['expires'];
         $auth->save();
 
         Auth::login($auth, true);

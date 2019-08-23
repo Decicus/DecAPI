@@ -13,6 +13,8 @@ use App\Helpers\Helper;
 use App\Helpers\Nightbot;
 use App\TwitchHelpArticle as HelpArticle;
 
+use App\Repositories\TwitchApiRepository;
+
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use DateTimeZone;
@@ -26,6 +28,8 @@ use Illuminate\Contracts\Encryption\DecryptException;
 
 use Exception;
 use Log;
+
+use App\Exceptions\TwitchApiException;
 
 class TwitchController extends Controller
 {
@@ -55,6 +59,11 @@ class TwitchController extends Controller
     private $twitchApi;
 
     /**
+     * @var App\Repositories\TwitchApiRepository
+     */
+    private $api;
+
+    /**
      * The 'Accept' header to receive Twitch API V5 responses.
      *
      * @var array
@@ -64,8 +73,9 @@ class TwitchController extends Controller
     /**
      * Initiliazes the controller with a reference to TwitchApiController.
      */
-    public function __construct()
+    public function __construct(TwitchApiRepository $apiRepository)
     {
+        $this->api = $apiRepository;
         $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
     }
 
@@ -219,30 +229,25 @@ class TwitchController extends Controller
      */
     public function avatar(Request $request, $user = null)
     {
+        $user = $user ?? $request->input('user', null);
         if (empty($user)) {
             return Helper::text(__('generic.username_required'));
         }
 
         $id = $request->input('id', 'false');
-        if ($id !== 'true') {
-            try {
-                $user = $this->userByName($user)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
+        $data = $id === 'true' ? $this->api->userById($user) : $this->api->userByUsername($user);
+
+        if (empty($data)) {
+            return Helper::text(__('twitch.user_not_found', [
+                'user' => $user,
+            ]));
         }
 
-        $data = $this->twitchApi->users($user, $this->version);
-
-        if (!empty($data['error'])) {
-            return Helper::text($data['status'] . ' - ' . $data['message']);
-        }
-
-        if (empty($data['logo'])) {
+        if (empty($data['avatar'])) {
             return Helper::text($this->defaultAvatar);
         }
 
-        return Helper::text($data['logo']);
+        return Helper::text($data['avatar']);
     }
 
     /**
@@ -293,15 +298,8 @@ class TwitchController extends Controller
             return $this->error(__('generic.channel_name_required'));
         }
 
-        $cluster = Helper::get('https://tmi.twitch.tv/servers?channel=' . $channel, [
-            'Client-ID' => env('TWITCH_CLIENT_ID')
-        ]);
-
-        if (empty($cluster)) {
-            return $this->error(__('twitch.error_occurred_chat_clusters'));
-        }
-
-        return Helper::text($cluster['cluster']);
+        // TODO: Just remove this route completely.
+        return Helper::text('aws');
     }
 
     /**
@@ -451,13 +449,20 @@ class TwitchController extends Controller
             }
         }
 
-        $getFollowers = $this->twitchApi->channelFollows($channel, 1, 0, 'desc', $this->version);
-
-        if (!empty($getFollowers['status'])) {
-            return Helper::text($getFollowers['message']);
+        try {
+            $getFollowers = $this->api->followsChannel($channel);
+        }
+        catch (TwitchApiException $ex)
+        {
+            // ¯\_(ツ)_/¯
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text('An error has occurred requesting followcount for: ' . $channel);
         }
 
-        return Helper::text($getFollowers['_total']);
+        return Helper::text($getFollowers['total']);
     }
 
     /**
@@ -500,6 +505,12 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                /**
+                 * Set different variables for error messages (usernames instead of IDs).
+                 */
+                $channelName = $channel;
+                $userName = $user;
+
                 $channel = $this->userByName($channel)->id;
                 $user = $this->userByName($user)->id;
             } catch (Exception $e) {
@@ -507,14 +518,30 @@ class TwitchController extends Controller
             }
         }
 
-        $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->version);
-
-        // If $user isn't following $channel, a 404 is returned.
-        if (!empty($getFollow['status'])) {
-            return Helper::text($getFollow['message']);
+        try {
+            $getFollow = $this->api->followRelationship($channel, $user);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.unable_get_following'));
         }
 
-        $time = Carbon::parse($getFollow['created_at']);
+        /**
+         * Information from API was valid, but empty.
+         */
+        if (empty($getFollow)) {
+            return Helper::text(__('twitch.follow_not_found', [
+                'user' => $userName ?? $user,
+                'channel' => $channelName ?? $channel,
+            ]));
+        }
+
+        $follow = $getFollow[0];
+        $time = Carbon::parse($follow['followed_at']);
         $time->setTimezone($tz);
 
         return Helper::text($time->format($format));
@@ -804,7 +831,7 @@ class TwitchController extends Controller
         }
 
         $text = $getGame[$route];
-        return Helper::text($text ?: __('generic.not_set'));
+        return Helper::text($text ?: '');
     }
 
     /**
@@ -1143,18 +1170,21 @@ class TwitchController extends Controller
      */
     public function id(Request $request, $user = null)
     {
-        $user = $user ?: $request->input('user', null);
+        $user = $user ?? $request->input('user', null);
 
         if (empty($user)) {
             return Helper::text(__('generic.username_required'));
         }
 
-        try {
-            $data = $this->userByName($user);
-            return Helper::text($data->id);
-        } catch (Exception $e) {
-            return Helper::text($e->getMessage());
+        $data = $this->api->userByUsername($user);
+
+        if (empty($data)) {
+            return Helper::text(__('twitch.user_not_found', [
+                'user' => $user,
+            ]));
         }
+
+        return Helper::text($data['id']);
     }
 
     /**
@@ -1343,8 +1373,8 @@ class TwitchController extends Controller
         $limit = 100;
         $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'desc', $this->version);
 
-        if (!empty($data['message'])) {
-            return Helper::text(__('generic.error_loading_data_api') . ' ' . $data['message']);
+        if (!empty($data['error'])) {
+            return Helper::text(sprintf('%s - %s (%s)', __('generic.error_loading_data_api'), $data['error'], $data['message']));
         }
 
         $count = $data['_total'];
@@ -1740,6 +1770,18 @@ class TwitchController extends Controller
 
         $emoticons = $this->twitchApi->emoticons($channel);
 
+        if (empty($emoticons)) {
+            if ($wantsJson) {
+                return $this->errorJson([
+                    'error' => 'API error',
+                    'message' => 'Error loading the requested data.',
+                    'status' => 500,
+                ], 500);
+            }
+
+            return __('generic.error_loading_data_api');
+        }
+
         if (!empty($emoticons['error'])) {
             $status = $emoticons['status'];
             $message = $emoticons['message'];
@@ -1844,8 +1886,8 @@ class TwitchController extends Controller
     public function totalViews(Request $request, $channel = null)
     {
         $id = $request->input('id', 'false');
-        $channelName = null;
 
+        $channel = $channel ?? $request->input('channel', null);
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
@@ -1856,23 +1898,15 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately and override $channel
-                $channelName = $channel;
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
+        $data = $id === 'true' ? $this->api->userById($channel) : $this->api->userByUsername($channel);
+
+        if (empty($data)) {
+            return Helper::text(__('twitch.user_not_found', [
+                'user' => $channel,
+            ]));
         }
 
-        $data = $this->twitchApi->channels($channel, $this->version);
-
-        if (!empty($data['views'])) {
-            return Helper::text($data['views']);
-        }
-
-        return Helper::text($data['error'] . ' - ' . $data['message']);
+        return Helper::text($data['view_count']);
     }
 
     /**
@@ -1949,33 +1983,34 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately and override $channel
-                $channelName = $channel;
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
+        try {
+            if ($id === 'true') {
+                $streams = $this->api->streamById($channel);
+            }
+            else {
+                $streams = $this->api->streamByName($channel);
             }
         }
-
-        $stream = $this->twitchApi->streams($channel, $this->version);
-
-        if (!empty($stream['status'])) {
-            return Helper::text($stream['message']);
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.stream_get_error', [
+                'channel' => $channel,
+            ]));
         }
 
-        if (empty($stream['stream'])) {
-            $channel = $channelName ?: $channel;
-            $offline = $channel . ' is offline';
-            if (!empty($request->input('offline_msg', null))) {
-                $offline = $request->input('offline_msg');
-            }
+        $defaultOffline = __('twitch.stream_offline', ['channel' => $channel]);
+        $offline = $request->input('offline_msg', $defaultOffline);
 
+        if (empty($streams['streams'])) {
             return Helper::text($offline);
         }
 
-        $start = $stream['stream']['created_at'];
+        $stream = $streams['streams'][0];
+        $start = $stream['created_at'];
         $diff = Helper::getDateDiff($start, time(), $precision);
         return Helper::text($diff);
     }

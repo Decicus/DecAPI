@@ -7,6 +7,8 @@ use Closure;
 use App\IpBlacklist;
 use Log;
 
+use Exception;
+
 class IPBasedBlacklist
 {
     /**
@@ -18,16 +20,26 @@ class IPBasedBlacklist
      */
     public function handle($request, Closure $next)
     {
-        $ip = $request->ip();
-        $blacklist = IpBlacklist
-                ::where('ip_address', $ip)
-                ->first();
+        try {
+            $ip = $request->ip();
+            $blacklist = IpBlacklist
+                    ::where('ip_address', $ip)
+                    ->first();
 
-        if (empty($blacklist)) {
-            return $next($request);
+            if (empty($blacklist)) {
+                return $next($request);
+            }
+
+            Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklist->reason));
+            abort(503);
         }
-
-        Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklist->reason));
-        abort(503);
+        catch (Exception $ex)
+        {
+            // If the database connection errors for some reason, just let the request continue.
+            // Most requests are _not_ blacklisted and it feels unfair to "punish" them because
+            // of an error that shouldn't affect them at all.
+            Log::error($ex);
+            return next($request);
+        }
     }
 }

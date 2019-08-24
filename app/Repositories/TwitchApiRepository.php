@@ -47,7 +47,7 @@ class TwitchApiRepository
         $params = [
             'to_id' => $toId,
             'first' => $first,
-            'after' => null,
+            'after' => $after,
         ];
 
         $request = $this->client->get('/users/follows', $params);

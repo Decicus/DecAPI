@@ -23,7 +23,6 @@ class Stream extends JsonResource
                 'name' => $stream['user_name'],
             ],
             'game' => $stream['game_id'],
-            'communities' => $stream['community_ids'],
             'type' => $stream['type'],
             'title' => $stream['title'],
             'viewers' => $stream['viewer_count'],

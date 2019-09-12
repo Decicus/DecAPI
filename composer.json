@@ -24,7 +24,8 @@
         "ramsey/uuid": "^3.7",
         "predis/predis": "^1.1",
         "laravel/tinker": "^1.0",
-        "laravel/helpers": "^1.0"
+        "laravel/helpers": "^1.0",
+        "chaseconey/laravel-datadog-helper": "^1.1"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

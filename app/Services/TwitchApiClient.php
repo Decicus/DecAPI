@@ -5,6 +5,8 @@ namespace App\Services;
 use GuzzleHttp\Client as HttpClient;
 use App\Http\Resources\Twitch\AppToken as TwitchAppToken;
 use Cache;
+use Datadog;
+use Log;
 
 class TwitchApiClient
 {
@@ -43,11 +45,21 @@ class TwitchApiClient
      */
     private $authToken = null;
 
+    /**
+     * If Datadog metrics should be considered enabled.
+     * See `DATADOG_ENABLED` in .env
+     *
+     * @var boolean
+     */
+    protected $datadogEnabled = false;
+
     public function __construct(HttpClient $client)
     {
         $this->twitchClientId = env('TWITCH_CLIENT_ID');
         $this->twitchClientSecret = env('TWITCH_CLIENT_SECRET');
         $this->client = $client;
+
+        $this->datadogEnabled = env('DATADOG_ENABLED', false);
     }
 
     /**
@@ -133,6 +145,24 @@ class TwitchApiClient
         $token = $this->getAuthToken() ?? $this->getAppToken();
         $clientParams['headers']['Authorization'] = 'Bearer ' . $token;
         $clientParams['headers']['Client-ID'] = $this->twitchClientId;
+
+        if ($this->datadogEnabled === true)
+        {
+            try {
+                // Strip `/` at the beginning of path.
+                $endpoint = ltrim($url, '/');
+                // Replace all other `/` with `_`
+                $endpoint = str_replace('/', '_', $endpoint);
+
+                Datadog::increment('twitch.helix_' . $endpoint, ['parameters' => $parameters]);
+            }
+            catch (\Exception $ex)
+            {
+                dd($ex);
+                Log::error('Unable to submit Datadog metrics.');
+                Log::error($ex);
+            }
+        }
 
         $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
         return json_decode($response->getBody(), true);

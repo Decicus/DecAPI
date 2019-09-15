@@ -158,7 +158,6 @@ class TwitchApiClient
             }
             catch (\Exception $ex)
             {
-                dd($ex);
                 Log::error('Unable to submit Datadog metrics.');
                 Log::error($ex);
             }

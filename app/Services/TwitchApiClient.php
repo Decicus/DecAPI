@@ -46,7 +46,8 @@ class TwitchApiClient
     private $authToken = null;
 
     /**
-     * Are Datadog metrics enabled?
+     * If Datadog metrics should be considered enabled.
+     * See `DATADOG_ENABLED` in .env
      *
      * @var boolean
      */

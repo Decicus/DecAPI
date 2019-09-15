@@ -30,9 +30,9 @@ return [
 
     'datadog_host' => 'https://app.datadoghq.com',
 
-    'statsd_server' => 'localhost',
+    'statsd_server' => env('DATADOG_STATSD_SERVER', 'localhost'),
 
-    'statsd_port' => 8125,
+    'statsd_port' => env('DATADOG_STATSD_PORT', 8125),
 
     'statsd_socket_path' => null,
 

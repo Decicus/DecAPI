@@ -1768,9 +1768,9 @@ class TwitchController extends Controller
             $channel = $channel['name'];
         }
 
-        $emoticons = $this->twitchApi->emoticons($channel);
+        $product = $this->twitchApi->channelProduct($channel);
 
-        if (empty($emoticons)) {
+        if (empty($product)) {
             if ($wantsJson) {
                 return $this->errorJson([
                     'error' => 'API error',
@@ -1782,24 +1782,36 @@ class TwitchController extends Controller
             return __('generic.error_loading_data_api');
         }
 
-        if (!empty($emoticons['error'])) {
-            $status = $emoticons['status'];
-            $message = $emoticons['message'];
+        if (!empty($product['error'])) {
+            $status = $product['status'];
+            $message = $product['message'];
             if ($wantsJson) {
-                return $this->errorJson(['error' => $emoticons['error'], 'message' => $message, 'status' => $status], $status);
+                return $this->errorJson(['error' => $product['error'], 'message' => $message, 'status' => $status], $status);
             }
 
             return Helper::text($message);
         }
 
-        $emotes = [];
-        foreach ($emoticons['emoticons'] as $emote) {
-            if ($emote['subscriber_only']) {
-                $emotes[] = $emote['regex'];
-            } else {
-                break; // Subscriber emotes are always listed first.
+        if (empty($product['emoticons'])) {
+            $message = __('twitch.channel_missing_subemotes');
+            if ($wantsJson) {
+                return $this->errorJson(['message' => $message], 404);
             }
+
+            return Helper::text($message);
         }
+
+        // Only get emotes that are active.
+        $emotes = array_filter($product['emoticons'], function($emote) {
+            return $emote['state'] === 'active' && $emote['subscriber_only'] === true;
+        });
+
+        // Regex = emote code in this context
+        // For some emotes (official Twitch emotes usually) there might
+        // be an actual regex. Subscriber emotes are probably fine.
+        $emotes = array_map(function($emote) {
+            return $emote['regex'];
+        }, $emotes);
 
         if (empty($emotes)) {
             $message = __('twitch.channel_missing_subemotes');

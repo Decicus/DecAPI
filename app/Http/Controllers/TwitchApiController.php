@@ -83,6 +83,21 @@ class TwitchApiController extends Controller
     }
 
     /**
+     * Returns data from the 1st party, yet unofficial 'Products' API endpoint.
+     * ! Depending on Twitch's mood, this may or may not disappear soon.
+     *
+     * @param string $channel
+     *
+     * @return TwitchApiController\get
+     */
+    public function channelProduct($channel = '')
+    {
+        $url = sprintf('https://api.twitch.tv/api/channels/%s/product', $channel);
+
+        return $this->get($url, true);
+    }
+
+    /**
      * Returns the "/channel/:channel/follows" object.
      *
      * @param  string $channel

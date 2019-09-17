@@ -65,6 +65,17 @@ class YouTubeController extends Controller
             $results = $apiResults['results'];
 
             /**
+             * Sometimes YouTube's API returns bad data... I guess?
+             * Need to investigate further (hence why logging is there).
+             */
+            if (!is_array($results)) {
+                Log::error(sprintf('An error occurred retrieving videos for channel: %s (%s)'), $request->input($type), $type);
+                Log::error($apiResults);
+
+                return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
+            }
+
+            /**
              * Seems that YouTube sorts the API response for uploaded videos
              * by their upload timestamp, instead of their
              * "published publicly to YouTube" timestamp.

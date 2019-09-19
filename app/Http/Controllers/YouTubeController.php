@@ -69,7 +69,7 @@ class YouTubeController extends Controller
              * Need to investigate further (hence why logging is there).
              */
             if (!is_array($results)) {
-                Log::error(sprintf('An error occurred retrieving videos for channel: %s (%s)'), $request->input($type), $type);
+                Log::error(sprintf('An error occurred retrieving videos for channel: %s (%s)', $request->input($type), $type));
                 Log::error($apiResults);
 
                 return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));

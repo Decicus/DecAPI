@@ -85,7 +85,7 @@ Route::group(['prefix' => 'random', 'as' => 'random.'], function() {
         ->where('max', '((-)?[\d]+)');
 });
 
-Route::group(['prefix' => 'steam', 'as' => 'steam.'], function() {
+Route::group(['prefix' => 'steam', 'as' => 'steam.', 'middleware' => 'ratelimit:' . env('STEAM_THROTTLE_RATE_LIMIT', '45,1')], function() {
     Route::get('connect/{appId?}/{parameters?}', ['as' => 'connect', 'uses' => 'SteamController@connect'])
         ->where('appId', '[\d]{1,8}')
         ->where('parameters', '.*');

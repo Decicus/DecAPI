@@ -32,7 +32,7 @@ Anything that for some reason did not get included in this rewrite, will still b
 The following things are required for setting this up:
 
 - [Laravel 5.6's requirements](https://laravel.com/docs/5.6/installation#server-requirements)
-- [A database system that Laravel supports](https://laravel.com/docs/5.2/database#introduction)
+- [A database system that Laravel supports](https://laravel.com/docs/5.6/database#introduction)
 - [Composer](https://getcomposer.org/)
 
 ## Setup
@@ -85,8 +85,13 @@ Rate limiting is done by using Laravel's `throttle` middleware. This means you c
 
 Below is an overview over what routes are currently rate limited. If the route is not specified, it does not have a rate limit.
 
+Rate limits per route are separate from each other.  
+If you've sent 45 requests to `/steam` routes, you will still have the ability to send another 100 requests to `/twitch` routes.
+
 - `/twitch/*` - All sub-routes under `/twitch`
     - Limit: 100 requests per 60 seconds.
+- `/steam/*` - All sub-routes under `/steam`
+    - Limit: 45 requests per 60 seconds.
 
 ## License
 

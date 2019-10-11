@@ -1,7 +1,8 @@
 <?php
 
 /**
- * English translation strings for generic errors/status messages.
+ * Russian translation strings for generic errors/status messages.
+ * hand-translated by one but-probably-not-the-only kriper1111
  */
 return [
     'username_required' => 'Укажите имя пользователя.',

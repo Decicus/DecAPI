@@ -4,7 +4,7 @@
 return [
 
 /*
- * I'm pretty sure that I don't need them translated but meh
+ * I'm pretty sure that I don't need them translated but *meh*
  * done by great facepalm of kriper1111
  */
 

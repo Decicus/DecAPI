@@ -37,12 +37,12 @@ return [
      */
     'no_highlights' => 'На канале :channel нету сохранённых хайлайтов.',
     'no_uploads' => 'На канале :channel нету загруженных видео.',
-    'no_vods' => 'На канале :channel нету доступных VOD'ов.',
+    'no_vods' => 'На канале :channel нету доступных VOD\'ов.',
     'invalid_limit_parameter' => 'Указано неверное значение "limit". Минимум :min, максимум :max.',
     'invalid_offset_parameter' => 'Указано неверное значение "offset". Минимум :min.',
     'end_of_video_list' => 'Достигнут конец списка видео!',
     'invalid_minutes_parameter' => 'Указано неверное количество минут: :min',
-    'vodreplay_minutes_too_high' => 'Указанное время (:min) больше длины VOD'а.',
+    'vodreplay_minutes_too_high' => 'Указанное время (:min) больше длины VOD\'а.',
 
     /**
      * Hosting

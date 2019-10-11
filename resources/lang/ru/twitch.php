@@ -87,5 +87,5 @@ return [
     /**
      * User
      */
-    'user_not_found' => 'Пользователь не найдет: :user',
+    'user_not_found' => 'Пользователь не найден: :user',
 ];

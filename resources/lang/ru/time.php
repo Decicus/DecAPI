@@ -2,8 +2,6 @@
 /**
  * Russian translation of uptime and followage
  * created by rhizoids of kriper1111
- * can't figure out how to specify modulus (if even possible) (for example "1", "21", "31", "61", etc. should have the same translation)
- * better than nothing
  */
 return [
     'year' => ':value год|:value года|:value лет',

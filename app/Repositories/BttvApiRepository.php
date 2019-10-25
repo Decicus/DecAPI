@@ -38,4 +38,24 @@ class BttvApiRepository
         return Resource\User::make($userData)
                             ->resolve();
     }
+
+    /**
+     * Retrieves user information based on their Twitch user ID.
+     *
+     * @param string $twitchId
+     *
+     * @return App\Http\Resources\Bttv\User
+     */
+    public function userByTwitchId($twitchId = '')
+    {
+        $request = $this->client->get('/cached/users/twitch/' . $twitchId);
+
+        if (isset($request['message'])) {
+            throw new BttvApiException(sprintf('Error occurred retrieving information for user ID: %s - %s', $twitchId, $request['message']));
+        }
+
+        $userId = $request['id'];
+
+        return $this->userById($userId);
+    }
 }

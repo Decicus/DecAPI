@@ -8,6 +8,9 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use App\Helpers\Helper;
 
+use App\Repositories\BttvApiRepository;
+use App\Repositories\TwitchApiRepository;
+
 class BttvController extends Controller
 {
     /**
@@ -16,6 +19,22 @@ class BttvController extends Controller
      * @var string
      */
     private $baseUrl = 'https://api.betterttv.net/2';
+
+    /**
+     * @var App\Repositories\BttvApiRepository
+     */
+    private $bttvApi;
+
+    /**
+     * @var App\Repositories\TwitchApiRepository
+     */
+    private $twitchApi;
+
+    public function __construct(BttvApiRepository $bttvRepo, TwitchApiRepository $twitchRepo)
+    {
+        $this->bttvApi = $bttvRepo;
+        $this->twitchApi = $twitchRepo;
+    }
 
     /**
      * The BTTV route homepage view
@@ -73,27 +92,47 @@ class BttvController extends Controller
             return Helper::text('You have to specify a channel name');
         }
 
-        $emotes = Helper::get($this->baseUrl . '/channels/' . $channel);
-        $status = $emotes['status'];
+        /**
+         * Get Twitch user details based on their username
+         * since BetterTTV API v3 uses Twitch IDs instead of names.
+         */
+        $twitchUser = $this->twitchApi->userByUsername($channel);
+        if (empty($twitchUser)) {
+            return Helper::text('Invalid Twitch channel name');
+        }
+
+        $twitchId = $twitchUser['id'];
+        $bttvUser = $this->bttvApi->userByTwitchId($twitchId);
         $types = explode(',', $types);
 
-        if ($status !== 200) {
-            return Helper::text($emotes['message']);
+        $emotes = $bttvUser['emotes'];
+
+        $channelEmotes = $emotes['channel'];
+        $sharedEmotes = $emotes['shared'];
+
+        if (count($channelEmotes) === 0 && count($sharedEmotes) === 0) {
+            return Helper::text($channel . ' does not have any BetterTTV emotes.');
         }
 
-        if (count($emotes['emotes']) > 0) {
-            $codes = [];
-            foreach ($emotes['emotes'] as $emote) {
-                if (!in_array('all', $types) && !in_array($emote['imageType'], $types)) {
-                    continue;
-                }
+        /**
+         * Only allow emotes that are 'live', approved and matches the correct type.
+         */
+        $emoteFilter = function($emote) use ($types) {
+            $isLive = $emote['live'];
+            // Filter by emote type: `all` is the default value and includes all emote types.
+            $isType = in_array('all', $types) || in_array($emote['type'], $types);
 
-                $codes[] = $emote['code'];
-            }
+            return $isLive && $isType;
+        };
 
-            return Helper::text(implode(' ', $codes));
-        }
+        $allEmotes = array_merge($channelEmotes, $sharedEmotes);
+        $allEmotes = array_filter($allEmotes, $emoteFilter);
 
-        return Helper::text('This channel does not have any emotes, but may have some emotes pending approval from the BetterTTV Team.');
+        $getEmoteCodes = function($emote) {
+            return $emote['code'];
+        };
+
+        $codes = array_map($getEmoteCodes, $allEmotes);
+        return Helper::text(implode(' ', $codes));
     }
 }

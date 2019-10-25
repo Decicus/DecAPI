@@ -30,8 +30,8 @@ class User extends JsonResource
             'bots' => $res['bots'],
 
             'emotes' => [
-                'channel' => $channelEmotes,
-                'shared' => $sharedEmotes,
+                'channel' => $channelEmotes->resolve(),
+                'shared' => $sharedEmotes->resolve(),
             ],
         ];
     }

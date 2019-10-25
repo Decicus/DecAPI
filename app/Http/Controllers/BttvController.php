@@ -89,7 +89,7 @@ class BttvController extends Controller
             return Helper::text('You have to specify a channel name');
         }
 
-        $user = $this->bttvApi->userByTwitchName($twitchId);
+        $user = $this->bttvApi->userByTwitchName($channel);
         $types = explode(',', $types);
 
         $emotes = $user['emotes'];

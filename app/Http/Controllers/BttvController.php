@@ -11,6 +11,10 @@ use App\Helpers\Helper;
 use App\Repositories\BttvApiRepository;
 use App\Repositories\TwitchApiRepository;
 
+use Exception;
+use App\Exceptions\BttvApiException;
+use App\Exceptions\TwitchApiException;
+
 class BttvController extends Controller
 {
     /**
@@ -25,15 +29,9 @@ class BttvController extends Controller
      */
     private $bttvApi;
 
-    /**
-     * @var App\Repositories\TwitchApiRepository
-     */
-    private $twitchApi;
-
-    public function __construct(BttvApiRepository $bttvRepo, TwitchApiRepository $twitchRepo)
+    public function __construct(BttvApiRepository $bttvRepo)
     {
         $this->bttvApi = $bttvRepo;
-        $this->twitchApi = $twitchRepo;
     }
 
     /**
@@ -52,26 +50,25 @@ class BttvController extends Controller
             'page' => 'home'
         ];
 
-        if (!empty($channel)) {
-            $emotes = Helper::get($this->baseUrl . '/channels/' . $channel);
-            $status = $emotes['status'];
-
-            if ($status === 200) {
-                if (count($emotes['emotes']) > 0) {
-                    $data['emotes'] = $emotes['emotes'];
-                    $data['template'] = str_replace(['{{id}}', '{{image}}'], ['__id__', '__image__'], $emotes['urlTemplate']);
-                } else {
-                    $msg = 'The channel specified does not have any emotes, but may have some emotes pending approval from the BetterTTV team.';
-                }
-            } elseif ($status === 404) {
-                $msg = 'Channel not found. This usually means the channel has not used the <a href="https://manage.betterttv.net" class="alert-link">BetterTTV management panel</a>.';
-            } else {
-                $msg = 'Unknown error (the BetterTTV API might be having issues).';
-            }
+        if (empty($channel)) {
+            return view('bttv.home', $data);
         }
 
-        $data['message'] = $msg;
+        try {
+            $user = $this->bttvApi->userByTwitchName($channel);
+        }
+        catch (Exception $ex)
+        {
+            $data['message'] = 'Unable to retrieve BetterTTV details for channel: ' . $channel;
+            return view('bttv.home', $data);
+        }
 
+        $emotes = $user['emotes'];
+        // Merge channel and 'shared' emotes
+        $emotes = array_merge($emotes['channel'], $emotes['shared']);
+
+        $data['user'] = $user;
+        $data['emotes'] = $emotes;
         return view('bttv.home', $data);
     }
 
@@ -92,20 +89,10 @@ class BttvController extends Controller
             return Helper::text('You have to specify a channel name');
         }
 
-        /**
-         * Get Twitch user details based on their username
-         * since BetterTTV API v3 uses Twitch IDs instead of names.
-         */
-        $twitchUser = $this->twitchApi->userByUsername($channel);
-        if (empty($twitchUser)) {
-            return Helper::text('Invalid Twitch channel name');
-        }
-
-        $twitchId = $twitchUser['id'];
-        $bttvUser = $this->bttvApi->userByTwitchId($twitchId);
+        $user = $this->bttvApi->userByTwitchName($twitchId);
         $types = explode(',', $types);
 
-        $emotes = $bttvUser['emotes'];
+        $emotes = $user['emotes'];
 
         $channelEmotes = $emotes['channel'];
         $sharedEmotes = $emotes['shared'];

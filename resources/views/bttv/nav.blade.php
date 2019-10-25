@@ -1,10 +1,8 @@
-<nav class="navbar navbar-default navbar-static-top" role="navigation">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a href="/bttv/" class="navbar-brand">BetterTTV Channel Emotes</a>
-        </div>
-        <ul class="nav navbar-nav">
-            <li <?php echo ( $page === 'home' ? 'class="active"' : '' ); ?>><a href="{{ route('bttv.home') }}"><i class="far fa-home fa-1x"></i> Home</a></li>
-        </ul>
-    </div>
+<nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary" role="navigation">
+    <a href="{{ route('bttv.home') }}" class="navbar-brand">BetterTTV Channel Emotes</a>
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item {{ $page === 'home' ? 'active' : '' }}">
+            <a href="{{ route('bttv.home') }}" class="nav-link"><i class="fas fa-home fa-1x"></i> Home</a>
+        </li>
+    </ul>
 </nav>

@@ -8,6 +8,13 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use App\Helpers\Helper;
 
+use App\Repositories\BttvApiRepository;
+use App\Repositories\TwitchApiRepository;
+
+use Exception;
+use App\Exceptions\BttvApiException;
+use App\Exceptions\TwitchApiException;
+
 class BttvController extends Controller
 {
     /**
@@ -16,6 +23,16 @@ class BttvController extends Controller
      * @var string
      */
     private $baseUrl = 'https://api.betterttv.net/2';
+
+    /**
+     * @var App\Repositories\BttvApiRepository
+     */
+    private $bttvApi;
+
+    public function __construct(BttvApiRepository $bttvRepo)
+    {
+        $this->bttvApi = $bttvRepo;
+    }
 
     /**
      * The BTTV route homepage view
@@ -33,26 +50,25 @@ class BttvController extends Controller
             'page' => 'home'
         ];
 
-        if (!empty($channel)) {
-            $emotes = Helper::get($this->baseUrl . '/channels/' . $channel);
-            $status = $emotes['status'];
-
-            if ($status === 200) {
-                if (count($emotes['emotes']) > 0) {
-                    $data['emotes'] = $emotes['emotes'];
-                    $data['template'] = str_replace(['{{id}}', '{{image}}'], ['__id__', '__image__'], $emotes['urlTemplate']);
-                } else {
-                    $msg = 'The channel specified does not have any emotes, but may have some emotes pending approval from the BetterTTV team.';
-                }
-            } elseif ($status === 404) {
-                $msg = 'Channel not found. This usually means the channel has not used the <a href="https://manage.betterttv.net" class="alert-link">BetterTTV management panel</a>.';
-            } else {
-                $msg = 'Unknown error (the BetterTTV API might be having issues).';
-            }
+        if (empty($channel)) {
+            return view('bttv.home', $data);
         }
 
-        $data['message'] = $msg;
+        try {
+            $user = $this->bttvApi->userByTwitchName($channel);
+        }
+        catch (Exception $ex)
+        {
+            $data['message'] = 'Unable to retrieve BetterTTV details for channel: ' . $channel;
+            return view('bttv.home', $data);
+        }
 
+        $emotes = $user['emotes'];
+        // Merge channel and 'shared' emotes
+        $emotes = array_merge($emotes['channel'], $emotes['shared']);
+
+        $data['user'] = $user;
+        $data['emotes'] = $emotes;
         return view('bttv.home', $data);
     }
 
@@ -73,27 +89,37 @@ class BttvController extends Controller
             return Helper::text('You have to specify a channel name');
         }
 
-        $emotes = Helper::get($this->baseUrl . '/channels/' . $channel);
-        $status = $emotes['status'];
+        $user = $this->bttvApi->userByTwitchName($twitchId);
         $types = explode(',', $types);
 
-        if ($status !== 200) {
-            return Helper::text($emotes['message']);
+        $emotes = $user['emotes'];
+
+        $channelEmotes = $emotes['channel'];
+        $sharedEmotes = $emotes['shared'];
+
+        if (count($channelEmotes) === 0 && count($sharedEmotes) === 0) {
+            return Helper::text($channel . ' does not have any BetterTTV emotes.');
         }
 
-        if (count($emotes['emotes']) > 0) {
-            $codes = [];
-            foreach ($emotes['emotes'] as $emote) {
-                if (!in_array('all', $types) && !in_array($emote['imageType'], $types)) {
-                    continue;
-                }
+        /**
+         * Only allow emotes that are 'live', approved and matches the correct type.
+         */
+        $emoteFilter = function($emote) use ($types) {
+            $isLive = $emote['live'];
+            // Filter by emote type: `all` is the default value and includes all emote types.
+            $isType = in_array('all', $types) || in_array($emote['type'], $types);
 
-                $codes[] = $emote['code'];
-            }
+            return $isLive && $isType;
+        };
 
-            return Helper::text(implode(' ', $codes));
-        }
+        $allEmotes = array_merge($channelEmotes, $sharedEmotes);
+        $allEmotes = array_filter($allEmotes, $emoteFilter);
 
-        return Helper::text('This channel does not have any emotes, but may have some emotes pending approval from the BetterTTV Team.');
+        $getEmoteCodes = function($emote) {
+            return $emote['code'];
+        };
+
+        $codes = array_map($getEmoteCodes, $allEmotes);
+        return Helper::text(implode(' ', $codes));
     }
 }

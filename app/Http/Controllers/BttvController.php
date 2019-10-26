@@ -18,13 +18,6 @@ use App\Exceptions\TwitchApiException;
 class BttvController extends Controller
 {
     /**
-     * The base API URL for the BetterTTV API
-     *
-     * @var string
-     */
-    private $baseUrl = 'https://api.betterttv.net/2';
-
-    /**
      * @var App\Repositories\BttvApiRepository
      */
     private $bttvApi;
@@ -89,7 +82,14 @@ class BttvController extends Controller
             return Helper::text('You have to specify a channel name');
         }
 
-        $user = $this->bttvApi->userByTwitchName($channel);
+        try {
+            $user = $this->bttvApi->userByTwitchName($channel);
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text('Unable to retrieve BetterTTV details for channel: ' . $channel);
+        }
+
         $types = explode(',', $types);
 
         $emotes = $user['emotes'];

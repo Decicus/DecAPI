@@ -220,9 +220,9 @@ class TwitchApiController extends Controller
      *
      * @return TwitchApiController\get
      */
-    public function ingests()
+    public function ingests($headers = ['Accept' => 'application/vnd.twitchtv.v5+json'])
     {
-        return $this->get('ingests');
+        return $this->get('ingests', false, $headers);
     }
 
     /**

@@ -14,6 +14,7 @@ use App\Helpers\Nightbot;
 use App\TwitchHelpArticle as HelpArticle;
 
 use App\Repositories\TwitchApiRepository;
+use App\Repositories\TwitchEmotesApiRepository;
 
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -64,6 +65,11 @@ class TwitchController extends Controller
     private $api;
 
     /**
+     * @var App\Repositories\TwitchEmotesApiRepository
+     */
+    private $emotes;
+
+    /**
      * The 'Accept' header to receive Twitch API V5 responses.
      *
      * @var array
@@ -73,9 +79,10 @@ class TwitchController extends Controller
     /**
      * Initiliazes the controller with a reference to TwitchApiController.
      */
-    public function __construct(TwitchApiRepository $apiRepository)
+    public function __construct(TwitchApiRepository $apiRepository, TwitchEmotesApiRepository $emotesApi)
     {
         $this->api = $apiRepository;
+        $this->emotes = $emotesApi;
         $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
     }
 
@@ -1789,23 +1796,36 @@ class TwitchController extends Controller
                 return Helper::text($message);
             }
 
-            $channel = $nb->channel['name'];
-            $id = 'false';
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
         }
 
-        if ($id === 'true') {
-            $channel = $this->twitchApi->channels($channel, $this->version);
+        if ($id !== 'true') {
+            $user = $this->api->userByUsername($channel);
 
-            if (!empty($channel['message'])) {
-                return Helper::text($channel['message']);
+            if (!empty($user['message'])) {
+                return Helper::text($user['message']);
             }
 
-            $channel = $channel['name'];
+            $channel = $user['id'];
         }
 
-        $product = $this->twitchApi->channelProduct($channel);
+        try {
+            $emotes = $this->emotes->channel($channel);
+        }
+        catch (TwitchEmotesApiException $ex) {
+            if ($wantsJson) {
+                return $this->errorJson([
+                    'error' => 'API error',
+                    'message' => $ex->getMessage(),
+                    'status' => 500,
+                ], 500);
+            }
 
-        if (empty($product)) {
+            return Helper::text('[TwitchEmotes API Error] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
             if ($wantsJson) {
                 return $this->errorJson([
                     'error' => 'API error',
@@ -1814,20 +1834,10 @@ class TwitchController extends Controller
                 ], 500);
             }
 
-            return __('generic.error_loading_data_api');
+            return Helper::text(__('generic.error_loading_data_api'));
         }
 
-        if (!empty($product['error'])) {
-            $status = $product['status'];
-            $message = $product['message'];
-            if ($wantsJson) {
-                return $this->errorJson(['error' => $product['error'], 'message' => $message, 'status' => $status], $status);
-            }
-
-            return Helper::text($message);
-        }
-
-        if (empty($product['emoticons'])) {
+        if (empty($emotes['emotes'])) {
             $message = __('twitch.channel_missing_subemotes');
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message], 404);
@@ -1836,34 +1846,17 @@ class TwitchController extends Controller
             return Helper::text($message);
         }
 
-        // Only get emotes that are active.
-        $emotes = array_filter($product['emoticons'], function($emote) {
-            return $emote['state'] === 'active' && $emote['subscriber_only'] === true;
-        });
-
-        // Regex = emote code in this context
-        // For some emotes (official Twitch emotes usually) there might
-        // be an actual regex. Subscriber emotes are probably fine.
-        $emotes = array_map(function($emote) {
-            return $emote['regex'];
-        }, $emotes);
-
-        if (empty($emotes)) {
-            $message = __('twitch.channel_missing_subemotes');
-            if ($wantsJson) {
-                return $this->errorJson(['message' => $message], 404);
-            }
-
-            return Helper::text($message);
-        }
+        // We only care about the emote codes.
+        $emotes = $emotes['emotes'];
+        $emoteCodes = $emotes->codes();
 
         if ($wantsJson) {
             return $this->json([
-                'emotes' => $emotes
+                'emotes' => $emoteCodes,
             ]);
         }
 
-        return Helper::text(implode(' ', $emotes));
+        return Helper::text(implode(' ', $emoteCodes));
     }
 
     /**

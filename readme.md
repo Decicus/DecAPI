@@ -100,3 +100,4 @@ If you've sent 45 requests to `/steam` routes, you will still have the ability t
 ## Special thanks to
 
 - [xgerhard](https://github.com/xgerhard) - For implementing the /twitch/subage & /twitch/latest_sub routes.
+- [TwitchEmotes.com](https://twitchemotes.com/) for providing information around channel emotes & badges.

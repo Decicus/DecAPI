@@ -47,7 +47,7 @@ class TwitchApiController extends Controller
         /**
          * Allow methods to override client ID header.
          */
-        if (empty($settings['header']['Client-ID'])) {
+        if (empty($settings['headers']['Client-ID'])) {
             $settings['headers']['Client-ID'] = $this->twitchClientID;
         }
 

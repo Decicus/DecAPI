@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 
 use GuzzleHttp\Client;
 use Exception;
+use Log;
 use App\CachedTwitchUser as CachedUser;
 
 class TwitchApiController extends Controller
@@ -51,6 +52,11 @@ class TwitchApiController extends Controller
         $settings['http_errors'] = false;
         $client = new Client();
         $result = $client->request('GET', ( !$override ? self::API_BASE_URL : '' ) . $url, $settings);
+
+        if ($result->getStatusCode() === 410) {
+            Log::error(sprintf('%s has been removed - 410 Gone', $url));
+        }
+
         return json_decode($result->getBody(), true);
     }
 

@@ -1658,6 +1658,7 @@ class TwitchController extends Controller
     {
         $id = $request->input('id', 'false');
         $include = $request->input('include', '');
+        $subtract = intval($request->input('subtract', 0), 10);
 
         // Turn $include into an array for future reference use.
         $include = empty($include) ? [] : explode(',', $include);
@@ -1689,6 +1690,9 @@ class TwitchController extends Controller
                 return Helper::text($needToReAuth);
             }
 
+            /**
+             * Retrieve encrypted OAuth token from DB and attempt to decrypt.
+             */
             try {
                 $token = Crypt::decrypt($user->access_token);
             } catch (DecryptException $e) {
@@ -1696,31 +1700,62 @@ class TwitchController extends Controller
                 return Helper::text($reAuth);
             }
 
-            $url = sprintf('https://api.twitch.tv/api/channels/%s/subscriber_count', $channel);
+            /**
+             * Use OAuth token in Helix API requests and retrieve
+             * all subscribers for the specified channel
+             */
+            try {
+                $this->api->setToken($token);
+                $subs = $this->api->subscriptionsAll($user->id);
+            }
+            catch (TwitchApiException $ex)
+            {
+                return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+            }
+            catch (Exception $ex)
+            {
+                return Helper::text(__('twitch.subpoints_generic_error', [
+                    'channel' => $channel,
+                ]));
+            }
 
-            $data = $this->twitchApi->get($url, true, [
-                'Authorization' => 'OAuth ' . $token,
-            ]);
+            /**
+             * Mapping between tier => point value.
+             */
+            $tiers = [
+                '1000' => 1,
+                '2000' => 2,
+                '3000' => 6,
+            ];
 
-            if (!empty($data['status'])) {
-                if ($data['status'] === 401) {
-                    return Helper::text($reAuth);
+            $subpoints = 0;
+
+            foreach ($subs as $sub) {
+                $userId = $sub['user_id'];
+
+                /**
+                 * If the subscriber "user" is the broadcaster
+                 * we should ignore it as it doesn't count anyways.
+                 */
+                if ($userId === $user->id) {
+                    continue;
                 }
 
-                return Helper::text($data['message']);
+                $tier = $sub['tier'];
+                $subpoints += $tiers[$tier];
             }
 
-            $text = $data['score'];
-            if (in_array('next_level', $include)) {
-                $text = sprintf('%d/%d', $data['score'], $data['next_level']['minimum_score']);
-            }
+            /**
+             * Subtract user-supplied value.
+             */
+            $subpoints = $subpoints - $subtract;
 
-            return Helper::text($text);
+            return Helper::text($subpoints);
         }
 
         $user = Auth::user();
-        $userData = $this->twitchApi->users($user->id, $this->version);
-        $name = $userData['name'];
+        $userData = $this->api->userById($user->id);
+        $name = $userData['login'];
 
         return view('twitch.subpoints', [
             'page' => 'Subpoints',

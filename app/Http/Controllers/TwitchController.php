@@ -31,6 +31,7 @@ use Exception;
 use Log;
 
 use App\Exceptions\TwitchApiException;
+use App\Exceptions\TwitchEmotesApiException;
 
 class TwitchController extends Controller
 {

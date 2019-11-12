@@ -185,18 +185,19 @@ class TwitchApiRepository
      *
      * @param string $broadcasterId User ID for channel/broadcaster
      * @param string $userId User ID for user.
+     * @param int    $first  Amount of subscriptions to retrieve per request. Max 100.
+     * @param string $cursor Cursor used for pagination
      *
-     * @return App\Http\Resources\Twitch\SubscriptionCollection
+     * @return array
      */
-    public function subscriptions($broadcasterId = '', $userId = '')
+    public function subscriptions($broadcasterId = '', $userId = null, $first = 20, $cursor = null)
     {
         $params = [
             'broadcaster_id' => $broadcasterId,
+            'first' => $first,
+            'user_id' => $userId,
+            'after' => $cursor,
         ];
-
-        if (!empty($userId)) {
-            $params['user_id'] = $userId;
-        }
 
         $request = $this->client->get('/subscriptions', $params);
 
@@ -205,10 +206,55 @@ class TwitchApiRepository
             throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
         }
 
-        $subscriptions = collect($request['data']);
+        $subscriptions = collect($request);
 
-        return Resource\SubscriptionCollection::make($subscriptions)
-                                              ->resolve();
+        return Resource\Subscriptions::make($subscriptions)
+                                     ->resolve();
+    }
+
+    /**
+     * Retrieves all the subscribers for a channel.
+     *
+     * @param string $broadcasterId Channel ID
+     *
+     * @return array Array of subscriber objects.
+     */
+    public function subscriptionsAll($broadcasterId = '')
+    {
+        $data = $this->subscriptions($broadcasterId, null, 100);
+        $subscriptions = $data['subscriptions'];
+
+        $count = $subscriptions->count();
+        $subscribers = $subscriptions->resolve();
+
+        while ($count !== 0)
+        {
+            $cursor = $data['pagination']['cursor'];
+
+            $data = $this->subscriptions($broadcasterId, null, 100, $cursor);
+            $subscriptions = $data['subscriptions'];
+            $count = $subscriptions->count();
+
+            $subscribers = array_merge($subscribers, $subscriptions->resolve());
+        }
+
+        return $subscribers;
+    }
+
+    /**
+     * Requests a specific subscription based on user ID (+ broadcaster ID).
+     * https://dev.twitch.tv/docs/api/reference/#get-broadcaster-subscriptions
+     *
+     * `setToken()` should be used prior to requesting subscription information.
+     *
+     * @param string $broadcasterId User ID for channel/broadcaster
+     * @param string $userId User ID for user.
+     *
+     * @return App\Http\Resources\Twitch\Subscriptions
+     */
+    public function subscriptionUser($broadcasterId = '', $userId = '')
+    {
+        $data = $this->subscriptions($broadcasterId, $userId);
     }
 
     /**

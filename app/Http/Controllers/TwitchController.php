@@ -1658,6 +1658,7 @@ class TwitchController extends Controller
     {
         $id = $request->input('id', 'false');
         $include = $request->input('include', '');
+        $subtract = intval($request->input('subtract', 0), 10);
 
         // Turn $include into an array for future reference use.
         $include = empty($include) ? [] : explode(',', $include);
@@ -1743,6 +1744,11 @@ class TwitchController extends Controller
                 $tier = $sub['tier'];
                 $subpoints += $tiers[$tier];
             }
+
+            /**
+             * Subtract user-supplied value.
+             */
+            $subpoints = $subpoints - $subtract;
 
             return Helper::text($subpoints);
         }

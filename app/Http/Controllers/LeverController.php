@@ -43,42 +43,12 @@ class LeverController extends Controller
     /**
      * Retrieves the Twitch Lever info
      *
+     * ! DEPRECATED: Returns `410 Gone`.
+     *
      * @return Response
      */
     public function twitch()
     {
-        $api = 'https://api.lever.co/v0/postings/twitch?mode=json';
-
-        $client = new Client;
-        $request = $client->request('GET', $api, [
-            'http_errors' => false,
-        ]);
-
-        $feed = [
-            0 => [
-                'guid' => 'error_has_occurred',
-                'text' => 'An error has occurred',
-                'description' => 'An error has occurred attempting to retrieve the latest jobs',
-                'link' => 'https://jobs.lever.co/twitch/',
-                'timestamp' => time(),
-            ],
-        ];
-
-        if ($request->getStatusCode() === 200) {
-            $data = json_decode($request->getBody(), true);
-            $feed = [];
-
-            foreach ($data as $post) {
-                $feed[] = [
-                    'guid' => $post['id'],
-                    'text' => $post['text'],
-                    'description' => $post['descriptionPlain'],
-                    'link' => $post['hostedUrl'],
-                    'timestamp' => intval($post['createdAt'] / 1000),
-                ];
-            }
-        }
-
-        return $this->feed('Lever - Twitch', 'Jobs listing at Twitch', 'https://jobs.lever.co/twitch/', 'https://lever-client-logos.s3.amazonaws.com/twitch.png', $feed);
+        return Helper::text('410 Gone - This feed (/lever/twitch) has been removed.', 410);
     }
 }

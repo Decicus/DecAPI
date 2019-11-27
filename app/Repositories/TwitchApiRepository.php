@@ -270,7 +270,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s - Users: [%s]', $status, $error, $message, implode(', ', $users)));
+            throw new TwitchApiException(sprintf('%d: %s - %s - Users: [%s]', $status, $error, $message, json_encode($users)));
         }
 
         $users = collect($request['data']);

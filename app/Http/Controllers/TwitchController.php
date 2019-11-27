@@ -243,7 +243,18 @@ class TwitchController extends Controller
         }
 
         $id = $request->input('id', 'false');
-        $data = $id === 'true' ? $this->api->userById($user) : $this->api->userByUsername($user);
+        try {
+            $data = $id === 'true' ? $this->api->userById($user) : $this->api->userByUsername($user);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('Invalid Twitch user specified: ' . $user, 400);
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex->getMessage());
+            return Helper::text('Error occurred retrieving user information for Twitch user: ' . $user);
+        }
 
         if (empty($data)) {
             return Helper::text(__('twitch.user_not_found', [
@@ -1186,7 +1197,13 @@ class TwitchController extends Controller
             return Helper::text(__('generic.username_required'));
         }
 
-        $data = $this->api->userByUsername($user);
+        try {
+            $data = $this->api->userByUsername($user);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('Invalid Twitch username specified: ' . $user, 400);
+        }
 
         if (empty($data)) {
             return Helper::text(__('twitch.user_not_found', [
@@ -1804,7 +1821,18 @@ class TwitchController extends Controller
         }
 
         if ($id !== 'true') {
-            $user = $this->api->userByUsername($channel);
+            try {
+                $user = $this->api->userByUsername($channel);
+            }
+            catch (TwitchApiException $ex)
+            {
+                return Helper::text('Invalid Twitch user specified: ' . $user, 400);
+            }
+            catch (Exception $ex)
+            {
+                Log::error($ex->getMessage());
+                return Helper::text('Error occurred retrieving user information for Twitch user: ' . $user);
+            }
 
             if (!empty($user['message'])) {
                 return Helper::text($user['message']);
@@ -1941,7 +1969,18 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        $data = $id === 'true' ? $this->api->userById($channel) : $this->api->userByUsername($channel);
+        try {
+            $data = $id === 'true' ? $this->api->userById($channel) : $this->api->userByUsername($channel);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('Invalid Twitch user specified: ' . $user, 400);
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex->getMessage());
+            return Helper::text('Error occurred retrieving user information for Twitch user: ' . $user);
+        }
 
         if (empty($data)) {
             return Helper::text(__('twitch.user_not_found', [

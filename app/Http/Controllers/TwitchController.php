@@ -1712,7 +1712,7 @@ class TwitchController extends Controller
             }
 
             $scopes = explode('+', $user->scopes);
-            if (!in_array('channel_subscriptions', $scopes)) {
+            if (!in_array('channel:read:subscriptions', $scopes)) {
                 $needToReAuth .= '+' . implode('+', $scopes);
                 return Helper::text($needToReAuth);
             }

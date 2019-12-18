@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 
 use App\IpBlacklist;
+use Cache;
 use Log;
 
 use Exception;
@@ -22,16 +23,21 @@ class IPBasedBlacklist
     {
         try {
             $ip = $request->ip();
-            $blacklist = IpBlacklist
-                    ::where('ip_address', $ip)
-                    ->first();
+            $blacklist = Cache::rememberForever('ip_blacklist', function() {
+                return IpBlacklist::all();
+            });
 
-            if (empty($blacklist)) {
+            $blacklistIp = $blacklist
+                           ->where('ip_address', $ip)
+                           ->first();
+
+            if (empty($blacklistIp)) {
                 return $next($request);
             }
 
-            Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklist->reason));
-            abort(503);
+            Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklistIp->reason));
+            return response()
+                   ->view('errors.503', [], 503);
         }
         catch (Exception $ex)
         {

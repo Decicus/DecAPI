@@ -1826,12 +1826,12 @@ class TwitchController extends Controller
             }
             catch (TwitchApiException $ex)
             {
-                return Helper::text('Invalid Twitch user specified: ' . $user, 400);
+                return Helper::text('Invalid Twitch user specified: ' . $channel, 400);
             }
             catch (Exception $ex)
             {
                 Log::error($ex->getMessage());
-                return Helper::text('Error occurred retrieving user information for Twitch user: ' . $user);
+                return Helper::text('Error occurred retrieving user information for Twitch user: ' . $channel);
             }
 
             if (!empty($user['message'])) {
@@ -1974,12 +1974,12 @@ class TwitchController extends Controller
         }
         catch (TwitchApiException $ex)
         {
-            return Helper::text('Invalid Twitch user specified: ' . $user, 400);
+            return Helper::text('Invalid Twitch user specified: ' . $channel, 400);
         }
         catch (Exception $ex)
         {
             Log::error($ex->getMessage());
-            return Helper::text('Error occurred retrieving user information for Twitch user: ' . $user);
+            return Helper::text('Error occurred retrieving user information for Twitch user: ' . $channel);
         }
 
         if (empty($data)) {

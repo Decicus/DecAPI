@@ -27,6 +27,7 @@ use GuzzleHttp\Client;
 use Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
 
+use Cache;
 use Exception;
 use Log;
 
@@ -1727,6 +1728,19 @@ class TwitchController extends Controller
                 return Helper::text($reAuth);
             }
 
+            $cacheKey = 'twitch_subpoints_' . $user->id;
+
+            if (Cache::has($cacheKey)) {
+                $subpoints = Cache::get($cacheKey);
+
+                /**
+                 * Subtract user-supplied value.
+                 */
+                $subpoints = $subpoints - $subtract;
+
+                return Helper::text($subpoints);
+            }
+
             /**
              * Use OAuth token in Helix API requests and retrieve
              * all subscribers for the specified channel
@@ -1771,6 +1785,12 @@ class TwitchController extends Controller
                 $tier = $sub['tier'];
                 $subpoints += $tiers[$tier];
             }
+
+            /**
+             * Cache subpoints for one minute,
+             * to prevent excessive requests to the Twitch API.
+             */
+            Cache::put($cacheKey, $subpoints, 60);
 
             /**
              * Subtract user-supplied value.

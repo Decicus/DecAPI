@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-use Feed;
+use App;
 use Carbon\Carbon;
 
 use GuzzleHttp\Client as HttpClient;
@@ -18,8 +18,7 @@ class AskfmController extends Controller
     public function rss(Request $request, $user = null)
     {
         $user = $user ?: $request->input('user', null);
-        $feed = new Feed;
-        $feed->setView('vendor.feed.atom');
+        $feed = App::make('feed');
 
         if (empty($user)) {
             $feed->title = 'Ask.fm - RSS Feed';

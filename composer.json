@@ -12,7 +12,6 @@
         "paquettg/php-html-parser": "^1.6",
         "symfony/dom-crawler": "~4.0",
         "symfony/css-selector": "~4.0",
-        "vinelab/rss": "^1.0",
         "austinb/gameq": "3.*@dev",
         "thujohn/twitter": "^2.2",
         "alaouy/youtube": "^1.2",
@@ -25,7 +24,8 @@
         "predis/predis": "^1.1",
         "laravel/tinker": "^1.0",
         "laravel/helpers": "^1.0",
-        "chaseconey/laravel-datadog-helper": "^1.1"
+        "chaseconey/laravel-datadog-helper": "^1.1",
+        "laravelium/feed": "3.1.*"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

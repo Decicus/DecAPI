@@ -8,7 +8,6 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use GuzzleHttp\Client;
-use Vinelab\Rss\Rss;
 use App\Helpers\Helper;
 use GameQ\GameQ;
 use Log;
@@ -255,22 +254,12 @@ class DayZController extends Controller
     /**
      * Retrieves the latest DayZ status report posted to Steam news.
      *
+     * ! As of March 2020, this returns the same as /dayz/status-report (dayz.com)
+     *
      * @return Response
      */
     public function steamStatusReport()
     {
-        $rss = new Rss();
-        $feed = $rss->feed('https://steamcommunity.com/games/221100/rss/');
-
-        $articles = $feed->articles();
-
-        foreach ($articles as $article) {
-            $title = $article->title;
-            if (strpos(strtolower($title), 'status report') !== false) {
-                return Helper::text($title . ' - ' . $article->link);
-            }
-        }
-
-        return Helper::text('No status reports found.');
+        return $this->statusReport();
     }
 }

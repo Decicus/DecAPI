@@ -30,7 +30,7 @@ class RefreshIzurviveLocations extends Command
      *
      * @var string
      */
-    private $currentMap = 'https://maps.izurvive.com/maps/CH-Sat/1.9.3/citycoords.json';
+    private $currentMap = 'https://maps.izurvive.com/maps/CH-Sat/1.12.0/citycoords.json';
 
     /**
      * Create a new command instance.

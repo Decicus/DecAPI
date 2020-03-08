@@ -156,11 +156,10 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        Roumen\Feed\FeedServiceProvider::class,
+        Laravelium\Feed\FeedServiceProvider::class,
         Thujohn\Twitter\TwitterServiceProvider::class,
         Alaouy\Youtube\YoutubeServiceProvider::class,
         Syntax\SteamApi\SteamApiServiceProvider::class,
-        Vinelab\Rss\RssServiceProvider::class,
         TomLingham\Searchy\SearchyServiceProvider::class,
 
         App\Providers\TwitchApiProvider::class,
@@ -212,7 +211,6 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View'      => Illuminate\Support\Facades\View::class,
 
-        'Feed'      => Roumen\Feed\Feed::class,
         'Helper'    => App\Helpers\Helper::class,
         'Searchy'   => TomLingham\Searchy\Facades\Searchy::class,
         'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,

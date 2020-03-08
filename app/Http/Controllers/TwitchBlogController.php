@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Helpers\Helper;
-use Vinelab\Rss\Rss;
 
 class TwitchBlogController extends Controller
 {
@@ -20,21 +19,13 @@ class TwitchBlogController extends Controller
     /**
      * Retrieves the latest Twitch blog post.
      *
+     * ! Deprecated & removed since the Twitch blog is no longer hosted on Medium.
+     *
      * @param  Request $request
      * @return Response
      */
     public function latest(Request $request)
     {
-        $rss = new Rss;
-        $feed = $rss->feed($this->baseUrl . '/feed');
-
-        $skip = intval($request->input('skip', 0));
-
-        $articles = $feed->articles();
-
-        $post = $articles[$skip];
-        $output = sprintf('%s - %s', $post->title, $post->link);
-
-        return Helper::text($output);
+        return Helper::text('410 Gone - This feed (/twitch/blog/latest) has been removed.', 410);
     }
 }

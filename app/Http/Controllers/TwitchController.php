@@ -14,6 +14,7 @@ use App\Helpers\Nightbot;
 use App\TwitchHelpArticle as HelpArticle;
 
 use App\Repositories\TwitchApiRepository;
+use App\Repositories\TwitchEmotesApiRepository;
 
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -26,10 +27,12 @@ use GuzzleHttp\Client;
 use Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
 
+use Cache;
 use Exception;
 use Log;
 
 use App\Exceptions\TwitchApiException;
+use App\Exceptions\TwitchEmotesApiException;
 
 class TwitchController extends Controller
 {
@@ -64,6 +67,11 @@ class TwitchController extends Controller
     private $api;
 
     /**
+     * @var App\Repositories\TwitchEmotesApiRepository
+     */
+    private $emotes;
+
+    /**
      * The 'Accept' header to receive Twitch API V5 responses.
      *
      * @var array
@@ -73,9 +81,10 @@ class TwitchController extends Controller
     /**
      * Initiliazes the controller with a reference to TwitchApiController.
      */
-    public function __construct(TwitchApiRepository $apiRepository)
+    public function __construct(TwitchApiRepository $apiRepository, TwitchEmotesApiRepository $emotesApi)
     {
         $this->api = $apiRepository;
+        $this->emotes = $emotesApi;
         $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
     }
 
@@ -235,7 +244,18 @@ class TwitchController extends Controller
         }
 
         $id = $request->input('id', 'false');
-        $data = $id === 'true' ? $this->api->userById($user) : $this->api->userByUsername($user);
+        try {
+            $data = $id === 'true' ? $this->api->userById($user) : $this->api->userByUsername($user);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('Invalid Twitch user specified: ' . $user, 400);
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex->getMessage());
+            return Helper::text('Error occurred retrieving user information for Twitch user: ' . $user);
+        }
 
         if (empty($data)) {
             return Helper::text(__('twitch.user_not_found', [
@@ -266,7 +286,9 @@ class TwitchController extends Controller
         }
 
         $url = sprintf('https://api.twitch.tv/api/channels/%s/chat_properties', $channel);
-        $data = $this->twitchApi->get($url, true);
+        $data = $this->twitchApi->get($url, true, [
+            'Client-ID' => 'kimne78kx3ncx6brgo4mv6wki5h1ko',
+        ]);
 
         if (isset($data['error'])) {
             return Helper::text($data['message']);
@@ -1176,7 +1198,13 @@ class TwitchController extends Controller
             return Helper::text(__('generic.username_required'));
         }
 
-        $data = $this->api->userByUsername($user);
+        try {
+            $data = $this->api->userByUsername($user);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('Invalid Twitch username specified: ' . $user, 400);
+        }
 
         if (empty($data)) {
             return Helper::text(__('twitch.user_not_found', [
@@ -1685,7 +1713,7 @@ class TwitchController extends Controller
             }
 
             $scopes = explode('+', $user->scopes);
-            if (!in_array('channel_subscriptions', $scopes)) {
+            if (!in_array('channel:read:subscriptions', $scopes)) {
                 $needToReAuth .= '+' . implode('+', $scopes);
                 return Helper::text($needToReAuth);
             }
@@ -1698,6 +1726,19 @@ class TwitchController extends Controller
             } catch (DecryptException $e) {
                 Log::error($e->getMessage());
                 return Helper::text($reAuth);
+            }
+
+            $cacheKey = 'twitch_subpoints_' . $user->id;
+
+            if (Cache::has($cacheKey)) {
+                $subpoints = Cache::get($cacheKey);
+
+                /**
+                 * Subtract user-supplied value.
+                 */
+                $subpoints = $subpoints - $subtract;
+
+                return Helper::text($subpoints);
             }
 
             /**
@@ -1746,6 +1787,12 @@ class TwitchController extends Controller
             }
 
             /**
+             * Cache subpoints for one minute,
+             * to prevent excessive requests to the Twitch API.
+             */
+            Cache::put($cacheKey, $subpoints, 60);
+
+            /**
              * Subtract user-supplied value.
              */
             $subpoints = $subpoints - $subtract;
@@ -1789,23 +1836,47 @@ class TwitchController extends Controller
                 return Helper::text($message);
             }
 
-            $channel = $nb->channel['name'];
-            $id = 'false';
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
         }
 
-        if ($id === 'true') {
-            $channel = $this->twitchApi->channels($channel, $this->version);
-
-            if (!empty($channel['message'])) {
-                return Helper::text($channel['message']);
+        if ($id !== 'true') {
+            try {
+                $user = $this->api->userByUsername($channel);
+            }
+            catch (TwitchApiException $ex)
+            {
+                return Helper::text('Invalid Twitch user specified: ' . $channel, 400);
+            }
+            catch (Exception $ex)
+            {
+                Log::error($ex->getMessage());
+                return Helper::text('Error occurred retrieving user information for Twitch user: ' . $channel);
             }
 
-            $channel = $channel['name'];
+            if (!empty($user['message'])) {
+                return Helper::text($user['message']);
+            }
+
+            $channel = $user['id'];
         }
 
-        $product = $this->twitchApi->channelProduct($channel);
+        try {
+            $emotes = $this->emotes->channel($channel);
+        }
+        catch (TwitchEmotesApiException $ex) {
+            if ($wantsJson) {
+                return $this->errorJson([
+                    'error' => 'API error',
+                    'message' => $ex->getMessage(),
+                    'status' => 500,
+                ], 500);
+            }
 
-        if (empty($product)) {
+            return Helper::text('[TwitchEmotes API Error] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
             if ($wantsJson) {
                 return $this->errorJson([
                     'error' => 'API error',
@@ -1814,20 +1885,10 @@ class TwitchController extends Controller
                 ], 500);
             }
 
-            return __('generic.error_loading_data_api');
+            return Helper::text(__('generic.error_loading_data_api'));
         }
 
-        if (!empty($product['error'])) {
-            $status = $product['status'];
-            $message = $product['message'];
-            if ($wantsJson) {
-                return $this->errorJson(['error' => $product['error'], 'message' => $message, 'status' => $status], $status);
-            }
-
-            return Helper::text($message);
-        }
-
-        if (empty($product['emoticons'])) {
+        if (empty($emotes['emotes'])) {
             $message = __('twitch.channel_missing_subemotes');
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message], 404);
@@ -1836,34 +1897,17 @@ class TwitchController extends Controller
             return Helper::text($message);
         }
 
-        // Only get emotes that are active.
-        $emotes = array_filter($product['emoticons'], function($emote) {
-            return $emote['state'] === 'active' && $emote['subscriber_only'] === true;
-        });
-
-        // Regex = emote code in this context
-        // For some emotes (official Twitch emotes usually) there might
-        // be an actual regex. Subscriber emotes are probably fine.
-        $emotes = array_map(function($emote) {
-            return $emote['regex'];
-        }, $emotes);
-
-        if (empty($emotes)) {
-            $message = __('twitch.channel_missing_subemotes');
-            if ($wantsJson) {
-                return $this->errorJson(['message' => $message], 404);
-            }
-
-            return Helper::text($message);
-        }
+        // We only care about the emote codes.
+        $emotes = $emotes['emotes'];
+        $emoteCodes = $emotes->codes();
 
         if ($wantsJson) {
             return $this->json([
-                'emotes' => $emotes
+                'emotes' => $emoteCodes,
             ]);
         }
 
-        return Helper::text(implode(' ', $emotes));
+        return Helper::text(implode(' ', $emoteCodes));
     }
 
     /**
@@ -1945,7 +1989,18 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        $data = $id === 'true' ? $this->api->userById($channel) : $this->api->userByUsername($channel);
+        try {
+            $data = $id === 'true' ? $this->api->userById($channel) : $this->api->userByUsername($channel);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('Invalid Twitch user specified: ' . $channel, 400);
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex->getMessage());
+            return Helper::text('Error occurred retrieving user information for Twitch user: ' . $channel);
+        }
 
         if (empty($data)) {
             return Helper::text(__('twitch.user_not_found', [

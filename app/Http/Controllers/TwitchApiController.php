@@ -43,7 +43,13 @@ class TwitchApiController extends Controller
     public function get($url = '', $override = false, $headers = [])
     {
         $settings['headers'] = $headers;
-        $settings['headers']['Client-ID'] = $this->twitchClientID;
+
+        /**
+         * Allow methods to override client ID header.
+         */
+        if (empty($settings['headers']['Client-ID'])) {
+            $settings['headers']['Client-ID'] = $this->twitchClientID;
+        }
 
         if (empty($settings['headers']['Accept'])) {
             $settings['headers']['Accept'] = 'application/vnd.twitchtv.v3+json';
@@ -100,7 +106,9 @@ class TwitchApiController extends Controller
     {
         $url = sprintf('https://api.twitch.tv/api/channels/%s/product', $channel);
 
-        return $this->get($url, true);
+        return $this->get($url, true, [
+            'Client-ID' => 'kimne78kx3ncx6brgo4mv6wki5h1ko',
+        ]);
     }
 
     /**

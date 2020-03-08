@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\IpBlacklist;
+use Artisan;
 
 class AddBlacklistedIp extends Command
 {
@@ -55,6 +56,8 @@ class AddBlacklistedIp extends Command
                 }
 
                 $blacklistIp->delete();
+                Artisan::call('blacklist:cache');
+
                 return $this->info('Successfully deleted IP from blacklist: ' . $blacklistIp->ip_address);
             }
 
@@ -66,6 +69,8 @@ class AddBlacklistedIp extends Command
             'ip_address' => $ipAddress,
             'reason' => $reason,
         ]);
+
+        Artisan::call('blacklist:cache');
 
         return $this->info(sprintf('Added IP: %s to the blacklist for reason: %s', $ipAddress, $reason));
     }

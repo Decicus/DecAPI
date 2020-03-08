@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         Commands\GenerateNewRateLimitApiKey::class,
         Commands\ImportSubcountTokens::class,
         Commands\ListRateLimitApiKeys::class,
+        Commands\RefreshIpBlacklistCache::class,
         Commands\RefreshIzurviveLocations::class,
         Commands\SetRateLimitApiKeyStatus::class,
         Commands\UpdateCachedTwitchUsers::class,

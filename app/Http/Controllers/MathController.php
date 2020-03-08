@@ -47,9 +47,11 @@ class MathController extends Controller
         }
 
         try {
-            $result = Helper::get($this->mathBaseUrl . urlencode($exp), [], false);
+            $result = (string) Helper::get($this->mathBaseUrl . urlencode($exp), [], false);
 
             if ($request->exists('round') === true) {
+                // Before we can use `round()` we need to convert it to a float.
+                $result = floatval($result);
                 $result = round($result, $round);
             }
 

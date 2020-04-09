@@ -48,7 +48,7 @@ return [
      * Hosting
      */
     'no_hosts' => 'Никто не хостит канал :channel',
-    'multiple_hosts' => ':channels и :amount другой|:channels и :amount других',
+    'multiple_hosts' => ':channels и :amount другой.',
 
     /**
      * Multi

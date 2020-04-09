@@ -46,7 +46,7 @@ return [
      * Hosting
      */
     'no_hosts' => 'Aktuell wird :channel von niemandem gehostet.',
-    'multiple_hosts' => ':channels und :amount weiterer|:channels und :amount weitere',
+    'multiple_hosts' => ':channels und :amount weiterer.',
 
     /**
      * Multi

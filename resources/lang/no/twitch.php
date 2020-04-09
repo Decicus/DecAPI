@@ -35,5 +35,5 @@ return [
      * Hosting
      */
     'no_hosts' => 'Det er foreløpig ingen som hoster :channel',
-    'multiple_hosts' => ':channels og :amount annen|:channels og :amount andre',
+    'multiple_hosts' => ':channels og :amount annen.',
 ];

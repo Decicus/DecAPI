@@ -1147,7 +1147,7 @@ class TwitchController extends Controller
 
         $names = array_slice($hostList, 0, $limit);
         $others = count($hostList) - $limit;
-        $text = __('twitch.multiple_hosts', [
+        $text = trans_choice('twitch.multiple_hosts', $others, [
             'channels' => implode($separator, $names),
             'amount' => $others,
         ]);

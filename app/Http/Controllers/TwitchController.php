@@ -1833,6 +1833,7 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
         $wantsJson = (($request->wantsJson() || $request->exists('json')) ? true : false);
+        $wantsPlans = ($request -> exists('tiers') && $wantsJson);
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
@@ -1913,6 +1914,16 @@ class TwitchController extends Controller
         }
 
         // We only care about the emote codes.
+        // or do we?
+        if ($wantsPlans) {
+            $plans = $emotes['plans'];
+            $emotesData = $emotes['emotes'];
+            $emotesTiers = $plans->sortEmotes($emotesData);
+            return $this->json([
+                'emotes' => $emotesTiers,
+            ]);
+        }
+
         $emotes = $emotes['emotes'];
         $emoteCodes = $emotes->codes();
 

@@ -17,6 +17,7 @@ class Channel extends JsonResource
         $res = $this->resource;
 
         $emotes = EmotesCollection::make(collect($res['emotes']));
+        $plans = Plans::make($res['plans']);
 
         return [
             'name' => $res['channel_name'],
@@ -27,7 +28,7 @@ class Channel extends JsonResource
             'generated_at' => $res['generated_at'],
 
             'emotes' => $emotes,
-            'plans' => $res['plans'],
+            'plans' => $plans,
             'badges' => [
                 'subscribers' => $res['subscriber_badges'] ?? null,
                 'bits' => $res['bits_badges'] ?? null,

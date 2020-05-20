@@ -30,7 +30,7 @@ class Plans extends ResourceCollection
                     ->map(function($plans) use($emotes){
                         $accumulator = [];
                         foreach ($emotes as $emote){
-                            if ($emote['emoticon_set'] == $plans){
+                            if ((string) $emote['emoticon_set'] === $plans){
                                 array_push($accumulator, $emote['code']);
                             };
                         }

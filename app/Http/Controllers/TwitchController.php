@@ -1833,7 +1833,7 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
         $wantsJson = (($request->wantsJson() || $request->exists('json')) ? true : false);
-        $wantsPlans = ($request -> exists('tiers') && $wantsJson);
+        $wantsPlans = ($request->exists('tiers') && $wantsJson);
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {

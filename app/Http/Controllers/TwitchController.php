@@ -848,6 +848,11 @@ class TwitchController extends Controller
 
         $getGame = $this->twitchApi->channels($channel, $this->version);
 
+        // Invalid API response
+        if (empty($getGame)) {
+            return Helper::text(__('generic.error_loading_data_api'));
+        }
+
         if (isset($getGame['message'])) {
             return Helper::text(sprintf('%s - %s', $getGame['error'], $getGame['message']));
         }
@@ -1147,7 +1152,7 @@ class TwitchController extends Controller
 
         $names = array_slice($hostList, 0, $limit);
         $others = count($hostList) - $limit;
-        $text = __('twitch.multiple_hosts', [
+        $text = trans_choice('twitch.multiple_hosts', $others, [
             'channels' => implode($separator, $names),
             'amount' => $others,
         ]);
@@ -1652,6 +1657,11 @@ class TwitchController extends Controller
 
             $data = $this->twitchApi->channelSubscriptions($user->id, $token, 1, 0, 'asc', $this->version);
 
+            // Invalid API response
+            if (empty($data)) {
+                return Helper::text(__('generic.error_loading_data_api'));
+            }
+
             if (!empty($data['status'])) {
                 if ($data['status'] === 401) {
                     return Helper::text($needToReAuth);
@@ -1852,6 +1862,11 @@ class TwitchController extends Controller
             {
                 Log::error($ex->getMessage());
                 return Helper::text('Error occurred retrieving user information for Twitch user: ' . $channel);
+            }
+
+            // API returned an empty response, most likely disabled/banned user or it doesn't exist.
+            if (empty($user)) {
+                return Helper::text(__('twitch.user_not_found', ['user' => $channel]));
             }
 
             if (!empty($user['message'])) {

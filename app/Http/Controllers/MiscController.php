@@ -71,6 +71,10 @@ class MiscController extends Controller
             return Helper::text('An error has occurred retrieving exchange rates');
         }
 
+        if (empty($convert)) {
+            return Helper::text('An error has occurred retrieving exchange rates');
+        }
+
         if ($convert['success'] === false) {
             if (!empty($convert['error'])) {
                 return Helper::text('An error occurred retrieving exchange rates: ' . $convert['error']['type']);

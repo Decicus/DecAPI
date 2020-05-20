@@ -1920,7 +1920,11 @@ class TwitchController extends Controller
             $emotesData = $emotes['emotes'];
             $emotesTiers = $plans->sortEmotes($emotesData);
             return $this->json([
-                'emotes' => $emotesTiers,
+                'emotes' => [
+                    'tier1' => $emotesTiers['$4.99'],
+                    'tier2' => $emotesTiers['$9.99'],
+                    'tier3' => $emotesTiers['$24.99'],
+                ],
             ]);
         }
 

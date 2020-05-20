@@ -21,9 +21,10 @@ class Plans extends ResourceCollection
         ];
     }
 
-    // i have no idea
+    // sorts emotes by plan name,  e.g. all emotes from 4.99 set would be together in one key ("$4.99")
     // so yeah.. I know this could be done better
     // for example, it could return tier1, tier2, tier3 instead of dollar values
+    // ^ EDIT: covered in TwitchController though it still feels wrong ^
     // how do i do that documentation thing?
     public function sortEmotes($emotes)
     {

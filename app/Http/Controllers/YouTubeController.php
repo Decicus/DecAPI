@@ -41,6 +41,22 @@ class YouTubeController extends Controller
             $skip = 0;
         }
 
+        /**
+         * Channel IDs and old "user" URLs do not have spaces in them.
+         *
+         * Some users have specified their display names (example: "My Channel Name")
+         * as their channel ID, which will just return an error from the YouTube API.
+         *
+         * To prevent unnecessary API requests, we're returning an error early as
+         * this would be an invalid ID/user value anyways.
+         */
+        if (strpos($id, ' ') !== false) {
+            return Helper::text(__('youtube.invalid_channel_value', [
+                'type' => $type,
+                'id' => $id,
+            ]));
+        }
+
         try {
             switch ($type) {
                 case 'user':

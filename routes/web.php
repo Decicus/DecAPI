@@ -101,10 +101,18 @@ Route::group(['prefix' => 'steam', 'as' => 'steam.', 'middleware' => 'ratelimit:
         ->where('id', '([A-z:0-9]+)');
 });
 
-Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'ratelimit:' . env('THROTTLE_RATE_LIMIT', '100,1')], function() {
-    // Include some extra characters that are used in examples quite often.
-    // The error returned should hopefully clear up any confusion as to why it doesn't work.
-    $channelRegex = '([$:{}A-z0-9]{1,50})';
+Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelimit:' . env('THROTTLE_RATE_LIMIT', '100,1'), 'twitch.remove_at_signs']], function() {
+
+    /**
+     * Include some extra characters that are used in examples quite often.
+     * The error returned should hopefully clear up any confusion as to why it doesn't work.
+     *
+     * `@` is included for when people use `@username` to mention users in bot commands.
+     * Normally these would 404, but we're modifying parameters to support it.
+     *
+     * The prefixed `@` characters are removed in RouteServiceProvider before being passed to the controller method.
+     */
+    $channelRegex = '([@$:{}A-z0-9]{1,50})';
 
     Route::get('/', 'TwitchController@base');
 
@@ -215,7 +223,7 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => 'ratelimi
 
     Route::get('{uptime}/{channel?}', 'TwitchController@uptime')
         ->where('uptime', '(uptime(\.php)?)')
-        ->where('channel', '([A-z0-9]){1,25}');
+        ->where('channel', $channelRegex);
 
     Route::get('viewercount/{channel?}', 'TwitchController@viewercount')
         ->where('channel', $channelRegex);

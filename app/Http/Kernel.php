@@ -56,5 +56,6 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'ratelimit' => \App\Http\Middleware\RateLimitWithWhitelist::class,
+        'twitch.remove_at_signs' => \App\Http\Middleware\TwitchRemoveAtSigns::class,
     ];
 }

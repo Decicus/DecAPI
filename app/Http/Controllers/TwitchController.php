@@ -157,7 +157,7 @@ class TwitchController extends Controller
             'clusters' => 'clusters/{CHANNEL}',
             'followage' => 'followage/{CHANNEL}/{USER}',
             'followed' => 'followed/{USER}/{CHANNEL}',
-            'followers' => 'followed/{CHANNEL}',
+            'followers' => 'followers/{CHANNEL}',
             'following' => 'following/{USER}',
             'game' => 'game/{CHANNEL}',
             'help' => 'help/{SEARCH}',
@@ -178,12 +178,13 @@ class TwitchController extends Controller
             'vod_replay' => 'vod_replay/{CHANNEL}',
         ];
 
-        foreach ($urls as $name => $endpoint) {
-            $urls[$name] = $baseUrl . '/' . $endpoint;
-        }
+        $urls = array_map(function($path) use($baseUrl) {
+            return sprintf('%s/%s', $baseUrl, $path);
+        }, $urls);
 
         return $this->json([
-            'endpoints' => $urls
+            'documentation' => 'https://docs.decapi.me/twitch',
+            'endpoints' => $urls,
         ]);
     }
 

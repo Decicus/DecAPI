@@ -31,8 +31,8 @@ Anything that for some reason did not get included in this rewrite, will still b
 
 The following things are required for setting this up:
 
-- [Laravel 5.8's requirements](https://laravel.com/docs/5.8/installation#server-requirements)
-- [A database system that Laravel supports](https://laravel.com/docs/5.8/database#introduction)
+- [Laravel 6.x's requirements](https://laravel.com/docs/6.x/installation#server-requirements)
+- [A database system that Laravel supports](https://laravel.com/docs/6.x/database#introduction)
 - [Composer](https://getcomposer.org/)
 
 ## Setup

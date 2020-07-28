@@ -12,7 +12,7 @@ use App\Http\Resources\Twitch as Resource;
 class TwitchApiRepository
 {
     /**
-     * @var App\Services\TwitchApiClient
+     * @var TwitchApiClient
      */
     private $client;
 
@@ -34,13 +34,73 @@ class TwitchApiRepository
     }
 
     /**
+     * Sends a request to the `channels` endpoint: https://dev.twitch.tv/docs/api/reference#get-channel-information
+     *
+     * @param array $fields
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function channels($fields = [])
+    {
+        $request = $this->client->get('/channels', $fields);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $channels = collect($request['data']);
+        return Resource\ChannelCollection::make($channels)
+                                         ->resolve();
+    }
+
+    /**
+     * Retrieves channel information for multiple channels by their unique ID.
+     *
+     * @param array $ids
+     * @return array
+     *
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
+     */
+    public function channelsByIds($ids = [])
+    {
+        if (!is_array($ids)) {
+            throw new TwitchFormatException('Array expected, got: ' . gettype($ids));
+        }
+
+        return $this->channels(['broadcaster_id' => $ids]);
+    }
+
+    /**
+     * Retrieve channel information for a single channel by their unique ID.
+     *
+     * @param string $id
+     * @return array
+     *
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
+     */
+    public function channelById($id = '')
+    {
+        if (!is_string($id) && !is_int($id))
+        {
+            throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
+        }
+
+        return $this->channelsByIds([$id]);
+    }
+
+    /**
      * Retrieves the channel's followers, as well as the total number of followers.
      *
      * @param string $toId Twitch user ID of the channel
      * @param integer $first Maximum number of objects to return. Maximum: 100. Default: 20.
      * @param string $after Cursor used for pagination.
      *
-     * @return App\Http\Resources\Twitch\Follow
+     * @return array
+     * @throws TwitchApiException
      */
     public function followsChannel($toId = '', $first = 20, $after = null)
     {
@@ -69,7 +129,8 @@ class TwitchApiRepository
      * @param string $toId User ID of the channel
      * @param string $fromId User ID of the user.
      *
-     * @return App\Http\Resources\Twitch\FollowUserCollection
+     * @return array
+     * @throws TwitchApiException
      */
     public function followRelationship($toId = '', $fromId = '')
     {
@@ -95,7 +156,9 @@ class TwitchApiRepository
      *
      * @param string|int $id ID can be a string or an int (for legacy reasons).
      *
-     * @return App\Http\Resources\Twitch\Streams
+     * @return array
+     * @throws TwitchFormatException
+     * @throws TwitchApiException
      */
     public function streamById($id = '')
     {
@@ -112,7 +175,9 @@ class TwitchApiRepository
      *
      * @param array $ids
      *
-     * @return App\Http\Resources\Twitch\Streams
+     * @return array
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
      */
     public function streamsByIds($ids = [])
     {
@@ -128,7 +193,9 @@ class TwitchApiRepository
      *
      * @param string $username
      *
-     * @return App\Http\Resources\Twitch\Streams
+     * @return array
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
      */
     public function streamByName($username = '')
     {
@@ -145,7 +212,9 @@ class TwitchApiRepository
      *
      * @param array $usernames
      *
-     * @return App\Http\Resources\Twitch\Streams
+     * @return array
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
      */
     public function streamsByNames($usernames = [])
     {
@@ -161,7 +230,8 @@ class TwitchApiRepository
      *
      * @param array $fields Optional query parameters for `/helix/streams` as documented in the Twitch API documentation.
      *
-     * @return App\Http\Resources\Twitch\Streams
+     * @return array
+     * @throws TwitchApiException
      */
     public function streams($fields = [])
     {
@@ -185,10 +255,11 @@ class TwitchApiRepository
      *
      * @param string $broadcasterId User ID for channel/broadcaster
      * @param string $userId User ID for user.
-     * @param int    $first  Amount of subscriptions to retrieve per request. Max 100.
+     * @param int $first Amount of subscriptions to retrieve per request. Max 100.
      * @param string $cursor Cursor used for pagination
      *
      * @return array
+     * @throws TwitchApiException
      */
     public function subscriptions($broadcasterId = '', $userId = null, $first = 20, $cursor = null)
     {
@@ -218,6 +289,7 @@ class TwitchApiRepository
      * @param string $broadcasterId Channel ID
      *
      * @return array Array of subscriber objects.
+     * @throws TwitchApiException
      */
     public function subscriptionsAll($broadcasterId = '')
     {
@@ -250,11 +322,20 @@ class TwitchApiRepository
      * @param string $broadcasterId User ID for channel/broadcaster
      * @param string $userId User ID for user.
      *
-     * @return App\Http\Resources\Twitch\Subscriptions
+     * @return array|null
+     * @throws TwitchApiException
      */
     public function subscriptionUser($broadcasterId = '', $userId = '')
     {
         $data = $this->subscriptions($broadcasterId, $userId);
+        $subscriptions = $data['subscriptions'];
+
+        if (empty($subscriptions))
+        {
+            return null;
+        }
+
+        return $subscriptions[0];
     }
 
     /**
@@ -263,6 +344,7 @@ class TwitchApiRepository
      * @param array $users
      *
      * @return array
+     * @throws TwitchApiException
      */
     public function users($users = [])
     {
@@ -285,6 +367,8 @@ class TwitchApiRepository
      * @param string|int $id
      *
      * @return array
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
      */
     public function userById($id = '')
     {
@@ -305,6 +389,8 @@ class TwitchApiRepository
      * @param array $ids
      *
      * @return array
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
      */
     public function usersByIds($ids = [])
     {
@@ -323,6 +409,8 @@ class TwitchApiRepository
      * @param string $username
      *
      * @return array
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
      */
     public function userByUsername($username = '')
     {
@@ -342,6 +430,8 @@ class TwitchApiRepository
      * @param array $usernames
      *
      * @return array
+     * @throws TwitchApiException
+     * @throws TwitchFormatException
      */
     public function usersByUsernames($usernames = [])
     {

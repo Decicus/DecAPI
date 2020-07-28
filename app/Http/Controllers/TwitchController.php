@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\TwitchFormatException;
 use Illuminate\Http\Request;
 
 use App\Http\Requests;
@@ -62,12 +63,12 @@ class TwitchController extends Controller
     private $twitchApi;
 
     /**
-     * @var App\Repositories\TwitchApiRepository
+     * @var TwitchApiRepository
      */
     private $api;
 
     /**
-     * @var App\Repositories\TwitchEmotesApiRepository
+     * @var TwitchEmotesApiRepository
      */
     private $emotes;
 
@@ -79,7 +80,10 @@ class TwitchController extends Controller
     private $version = ['Accept' => 'application/vnd.twitchtv.v5+json'];
 
     /**
-     * Initiliazes the controller with a reference to TwitchApiController.
+     * Initializes the controller with a reference to TwitchApiController.
+     *
+     * @param TwitchApiRepository $apiRepository
+     * @param TwitchEmotesApiRepository $emotesApi
      */
     public function __construct(TwitchApiRepository $apiRepository, TwitchEmotesApiRepository $emotesApi)
     {
@@ -847,19 +851,19 @@ class TwitchController extends Controller
             }
         }
 
-        $getGame = $this->twitchApi->channels($channel, $this->version);
-
-        // Invalid API response
-        if (empty($getGame)) {
+        try {
+            $getChannel = $this->api->channelById($channel);
+        } catch (TwitchApiException $ex) {
             return Helper::text(__('generic.error_loading_data_api'));
+        } catch (TwitchFormatException $ex) {
+            return Helper::text($ex->getMessage());
         }
 
-        if (isset($getGame['message'])) {
-            return Helper::text(sprintf('%s - %s', $getGame['error'], $getGame['message']));
+        if ($route === 'game') {
+            return Helper::text($getChannel['game']['name'] ?: '');
         }
 
-        $text = $getGame[$route];
-        return Helper::text($text ?: '');
+        return Helper::text($getChannel['title']);
     }
 
     /**

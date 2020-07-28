@@ -89,7 +89,8 @@ class TwitchApiRepository
             throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
         }
 
-        return $this->channelsByIds([$id]);
+        $channels = $this->channelsByIds([$id]);
+        return $channels[0];
     }
 
     /**

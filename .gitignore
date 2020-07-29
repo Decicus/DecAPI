@@ -9,3 +9,4 @@ Homestead.json
 .phpintel
 .idea
 .vscode
+docker-compose.yml

@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+    app:
+        build:
+            context: ./
+            dockerfile: Dockerfile
+            args:
+                user: decapi
+                uid: 1000
+        image: decapi
+        container_name: decapi-app
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - decapi
+
+    db:
+        image: mariadb:10.5
+        container_name: decapi-db
+        restart: unless-stopped
+        networks:
+            - decapi
+        environment:
+            # Values are loaded from `.env`
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+
+    nginx:
+        image: nginx:1.19-alpine
+        container_name: decapi-nginx
+        restart: unless-stopped
+        networks:
+            - decapi
+        ports:
+            - "8080:80"
+        volumes:
+            - ./:/var/www/html
+            - ./.docker/nginx:/etc/nginx/conf.d
+
+    redis:
+        image: redis:6.0-alpine
+        container_name: decapi-redis
+        restart: unless-stopped
+        networks:
+            - decapi
+
+
+
+networks:
+    decapi:
+        driver: bridge

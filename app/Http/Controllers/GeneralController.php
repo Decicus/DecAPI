@@ -57,4 +57,16 @@ class GeneralController extends Controller
     {
         return Helper::text('404 Page Not Found', 404);
     }
+
+    /**
+     * Displays the page for the Privacy Policy.
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function privacyPolicy(Request $request)
+    {
+        return view('privacy-policy', ['page' => 'Privacy Policy']);
+    }
 }

@@ -14,6 +14,8 @@
 Route::get('/{index?}', ['as' => 'home', 'uses' => 'GeneralController@home'])
     ->where('index', '(index(.php)?|home)');
 
+Route::get('/privacy-policy', ['as' => 'privacy-policy', 'uses' => 'GeneralController@privacyPolicy']);
+
 Route::group(['prefix' => 'askfm'], function() {
     Route::get('rss/{user?}', 'AskfmController@rss');
 });

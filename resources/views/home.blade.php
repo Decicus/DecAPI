@@ -60,6 +60,10 @@
                     <p class="text-info">
                         Project repository on <a href="https://github.com/Decicus/DecAPI" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a>
                     </p>
+
+                    <p class="text-muted">
+                        <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
+                    </p>
                 </div>
             </div>
         </div>

@@ -58,13 +58,14 @@ class YouTubeController extends Controller
         }
 
         try {
+            $parts = ['id', 'snippet', 'contentDetails'];
             switch ($type) {
                 case 'user':
-                    $channel = YouTube::getChannelByName($id);
+                    $channel = YouTube::getChannelByName($id, false, $parts);
                     break;
 
                 default:
-                    $channel = YouTube::getChannelById($id);
+                    $channel = YouTube::getChannelById($id, false, $parts);
                     break;
             }
 

@@ -88,6 +88,10 @@
                         By using DecAPI for YouTube-related data, you accept <a href="https://www.youtube.com/t/terms">YouTube's Terms of Service</a> and <a href="https://policies.google.com/privacy">Google's privacy policy</a>.
                         <br>
                         No YouTube-related user information is stored or cached in the DecAPI service.
+                        <br>
+                        No YouTube-related user information is not being shared with any other parties via the DecAPI service.
+                        <br>
+                        Information from the YouTube API is processed by extracting the relevant information (such as video title or video ID) and then returning it with the response.
                     </p>
                 </div>
             </div>

@@ -17,15 +17,7 @@ V2 is based on the [Laravel framework](https://laravel.com/).
 
 ## Contributing
 
-Pull requests are generally welcome for new features, but ideally I'd like to discuss it via [Discord](https://links.decapi.me/discord) or through [issues](https://github.com/Decicus/DecAPI/issues) before anything is implemented.
-
-### Translations
-
-DecAPI supports some basic translations for certain endpoints, but it's not implemented fully everywhere.  
-Most translations are provided by users of DecAPI.  
-
-You can find translations in the [resources/lang](resources/lang) directory of the repository.  
-There's also some information about [translations on the documentation website](https://docs.decapi.me/#localization).
+The `CONTRIBUTING` document has been moved to [`.github/CONTRIBUTING.md`](/.github/CONTRIBUTING.md)
 
 ## Layout
 

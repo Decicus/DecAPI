@@ -51,7 +51,9 @@ class ListRateLimitApiKeys extends Command
                     ::all()
                     ->toArray();
 
-            return $this->table($this->tableHeaders, $keys);
+            $this->table($this->tableHeaders, $keys);
+
+            return 0;
         }
 
         $apiKey = trim($apiKey);
@@ -64,7 +66,8 @@ class ListRateLimitApiKeys extends Command
 
 
         if ($apiKeyModel->isEmpty()) {
-            return $this->error('The specified API key does not exist: ' . $apiKey);
+            $this->error('The specified API key does not exist: ' . $apiKey);
+            return 1;
         }
 
         $this->table($this->tableHeaders, $apiKeyModel->toArray());

@@ -57,7 +57,8 @@ class UpdateTwitchAuthUsers extends Command
                      ->get();
 
         if ($users->isEmpty()) {
-            return $this->info('No authenticated Twitch users to check.');
+            $this->info('No authenticated Twitch users to check.');
+            return 0;
         }
 
         $settings = [

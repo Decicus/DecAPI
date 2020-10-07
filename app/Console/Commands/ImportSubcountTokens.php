@@ -49,7 +49,8 @@ class ImportSubcountTokens extends Command
 
         $data = json_decode($request->getBody(), true);
         if ($data['success'] !== true) {
-            return $this->error($data['error']);
+            $this->error($data['error']);
+            return 1;
         }
 
         $users = $data['users'];
@@ -89,6 +90,6 @@ class ImportSubcountTokens extends Command
 
         $progress->finish();
 
-        return $this->info('Successfully imported all users.');
+        $this->info('Successfully imported all users.');
     }
 }

@@ -39,6 +39,6 @@ class DecryptString extends Command
     public function handle()
     {
         $str = $this->argument('string');
-        return $this->info(Crypt::decrypt($str));
+        $this->info(Crypt::decrypt($str));
     }
 }

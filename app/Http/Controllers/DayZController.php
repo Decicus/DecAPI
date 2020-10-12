@@ -56,7 +56,7 @@ class DayZController extends Controller
         $prefix = 'https://www.izurvive.com/';
         $maxResults = intval($request->input('max_results', 1));
         $separator = $request->input('separator', ' | ');
-        $zoom = intval($request->input('zoom_level', 7));
+        $zoom = intval($request->input('zoom_level', 6));
 
         if ($request->exists('list')) {
             $locations = [];
@@ -64,7 +64,7 @@ class DayZController extends Controller
 
             foreach (Location::all() as $location) {
                 $name = $location->name_en;
-                $locations[$name] = sprintf('#c=%s;%s', intval($location->latitude), intval($location->longitude));
+                $locations[$name] = sprintf('#c=%s;%s;%d', intval($location->latitude), intval($location->longitude), $zoom);
                 $spellings[$name] = $location
                                     ->spellings
                                     ->pluck('spelling')
@@ -113,6 +113,7 @@ class DayZController extends Controller
         $results = $results->sortBy('distance');
 
         $spellingResults = $results->take($maxResults);
+        $spellingResults = $spellingResults->unique('location_id');
 
         $locations = [];
         foreach ($spellingResults as $spelling) {

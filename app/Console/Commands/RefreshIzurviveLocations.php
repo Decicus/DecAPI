@@ -30,7 +30,7 @@ class RefreshIzurviveLocations extends Command
      *
      * @var string
      */
-    private $currentMap = 'https://maps.izurvive.com/maps/CH-Sat/1.12.0/citycoords.json';
+    private $currentMap = 'https://maps.izurvive.com/maps/CH-Sat/1.16.0/citycoords.json';
 
     /**
      * Create a new command instance.
@@ -56,15 +56,27 @@ class RefreshIzurviveLocations extends Command
         foreach ($locations as $loc) {
             /**
              * Example format:
-             * [
+             * {
              *  "nameEN" : "airfield",
              *  "nameRU" : "аэродром",
              *  "lat" : "44.932979212515605",
              *  "lng" : "-75.26630500880349",
-             *  "spellings" : ["airfield", "аэродром", "aepoApoM", "a3poApoM"]
-             * ]
+             *  "spellings" : ["airfield", "аэродром", "aepoApoM", "a3poApoM"],
+             *  "type": "Local",
+             *  "minZoom": 4
+             * }
              */
             extract($loc);
+
+            /**
+             * Ignore the locations that don't have `nameRU` set
+             * as they're usually "duplicate" locations (such as railroad stations instead of cities).
+             *
+             * Examples: Berezino, Balota
+             */
+            if (empty($nameRU)) {
+                continue;
+            }
 
             $location = Location::where('name_en', $nameEN)->first();
 

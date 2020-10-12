@@ -160,7 +160,6 @@ return [
         Thujohn\Twitter\TwitterServiceProvider::class,
         Alaouy\Youtube\YoutubeServiceProvider::class,
         Syntax\SteamApi\SteamApiServiceProvider::class,
-        TomLingham\Searchy\SearchyServiceProvider::class,
 
         App\Providers\TwitchApiProvider::class,
     ],
@@ -212,7 +211,6 @@ return [
         'View'      => Illuminate\Support\Facades\View::class,
 
         'Helper'    => App\Helpers\Helper::class,
-        'Searchy'   => TomLingham\Searchy\Facades\Searchy::class,
         'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
         'YouTube'   => Alaouy\Youtube\Facades\Youtube::class,
     ],

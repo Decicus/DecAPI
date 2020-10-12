@@ -24,7 +24,6 @@ class Kernel extends ConsoleKernel
         Commands\SetRateLimitApiKeyStatus::class,
         Commands\UpdateCachedTwitchUsers::class,
         Commands\UpdateTwitchAuthUsers::class,
-        Commands\UpdateTwitchHelp::class,
     ];
 
     /**
@@ -37,9 +36,6 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('twitch:userupdate')
                  ->everyMinute();
-
-        $schedule->command('twitch:help')
-                 ->daily();
 
         $schedule->command('twitch:authuserupdate')
                 ->hourly()

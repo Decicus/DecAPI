@@ -48,7 +48,8 @@ class SetRateLimitApiKeyStatus extends Command
                 ->first();
 
         if (empty($apiKeyModel)) {
-            return $this->error('The specified API key does not exist: ' . $key);
+            $this->error('The specified API key does not exist: ' . $key);
+            return 1;
         }
 
         $apiKeyModel->enabled = $enable;

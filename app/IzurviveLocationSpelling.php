@@ -27,4 +27,16 @@ class IzurviveLocationSpelling extends Model
     {
         return $this->belongsTo('App\IzurviveLocation', 'location_id', 'id');
     }
+
+    /**
+     * Scope a query to search location spellings.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $search
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeSearch($query, $search)
+    {
+        return $query->where('spelling', 'LIKE', '%' . $search . '%');
+    }
 }

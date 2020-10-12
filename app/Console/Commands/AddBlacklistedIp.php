@@ -58,10 +58,12 @@ class AddBlacklistedIp extends Command
                 $blacklistIp->delete();
                 Artisan::call('blacklist:cache');
 
-                return $this->info('Successfully deleted IP from blacklist: ' . $blacklistIp->ip_address);
+                $this->info('Successfully deleted IP from blacklist: ' . $blacklistIp->ip_address);
+                return 0;
             }
 
-            return $this->error('This IP address is already blacklisted for reason: ' . $blacklistIp->reason);
+            $this->error('This IP address is already blacklisted for reason: ' . $blacklistIp->reason);
+            return 1;
         }
 
         $reason = $this->ask('Reason?');
@@ -72,6 +74,6 @@ class AddBlacklistedIp extends Command
 
         Artisan::call('blacklist:cache');
 
-        return $this->info(sprintf('Added IP: %s to the blacklist for reason: %s', $ipAddress, $reason));
+        $this->info(sprintf('Added IP: %s to the blacklist for reason: %s', $ipAddress, $reason));
     }
 }

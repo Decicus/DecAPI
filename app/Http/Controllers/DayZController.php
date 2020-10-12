@@ -11,11 +11,9 @@ use GuzzleHttp\Client;
 use App\Helpers\Helper;
 use GameQ\GameQ;
 use Log;
-use Searchy;
 
 use App\IzurviveLocation as Location;
 use App\IzurviveLocationSpelling as Spelling;
-
 
 class DayZController extends Controller
 {
@@ -99,15 +97,21 @@ class DayZController extends Controller
         }
 
         $search = urldecode(trim($search));
-        $results = Searchy::izurvive_location_spellings('location_id', 'spelling')
-                ->query($search)
-                ->get();
+        $resultsQuery = Spelling::search($search);
+        $results = $resultsQuery->get();
 
         if ($results->isEmpty()) {
             return Helper::text('No results found for search: ' . $search);
         }
 
-        $results = Spelling::hydrate($results->all());
+        /**
+         * Measure Levenshtein distances, then sort them by said distances.
+         */
+        $results->each(function($result) use ($search) {
+            $result->distance = levenshtein($search, $result->spelling);
+        });
+        $results = $results->sortBy('distance');
+
         $spellingResults = $results->take($maxResults);
 
         $locations = [];

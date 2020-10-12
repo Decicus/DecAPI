@@ -17,7 +17,6 @@
         "syntax/steam-api": "dev-master",
         "doctrine/dbal": "^2.5",
         "fideloper/proxy": "~4.0",
-        "tom-lingham/searchy": "^2.0",
         "sentry/sentry-laravel": "^1.0",
         "ramsey/uuid": "^3.7",
         "predis/predis": "^1.1",

@@ -25,7 +25,17 @@ class AskfmController extends Controller
             $feed->description = 'RSS feed covering answers of users on Ask.fm';
             $date = new Carbon();
             $msg = 'User has to be specified';
-            $feed->add($msg, $msg, url($request->fullUrl()), $date->toAtomString(), $msg, $msg);
+
+            $item = [
+                'title' => $msg,
+                'author' => $msg,
+                'link' => url($request->fullUrl()),
+                'pubdate' => $date->toAtomString(),
+                'description' => $msg,
+                'content' => $msg,
+            ];
+
+            $feed->addItem($item);
             return $feed->render('atom');
         }
 
@@ -38,7 +48,7 @@ class AskfmController extends Controller
             'http_errors' => false,
         ];
 
-        $httpRequest = $httpClient->request('GET', 'https://ask.fm/' . $user);
+        $httpRequest = $httpClient->request('GET', 'https://ask.fm/' . $user, $settings);
         $body = (string) $httpRequest->getBody();
 
         $dom = new Crawler($body);
@@ -49,7 +59,16 @@ class AskfmController extends Controller
             $feed->description = 'RSS feed covering answers of users on Ask.fm';
             $date = new Carbon();
             $msg = sprintf('User %s has not answered any questions.', $user);
-            $feed->add($msg, $msg, url($request->fullUrl()), $date->toAtomString(), $msg, $msg);
+            $item = [
+                'title' => $msg,
+                'author' => $msg,
+                'link' => url($request->fullUrl()),
+                'pubdate' => $date->toAtomString(),
+                'description' => $msg,
+                'content' => $msg,
+            ];
+
+            $feed->addItem($item);
             return $feed->render('atom');
         }
 
@@ -73,7 +92,16 @@ class AskfmController extends Controller
             $link = "https://ask.fm" . $itemAge->attr('href');
             $date = $itemAge->attr('title');
 
-            $feed->add($question, $user, $link, $date, $answer, $answer);
+            $item = [
+                'title' => $question,
+                'author' => $user,
+                'link' => $link,
+                'pubdate' => $date,
+                'description' => $answer,
+                'content' => $answer,
+            ];
+
+            $feed->addItem($item);
         });
 
         return $feed->render('atom');

@@ -5,8 +5,8 @@
     "license": "MIT",
     "type": "project",
     "require": {
-        "php": ">=7.2.0",
-        "laravel/framework": "^7.0",
+        "php": ">=7.3.0",
+        "laravel/framework": "^8.0",
         "guzzlehttp/guzzle": "^7.1",
         "paquettg/php-html-parser": "^1.6",
         "symfony/dom-crawler": "~4.0",
@@ -18,19 +18,21 @@
         "doctrine/dbal": "^2.5",
         "fideloper/proxy": "~4.0",
         "sentry/sentry-laravel": "^1.0",
-        "ramsey/uuid": "^3.7",
+        "ramsey/uuid": "^4.0",
         "predis/predis": "^1.1",
         "laravel/tinker": "^2.0",
         "laravel/helpers": "^1.2",
         "chaseconey/laravel-datadog-helper": "^1.1",
-        "laravelium/feed": "7.*",
-        "nunomaduro/collision": "^4.1",
-        "facade/ignition": "^2.0"
+        "laravelium/feed": "8.*",
+        "nunomaduro/collision": "^5.0",
+        "facade/ignition": "^2.3.6",
+        "laravel/legacy-factories": "^1.0",
+        "laravel/ui": "^3.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
         "mockery/mockery": "0.9.*",
-        "phpunit/phpunit": "^8.5",
+        "phpunit/phpunit": "^9.0",
         "filp/whoops": "~2.0"
     },
     "autoload": {
@@ -38,7 +40,9 @@
             "database"
         ],
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {

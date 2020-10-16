@@ -14,7 +14,7 @@
     <body>
         <div class="container">
             <h1>Privacy Policy for DecAPI</h1>
-            <p><strong>Last updated: October 14th, 2020.</strong></p>
+            <p><strong>Last updated: October 16th, 2020.</strong></p>
 
             <p>This privacy policy describes the information that the DecAPI service collects from you when using the service.</p>
 

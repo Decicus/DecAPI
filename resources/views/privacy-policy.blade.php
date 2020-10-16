@@ -14,7 +14,7 @@
     <body>
         <div class="container">
             <h1>Privacy Policy for DecAPI</h1>
-            <p><strong>Last updated: September 12th, 2020.</strong></p>
+            <p><strong>Last updated: October 14th, 2020.</strong></p>
 
             <p>This privacy policy describes the information that the DecAPI service collects from you when using the service.</p>
 
@@ -31,7 +31,10 @@
                             <li>What page you were visiting</li>
                             <li>Date &amp; time of visit</li>
                         </ul>
-                        This information is only stored for up to 14 days before being deleted. The information is only logged to prevent abuse.
+
+                        Information is only stored for up to 14 days on the DecAPI web servers (using the NGINX access log feature) before being automatically rotated &amp; deleted.
+                        <br>
+                        The information is only stored in raw log files and is not processed or shared with any other parties.
                     </p>
                 </div>
             </div>

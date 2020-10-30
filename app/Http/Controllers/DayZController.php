@@ -222,49 +222,49 @@ class DayZController extends Controller
     }
 
     /**
-     * Retrieves the latest DayZ "status report" from their blog/website.
+     * Return the latest DayZ news article, optionally based on search.
+     *
+     * ! As of October 2020, /status-report and /steam-status-report have been moved to use this endpoint.
+     *
+     * @param \Illuminate\Http\Request $request
      *
      * @return Response
      */
-    public function statusReport()
+    public function news(Request $request)
     {
         $client = new Client;
-        $result = $client->request('GET', 'https://dayz.com/api/article?rowsPerPage=10', [
+        $result = $client->request('GET', 'https://dayz.com/api/article?rowsPerPage=100', [
             'http_errors' => false
         ]);
 
         $data = json_decode($result->getBody(), true);
 
         if (empty($data['rows'])) {
-            return Helper::text('There was an error retrieving the latest DayZ status report.');
+            return Helper::text('No DayZ news articles found.');
         }
 
+        $search = $request->input('search', null);
         $rows = $data['rows'];
 
-        foreach ($rows as $post) {
-            $title = $post['title'];
-            if (strpos(strtolower($title), 'status report') !== false) {
-                $articleSlug = $post['ArticleCategory']['slug'];
-                $postSlug = $post['slug'];
+        $post = $rows[0];
+        if (!empty($search)) {
+            $searchLowercase = strtolower($search);
+            $posts = array_filter($rows, function($post) use ($searchLowercase) {
+                $title = strtolower($post['title']);
+                return strpos($title, $searchLowercase) !== false;
+            });
 
-                $output = sprintf('%s - https://dayz.com/article/%s/%s', $title, $articleSlug, $postSlug);
-
-                return Helper::text($output);
+            if (empty($posts)) {
+                return Helper::text(sprintf('No DayZ news articles were found matching the following search: %s', $search));
             }
+
+            $post = $posts[0];
         }
 
-        return Helper::text('No status reports found.');
-    }
-
-    /**
-     * Retrieves the latest DayZ status report posted to Steam news.
-     *
-     * ! As of March 2020, this returns the same as /dayz/status-report (dayz.com)
-     *
-     * @return Response
-     */
-    public function steamStatusReport()
-    {
-        return $this->statusReport();
+        $title = $post['title'];
+        $articleSlug = $post['ArticleCategory']['slug'];
+        $postSlug = $post['slug'];
+        $output = sprintf('%s - https://dayz.com/article/%s/%s', $title, $articleSlug, $postSlug);
+        return Helper::text($output);
     }
 }

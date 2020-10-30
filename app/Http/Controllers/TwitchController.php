@@ -1342,6 +1342,12 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $token = $request->input('token', null);
         $amount = intval($request->input('count', 1));
+
+        // Fallback to 1
+        if ($amount < 1) {
+            $amount = 1;
+        }
+
         $field = $request->input('field', 'name');
         $separator = $request->input('separator', ', ');
         $needToReAuth = '';
@@ -1409,7 +1415,7 @@ class TwitchController extends Controller
         }
 
         $limit = 100;
-        $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, $direction = 'desc', $this->version);
+        $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, 'desc', $this->version);
 
         if (!empty($data['error'])) {
             return Helper::text(sprintf('%s - %s (%s)', __('generic.error_loading_data_api'), $data['error'], $data['message']));

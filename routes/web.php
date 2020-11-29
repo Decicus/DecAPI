@@ -48,8 +48,10 @@ Route::group(['prefix' => 'dayz', 'as' => 'dayz.'], function() {
     Route::get('players', ['as' => 'players', 'uses' => 'DayZController@players']);
     Route::get('izurvive', ['as' => 'izurvive', 'uses' => 'DayZController@izurvive']);
     Route::get('random-server', ['as' => 'randomServer', 'uses' => 'DayZController@randomServer']);
-    Route::get('status-report', ['as' => 'statusReport', 'uses' => 'DayZController@statusReport']);
-    Route::get('steam-status-report', ['as' => 'steamStatusReport', 'uses' => 'DayZController@steamStatusReport']);
+
+    Route::get('news', ['as' => 'news', 'uses' => 'DayZController@news']);
+    Route::get('status-report', ['as' => 'statusReport', 'uses' => 'DayZController@news']);
+    Route::get('steam-status-report', ['as' => 'steamStatusReport', 'uses' => 'DayZController@news']);
 });
 
 Route::group(['prefix' => 'ffz', 'as' => 'ffz.'], function() {

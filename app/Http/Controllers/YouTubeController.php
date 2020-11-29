@@ -83,12 +83,8 @@ class YouTubeController extends Controller
 
             /**
              * Sometimes YouTube's API returns bad data... I guess?
-             * Need to investigate further (hence why logging is there).
              */
             if (!is_array($results)) {
-                Log::error(sprintf('An error occurred retrieving videos for channel: %s (%s)', $request->input($type), $type));
-                Log::error($apiResults);
-
                 return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
             }
 
@@ -124,7 +120,6 @@ class YouTubeController extends Controller
             $title = htmlspecialchars_decode($video->snippet->title, ENT_QUOTES);
             return Helper::text($title . ' - https://youtu.be/' . $video->contentDetails->videoId);
         } catch (Exception $ex) {
-            Log::error('An error occurred in /youtube/latest_video: ' . (string) $ex);
             return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
         }
     }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Exceptions\TwitchFormatException;
 use Illuminate\Http\Request;
 
-use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use App\User;
@@ -18,12 +17,7 @@ use App\Repositories\TwitchApiRepository;
 use App\Repositories\TwitchEmotesApiRepository;
 
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
 use DateTimeZone;
-
-use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\CssSelector;
-use GuzzleHttp\Client;
 
 use Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -248,6 +242,14 @@ class TwitchController extends Controller
             return Helper::text(__('generic.username_required'));
         }
 
+        /**
+         * Return avatar URL from cache if it exists.
+         */
+        $cacheKey = sprintf('twitch_avatar_%s', md5($user));
+        if (Cache::has($cacheKey)) {
+            return Helper::text(Cache::get($cacheKey));
+        }
+
         $id = $request->input('id', 'false');
         try {
             $data = $id === 'true' ? $this->api->userById($user) : $this->api->userByUsername($user);
@@ -268,11 +270,13 @@ class TwitchController extends Controller
             ]));
         }
 
-        if (empty($data['avatar'])) {
-            return Helper::text($this->defaultAvatar);
-        }
+        // Fallback to the default avatar if necessary.
+        $avatar = $data['avatar'] ?? $this->defaultAvatar;
 
-        return Helper::text($data['avatar']);
+        // Cache the avatar URL for 5 minutes.
+        Cache::put($cacheKey, $avatar, config('twitch.cache.avatar'));
+
+        return Helper::text($avatar);
     }
 
     /**
@@ -851,6 +855,18 @@ class TwitchController extends Controller
             }
         }
 
+        /**
+         * Check cache for game/status.
+         */
+        $cacheId = md5($channel);
+        $cacheGame = sprintf('twitch_game_%s', $cacheId);
+        $cacheStatus = sprintf('twitch_status_%s', $cacheId);
+
+        $cacheKey = $route === 'game' ? $cacheGame : $cacheStatus;
+        if (Cache::has($cacheKey)) {
+            return Helper::text(Cache::get($cacheKey));
+        }
+
         try {
             $getChannel = $this->api->channelById($channel);
         } catch (TwitchApiException $ex) {
@@ -859,11 +875,20 @@ class TwitchController extends Controller
             return Helper::text($ex->getMessage());
         }
 
+        $game = $getChannel['game']['name'];
+        $status = $getChannel['title'];
+
+        /**
+         * We can cache both values as it's from the same request anyways.
+         */
+        Cache::put($cacheGame, $game, config('twitch.cache.game'));
+        Cache::put($cacheStatus, $status, config('twitch.cache.status'));
+
         if ($route === 'game') {
-            return Helper::text($getChannel['game']['name'] ?: '');
+            return Helper::text($game ?: '');
         }
 
-        return Helper::text($getChannel['title']);
+        return Helper::text($status);
     }
 
     /**
@@ -1811,7 +1836,7 @@ class TwitchController extends Controller
              * Cache subpoints for one minute,
              * to prevent excessive requests to the Twitch API.
              */
-            Cache::put($cacheKey, $subpoints, 60);
+            Cache::put($cacheKey, $subpoints, config('twitch.cache.subpoints'));
 
             /**
              * Subtract user-supplied value.
@@ -2190,6 +2215,14 @@ class TwitchController extends Controller
             }
         }
 
+        /**
+         * Load viewercount from cache to prevent unneccessary API request.
+         */
+        $cacheKey = sprintf('twitch_viewercount_%s', md5($channel));
+        if (Cache::has($cacheKey)) {
+            return Helper::text(Cache::get($cacheKey));
+        }
+
         $stream = $this->twitchApi->streams($channel, $this->version);
 
         if (!empty($stream['status'])) {
@@ -2202,6 +2235,8 @@ class TwitchController extends Controller
         }
 
         $viewers = $stream['stream']['viewers'];
+        // Add viewercount to the cache and cache it for 60 seconds.
+        Cache::put($cacheKey, $viewers, config('twitch.cache.viewercount'));
         return Helper::text($viewers);
     }
 

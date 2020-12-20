@@ -161,7 +161,20 @@ return [
         Alaouy\Youtube\YoutubeServiceProvider::class,
         Syntax\SteamApi\SteamApiServiceProvider::class,
 
+        /**
+         * Twitch's official APIs
+         */
         App\Providers\TwitchApiProvider::class,
+
+        /**
+         * TwitchEmotes.com API
+         */
+        App\Providers\TwitchEmotesApiProvider::class,
+
+        /**
+         * BetterTTV
+         */
+        App\Providers\BttvApiProvider::class,
     ],
 
     /*

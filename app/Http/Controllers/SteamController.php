@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use App\Helpers\Helper;
 use Steam;
+
+use Cache;
 use Exception;
 use Log;
 use Redirect;
+use Validator;
 
 class SteamController extends Controller
 {
@@ -62,15 +64,6 @@ class SteamController extends Controller
         'uy' => 'Uruguayan Peso',
         'vn' => 'Vietnamese Dong',
         'za' => 'South African Rand',
-    ];
-
-    /**
-     * Array of standard HTTP headers to return back to the client
-     *
-     * @var array
-     */
-    private $headers = [
-        'Access-Control-Allow-Origin' => '*'
     ];
 
     /**
@@ -202,6 +195,43 @@ class SteamController extends Controller
         }
 
         return Helper::text(implode($values, " - "));
+    }
+
+    /**
+     * Retrieves the global player count for the specified app ID.
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function globalPlayers(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'appid' => 'required|integer|min:10',
+        ]);
+
+        if ($validator->fails()) {
+            return Helper::text('Missing or invalid Steam app ID');
+        }
+
+        $appId = $request->input('appid');
+        $cacheKey = sprintf('steam_global-players_%s', intval($appId));
+
+        if (Cache::has($cacheKey)) {
+            return Helper::text(Cache::get($cacheKey));
+        }
+
+        $apiUrl = sprintf('https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=%s', $appId);
+        $response = Helper::get($apiUrl);
+
+        $data = $response['response'];
+        if (!isset($data['player_count']) || $data['result'] !== 1) {
+            return Helper::text(sprintf('Steam API returned an invalid response for app ID: %s', $appId));
+        }
+
+        $count = $data['player_count'];
+        Cache::put($cacheKey, $count, 60);
+        return Helper::text($count);
     }
 
     /**

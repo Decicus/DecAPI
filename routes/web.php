@@ -94,6 +94,8 @@ Route::group(['prefix' => 'steam', 'as' => 'steam.', 'middleware' => 'ratelimit:
 
     Route::get('gamesearch', ['as' => 'gamesearch', 'uses' => 'SteamController@gameInfoBySearch']);
 
+    Route::get('global-players', ['as' => 'global-players', 'uses' => 'SteamController@globalPlayers']);
+
     Route::get('{hours}/{player_id?}/{app_id?}/{readable?}', ['as' => 'hours', 'uses' => 'SteamController@hours'])
         ->where('hours', '(hours(\.php)?)')
         ->where('player_id', '([A-z:0-9]+)')

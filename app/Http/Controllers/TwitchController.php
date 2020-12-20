@@ -151,19 +151,27 @@ class TwitchController extends Controller
         $baseUrl = url('/twitch/');
 
         $urls = [
-            'chat_rules' => 'chat_rules/{CHANNEL}',
-            'clusters' => 'clusters/{CHANNEL}',
+            'accountage' => 'accountage/{USER}',
+            'avatar' => 'avatar/{USER}',
+            'creation' => 'creation/{USER}',
             'followage' => 'followage/{CHANNEL}/{USER}',
+            'followcount' => 'followcount/{CHANNEL}',
             'followed' => 'followed/{USER}/{CHANNEL}',
             'followers' => 'followers/{CHANNEL}',
             'following' => 'following/{USER}',
             'game' => 'game/{CHANNEL}',
             'help' => 'help/{SEARCH}',
             'highlight' => 'highlight/{CHANNEL}',
+            'highlight_random' => 'highlight_random/{CHANNEL}',
             'hosts' => 'hosts/{CHANNEL}',
+            'hostscount' => 'hostscount/{CHANNEL}',
             'id' => 'id/{USER}',
             'ingests' => 'ingests',
+            'latest_sub' => 'latest_sub/{CHANNEL}',
             'multi' => 'multi/{STREAMS}',
+            'random_sub' => 'random_sub/{CHANNEL}',
+            'random_user' => 'random_user/{CHANNEL}',
+            'subage' => 'subage/{CHANNEL}/{USER}',
             'subcount' => 'subcount/{CHANNEL}',
             'subpoints' => 'subpoints/{CHANNEL}',
             'subscriber_emotes' => 'subscriber_emotes/{CHANNEL}',
@@ -171,8 +179,11 @@ class TwitchController extends Controller
             'status' => 'status/{CHANNEL}',
             'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
+            'total_views' => 'total_views/{CHANNEL}',
             'upload' => 'upload/{CHANNEL}',
             'uptime' => 'uptime/{CHANNEL}',
+            'viewercount' => 'viewercount/{CHANNEL}',
+            'videos' => 'videos/{CHANNEL}',
             'vod_replay' => 'vod_replay/{CHANNEL}',
         ];
 
@@ -280,60 +291,6 @@ class TwitchController extends Controller
     }
 
     /**
-     * Returns a text list with chat rules of the specified channel.
-     *
-     * @param  Request $request
-     * @param  string  $channel Channel name
-     * @return Response
-     */
-    public function chatRules(Request $request, $channel = null)
-    {
-        $channel = $channel ?: $request->input('channel', null);
-
-        if (empty($channel)) {
-            return Helper::text(__('generic.channel_name_required'));
-        }
-
-        $url = sprintf('https://api.twitch.tv/api/channels/%s/chat_properties', $channel);
-        $data = $this->twitchApi->get($url, true, [
-            'Client-ID' => 'kimne78kx3ncx6brgo4mv6wki5h1ko',
-        ]);
-
-        if (isset($data['error'])) {
-            return Helper::text($data['message']);
-        }
-
-        $rules = $data['chat_rules'];
-
-        if (empty($rules)) {
-            return Helper::text(__('twitch.no_chat_rules', ['channel' => $channel]));
-        }
-
-        $rules = implode(PHP_EOL, $rules);
-        return Helper::text($rules);
-    }
-
-    /**
-     * Returns the Twitch chat cluster for the specified channel.
-     * Added purely for backwards compatibility as it's not necessary as of March 23rd 2016.
-     *
-     * @param  Request $request
-     * @param  string  $channel Channel name
-     * @return Response
-     */
-    public function clusters(Request $request, $channel = null)
-    {
-        $channel = $channel ?: $request->input('channel', null);
-
-        if (empty($channel)) {
-            return $this->error(__('generic.channel_name_required'));
-        }
-
-        // TODO: Just remove this route completely.
-        return Helper::text('aws');
-    }
-
-    /**
      * Retrieve the creation time and date of the specified user.
      *
      * @param  Request $request
@@ -383,20 +340,6 @@ class TwitchController extends Controller
         $time->setTimezone($tz);
 
         return Helper::text($time->format($format));
-    }
-
-    /**
-     * Uses the specified subscriber count to see how many subscribers are needed to open a certain amount of emoteslots.
-     *
-     * ! NOTE: Deprecated/removed. Returns a 404 page not found.
-     *
-     * @param  Request $request
-     * @param  string  $channel The channel name
-     * @return Response
-     */
-    public function emoteslots(Request $request, $channel = null)
-    {
-        return Helper::text('404 Page Not Found', 404);
     }
 
     /**
@@ -1257,17 +1200,28 @@ class TwitchController extends Controller
      */
     public function ingests()
     {
-        $ingests = $this->twitchApi->ingests();
+        /**
+         * Use new ingests API
+         */
+        $ingests = Helper::get('https://ingest.twitch.tv/ingests');
+
         if (empty($ingests['ingests'])) {
             return $this->error(__('generic.error_loading_data'));
         }
 
+        /**
+         * Sort the ingest servers by the location name
+         */
+        usort($ingests['ingests'], function($a, $b) {
+            return strcasecmp($a['name'], $b['name']);
+        });
+
         $info = '';
-        $pad = '    ';
-        foreach ($ingests['ingests'] as $server) {
-            $info .= 'Name: ' . $server['name'] . PHP_EOL;
-            $info .= $pad . 'Template: ' . $server['url_template'] . PHP_EOL;
-            $info .= $pad . 'Availability: ' . ($server['availability'] ? 'Yes' : 'No') . PHP_EOL . PHP_EOL;
+        $servers = $ingests['ingests'];
+        foreach ($servers as $server) {
+            $info .= sprintf('Name: %s%s', $server['name'], PHP_EOL);
+            $info .= sprintf('    Template: %s%s', $server['url_template'], PHP_EOL);
+            $info .= sprintf('    Availability: %.1f%s%s', $server['availability'], PHP_EOL, PHP_EOL);
         }
 
         return Helper::text($info);
@@ -1282,7 +1236,6 @@ class TwitchController extends Controller
      */
     public function multi(Request $request, $streams = null)
     {
-        $query = $request->input('query', null);
         $service = strtolower($request->input('service', 'multistream'));
         $streams = $streams ?: $request->input('streams', null);
 

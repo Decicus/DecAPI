@@ -125,21 +125,8 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
 
     Route::get('avatar/{user?}', 'TwitchController@avatar');
 
-    Route::group(['prefix' => 'blog', 'as' => 'blog.'], function() {
-        Route::get('latest', ['as' => 'latest', 'uses' => 'TwitchBlogController@latest']);
-    });
-
-    Route::get('chat_rules/{channel?}', ['as' => 'chat_rules', 'uses' => 'TwitchController@chatRules'])
-        ->where('channel', $channelRegex);
-
-    Route::get('clusters/{channel?}', 'TwitchController@clusters')
-        ->where('channel', $channelRegex);
-
     Route::get('{creation}/{channel?}', 'TwitchController@creation')
         ->where('creation', '(creation(\.php)?)')
-        ->where('channel', $channelRegex);
-
-    Route::get('emoteslots/{channel?}', 'TwitchController@emoteslots')
         ->where('channel', $channelRegex);
 
     Route::get('followage/{channel?}/{user?}', 'TwitchController@followAge')

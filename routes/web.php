@@ -59,12 +59,6 @@ Route::group(['prefix' => 'ffz', 'as' => 'ffz.'], function() {
         ->where('channel', '.*');
 });
 
-Route::group(['prefix' => 'lever', 'as' => 'lever.'], function() {
-    Route::get('/', ['as' => 'base', 'uses' => 'LeverController@base']);
-    Route::get('{twitch}', ['as' => 'twitch', 'uses' => 'LeverController@twitch'])
-        ->where('twitch', '(twitch(\.php)?)');
-});
-
 Route::group(['prefix' => 'math', 'as' => 'math.'], function() {
     Route::get('/', ['as' => 'evaluate', 'uses' => 'MathController@evaluate']);
 });

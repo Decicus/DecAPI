@@ -1312,7 +1312,7 @@ class TwitchController extends Controller
             ]));
         }
 
-         if ($request->exists('logout')) {
+        if ($request->exists('logout')) {
             return redirect()->route('auth.twitch.logout');
         }
 
@@ -1406,6 +1406,24 @@ class TwitchController extends Controller
         }
 
         $subscriptions = $data['subscriptions'];
+
+        /**
+         * Hotfix for Twitch API (Kraken V5) bug.
+         *
+         * Seems Kraken has an issue with sorting when direction=desc and limit > 1, though I'm not sure about exact params.
+         * The result seems to be completely randomized, which is just silly.
+         * We try to avoid that by sorting by `created_at`, but only for `latest`.
+         * It kinda 'helps' making the "random sub" even more random, ironically.
+         */
+        if ($action === 'latest') {
+            usort($subscriptions, function($a, $b) {
+                $first = strtotime($a['created_at']);
+                $second = strtotime($b['created_at']);
+
+                return $first < $second;
+            });
+        }
+
         $output = [];
 
         if ($action == 'random') {

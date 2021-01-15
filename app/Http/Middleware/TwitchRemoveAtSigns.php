@@ -62,9 +62,9 @@ class TwitchRemoveAtSigns
         }
 
         /**
-         * Merge/replace the new strings into the request.
+         * Merge the new strings into the request.
          */
-        $request->replace($new);
+        $request->merge($new);
 
         return $next($request);
     }

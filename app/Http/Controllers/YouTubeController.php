@@ -89,16 +89,36 @@ class YouTubeController extends Controller
             }
 
             /**
+             * The YouTube API seems to return basic information about private videos as well,
+             * even though we can't see any "real" information about them.
+             *
+             * This actually causes issues when we attempt to sort the videos,
+             * as `videoPublishedAt` isn't a field that's available.
+             *
+             * Instead we filter the videos, so we only have the public ones left.
+             */
+            $results = array_filter($results,
+                function($video) {
+                    $privacyStatus = $video->status->privacyStatus ?? 'private';
+                    return $privacyStatus === 'public';
+                }
+            );
+
+            /**
              * Seems that YouTube sorts the API response for uploaded videos
              * by their upload timestamp, instead of their
              * "published publicly to YouTube" timestamp.
              *
              * With scheduled uploads, this can become an issue, so we're re-sorting
              * the whole array to take this into account.
+             *
+             * The fallback for `date('c', 0)` is used when `videoPublishedAt` isn't an available field.
+             * All public videos (since we filter out any non-public videos earlier), _should_ have this field.
+             * So it might be an unnecessary precaution.
              */
             usort($results, function($a, $b) {
-                $publishOne = $a->contentDetails->videoPublishedAt;
-                $publishTwo = $b->contentDetails->videoPublishedAt;
+                $publishOne = $a->contentDetails->videoPublishedAt ?? date('c', 0);
+                $publishTwo = $b->contentDetails->videoPublishedAt ?? date('c', 0);
 
                 return strtotime($publishTwo) - strtotime($publishOne);
             });

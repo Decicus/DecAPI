@@ -61,6 +61,10 @@ class TwitchApiController extends Controller
 
         if ($result->getStatusCode() === 410) {
             Log::error(sprintf('%s has been removed - 410 Gone', $url));
+
+            if ($override) {
+                return ['status' => 410, 'message' => '[Error from Twitch API] 410 Gone - This API has been removed.'];
+            }
         }
 
         return json_decode($result->getBody(), true);
@@ -205,6 +209,11 @@ class TwitchApiController extends Controller
 
         $hostUrl = 'https://tmi.twitch.tv/hosts?include_logins=1&target={_id}';
         $hosts = $this->get(str_replace('{_id}', $channel, $hostUrl), true);
+
+        if (isset($hosts['status'])) {
+            return $hosts;
+        }
+
         return $hosts['hosts'];
     }
 

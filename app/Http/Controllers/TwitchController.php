@@ -1158,6 +1158,11 @@ class TwitchController extends Controller
         }
 
         $hosts = $this->twitchApi->hosts($channel);
+
+        if (isset($hosts['message'])) {
+            return Helper::text($hosts['message']);
+        }
+
         return Helper::text(count($hosts));
     }
 

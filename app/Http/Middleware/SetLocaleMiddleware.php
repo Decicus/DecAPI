@@ -16,7 +16,10 @@ class SetLocaleMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $locale = $request->input('lang', 'en');
+        /**
+         * Filter away invalid characters from specified locale
+         */
+        $locale = preg_replace('[^A-z-]', '', $request->input('lang', 'en'));
         App::setLocale($locale);
 
         return $next($request);

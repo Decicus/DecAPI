@@ -22,9 +22,9 @@ The following basic rules should apply and are already defined in the `.editorco
 
 - Indentation: 4 spaces - Sometimes referred to as "soft tabs"
 - Newlines: Unix-style - Sometimes referred to as `LF` or `\n`
-- Empty lines are fine, but they should not include any whitespace
+- Empty lines are fine as long as they're not excessive. They should not include any extra whitespace
 - Lines should not have any trailing whitespace
-    - The exception is Markdown files, where trailing whitespace might indicate a line break
+    - **Exception**: Markdown (`.md`) files, where trailing whitespace might indicate a line break
 
 These formatting rules apply even if the file is not following is already, as there's a chance some of the files from early development have not been edited since `.editorconfig` was added.
 

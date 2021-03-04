@@ -59,12 +59,20 @@ class TwitchApiController extends Controller
         $client = new Client();
         $result = $client->request('GET', ( !$override ? self::API_BASE_URL : '' ) . $url, $settings);
 
-        if ($result->getStatusCode() === 410) {
+        $statusCode = $result->getStatusCode();
+        if ($statusCode === 410) {
             Log::error(sprintf('%s has been removed - 410 Gone', $url));
 
             if ($override) {
                 return ['status' => 410, 'message' => '[Error from Twitch API] 410 Gone - This API has been removed.'];
             }
+        }
+
+        /**
+         * Hotfix to avoid polluting logs for removed API that doesn't use 410.
+         */
+        if ($statusCode === 404) {
+            return ['status' => 404, 'message' => '[Error from Twitch API] 404 Not Found'];
         }
 
         return json_decode($result->getBody(), true);

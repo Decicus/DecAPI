@@ -163,17 +163,10 @@ class TwitchController extends Controller
          * Filter away IDs that have already been retrieved
          * from cached users.
          */
-        $checkIds = [];
-        foreach ($ids as $id)
-        {
-            $notCached = $cachedUsers
-                        ->where('id', $id)
-                        ->isEmpty();
-
-            if ($notCached) {
-                $checkIds[] = $id;
-            }
-        }
+        $cachedUserIds = $cachedUsers
+                            ->pluck('id')
+                            ->toArray();
+        $checkIds = array_diff($ids, $cachedUserIds);
 
         /**
          * Take the missing IDs, split them into 100 chunks

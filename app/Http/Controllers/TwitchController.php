@@ -1144,6 +1144,15 @@ class TwitchController extends Controller
             return Helper::text($message, (empty($nb->channel) ? $code : 200));
         }
 
+        /**
+         * Verify that the `hosts` field exists at all.
+         * I don't think this scenario will ever trigger,
+         * but better to be safe than sorry... I guess.
+         */
+        if (!isset($hosts['hosts'])) {
+            return Helper::text(__('twitch.invalid_api_data'));
+        }
+
         $hostChannels = $hosts['hosts'];
         if (empty($hostChannels)) {
             return Helper::text(__('twitch.no_hosts', ['channel' => ($channelName ?: $channel)]));
@@ -1151,7 +1160,6 @@ class TwitchController extends Controller
 
         /**
          * Extract all the hosting channels
-         *
          * We don't need the `target_id`, as we already know who that is.
          */
         $hostChannelIds = array_map(
@@ -1160,6 +1168,16 @@ class TwitchController extends Controller
             },
             $hostChannels
         );
+
+        /**
+         * Define which IDs we should retrieve the usernames for.
+         * If `limit` is specified, we don't need to retrieve all of them
+         * And can reduce database/API calls.
+         */
+        $usernameIds = $hostChannelIds;
+        if ($limit > 0) {
+            $usernameIds = array_slice($hostChannelIds, 0, $limit);
+        }
 
         /**
          * Check our Twitch user cache for the
@@ -1171,10 +1189,25 @@ class TwitchController extends Controller
          * The result is a collection of CachedTwitchUser instances.
          * Which we can then use to extract the usernames.
          */
-        $hostUsers = $this->usernamesByIds($hostChannelIds);
+        $hostUsers = $this->usernamesByIds($usernameIds);
         $hostList = $hostUsers
                         ->pluck('username')
                         ->toArray();
+
+        /**
+         * We first grab the difference between `usernameIds` and `hostChannelIds`
+         * The result of that should be the "hosting IDs" that *were not* queried for usernames.
+         *
+         * Once that has been established, we merge them at the end of `$hostList`.
+         *
+         * The result is that `$hostList` now includes usernames at the beginning,
+         * then user IDs (if any) at the end.
+         *
+         * The only scenario where user IDs will be used, should in theory be for the scenarios where
+         * `A, B, C and XYZ others` would occur. So it's only really used for counting purposes.
+         */
+        $hostChannelDiff = array_diff($hostChannelIds, $usernameIds);
+        $hostList = array_merge($hostList, $hostChannelDiff);
 
         $implode = $request->exists('implode') || $request->exists('limit') ? $separator : PHP_EOL;
         if ($limit <= 0 || count($hostList) <= $limit) {

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\Controller;
 
+use App\CachedTwitchUser;
 use App\User;
 use Auth;
 use App\Helpers\Helper;
@@ -139,6 +140,71 @@ class TwitchController extends Controller
         } catch (Exception $e) {
             throw $e;
         }
+    }
+
+    /**
+     * TODO: Move this to a proper location, same with `userByName()`.
+     * Retrieves usernames by their IDs.
+     *
+     * First it checks the local database cache (`CachedTwitchUser`).
+     * Any IDs that haven't been cached is then queued up for querying the API,
+     * in batches of 100 IDs per request. Results are then cached for next time.
+     *
+     * @param array $ids Array of Twitch user IDs
+     * @return App\CachedTwitchUser Collection of CachedTwitchUsers instances.
+     */
+    private function usernamesByIds($ids = [])
+    {
+        $cachedUsers = CachedTwitchUser
+                        ::whereIn('id', $ids)
+                        ->get();
+
+        /**
+         * Filter away IDs that have already been retrieved
+         * from cached users.
+         */
+        $checkIds = [];
+        foreach ($ids as $id)
+        {
+            $notCached = $cachedUsers
+                        ->where('id', $id)
+                        ->isEmpty();
+
+            if ($notCached) {
+                $checkIds[] = $id;
+            }
+        }
+
+        /**
+         * Take the missing IDs, split them into 100 chunks
+         * Use said chunks to request user information.
+         */
+        $idChunks = array_chunk($checkIds, 100);
+        foreach ($idChunks as $chunk)
+        {
+            /**
+             * Retrieve information about all the user IDs
+             */
+            $users = $this->api->usersByIds($chunk);
+
+            /**
+             * Cache user IDs and add it to the original `cachedUsers`.
+             * Next time most users should be loaded from database.
+             */
+            foreach ($users as $user)
+            {
+                $cacheUser = new CachedTwitchUser([
+                    'id' => $user['id'],
+                    'username' => $user['login'],
+                ]);
+
+                $cacheUser->save();
+
+                $cachedUsers->push($cacheUser);
+            }
+        }
+
+        return $cachedUsers;
     }
 
     /**
@@ -1050,22 +1116,13 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
         $channelName = null;
-        $wantsJson = true;
-        $displayNames = $request->exists('display_name');
         $id = $request->input('id', 'false');
         $limit = intval($request->input('limit', 0));
         $separator = $request->input('separator', ', ');
 
-        if ($request->exists('list') || $request->exists('implode') || $request->exists('limit')) {
-            $wantsJson = false;
-        }
-
         $nb = new Nightbot($request);
         if (empty($channel)) {
             $message = __('generic.channel_name_required');
-            if ($wantsJson) {
-                return $this->errorJson(['message' => $message, 'status' => 404], 404);
-            }
 
             if (empty($nb->channel)) {
                 return Helper::text($message);
@@ -1089,34 +1146,42 @@ class TwitchController extends Controller
         if (!empty($hosts['status'])) {
             $message = $hosts['message'];
             $code = $hosts['status'];
-            if ($wantsJson) {
-                return $this->errorJson(['message' => $message, 'status' => $code], $code);
-            }
 
             // Return 200 if it's a Nightbot request to prevent "Remote Server Returned Code 404"
             return Helper::text($message, (empty($nb->channel) ? $code : 200));
         }
 
-        if (empty($hosts)) {
-            if ($wantsJson) {
-                return Helper::json([]); // just send an empty host list
-            }
-
+        $hostChannels = $hosts['hosts'];
+        if (empty($hostChannels)) {
             return Helper::text(__('twitch.no_hosts', ['channel' => ($channelName ?: $channel)]));
         }
 
-        $hostList = [];
-        foreach($hosts as $host) {
-            if ($displayNames) {
-                $hostList[] = $host['host_display_name'];
-            } else {
-                $hostList[] = $host['host_login'];
-            }
-        }
+        /**
+         * Extract all the hosting channels
+         *
+         * We don't need the `target_id`, as we already know who that is.
+         */
+        $hostChannelIds = array_map(
+            function($host) {
+                return $host['host_id'];
+            },
+            $hostChannels
+        );
 
-        if ($wantsJson) {
-            return Helper::json($hostList);
-        }
+        /**
+         * Check our Twitch user cache for the
+         * usernames of the hosting channels.
+         *
+         * If they are not already cached, `usernamesByIds()` will request
+         * that data from the API, then cache it.
+         *
+         * The result is a collection of CachedTwitchUser instances.
+         * Which we can then use to extract the usernames.
+         */
+        $hostUsers = $this->usernamesByIds($hostChannelIds);
+        $hostList = $hostUsers
+                        ->pluck('username')
+                        ->toArray();
 
         $implode = $request->exists('implode') || $request->exists('limit') ? $separator : PHP_EOL;
         if ($limit <= 0 || count($hostList) <= $limit) {
@@ -1160,10 +1225,19 @@ class TwitchController extends Controller
         $hosts = $this->twitchApi->hosts($channel);
 
         if (isset($hosts['message'])) {
-            return Helper::text($hosts['message']);
+            return Helper::text(sprintf('[Error from Twitch API] %s', $hosts['message']));
         }
 
-        return Helper::text(count($hosts));
+        /**
+         * Not sure what would cause `hosts` to not be set,
+         * and not `message`, but we're checking it.
+         */
+        if (!isset($hosts['hosts'])) {
+            return Helper::text(__('twitch.invalid_api_data'));
+        }
+
+        $count = count($hosts['hosts']);
+        return Helper::text($count);
     }
 
     /**

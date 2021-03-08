@@ -215,14 +215,9 @@ class TwitchApiController extends Controller
             throw new Exception('You have to specify a channel');
         }
 
-        $hostUrl = 'https://tmi.twitch.tv/hosts?include_logins=1&target={_id}';
-        $hosts = $this->get(str_replace('{_id}', $channel, $hostUrl), true);
-
-        if (isset($hosts['status'])) {
-            return $hosts;
-        }
-
-        return $hosts['hosts'];
+        $url = sprintf('channels/%s/hosts', $channel);
+        $hosts = $this->get($url, false, ['Accept' => 'application/vnd.twitchtv.v5+json']);
+        return $hosts;
     }
 
     /**

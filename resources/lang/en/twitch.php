@@ -88,4 +88,9 @@ return [
      * User
      */
     'user_not_found' => 'User not found: :user',
+
+    /**
+     * API deprecation
+     */
+    'api_removed_by_twitch' => '[Deprecated] This API has been removed by Twitch.',
 ];

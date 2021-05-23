@@ -437,6 +437,13 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
+                /**
+                 * Save username/channel name in separate variables before
+                 * overwriting them to use in later calls.
+                 */
+                $username = $user;
+                $channelName = $channel;
+
                 $channel = $this->userByName($channel)->id;
                 $user = $this->userByName($user)->id;
             } catch (Exception $e) {
@@ -445,8 +452,18 @@ class TwitchController extends Controller
         }
 
         $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->version);
+        $status = $getFollow['status'] ?? null;
+        if (!empty($status)) {
+            /**
+             * 404 = Follow not found, when :user isn't following :channel.
+             */
+            if ($status === 404) {
+                return Helper::text(__('twitch.follow_not_found', [
+                    'user' => $username ?? $user,
+                    'channel' => $channelName ?? $channel,
+                ]));
+            }
 
-        if (!empty($getFollow['status'])) {
             return Helper::text($getFollow['message']);
         }
 

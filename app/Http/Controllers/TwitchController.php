@@ -15,7 +15,6 @@ use App\Helpers\Nightbot;
 use App\TwitchHelpArticle as HelpArticle;
 
 use App\Repositories\TwitchApiRepository;
-use App\Repositories\TwitchEmotesApiRepository;
 
 use Carbon\Carbon;
 use DateTimeZone;
@@ -28,7 +27,6 @@ use Exception;
 use Log;
 
 use App\Exceptions\TwitchApiException;
-use App\Exceptions\TwitchEmotesApiException;
 
 class TwitchController extends Controller
 {
@@ -63,11 +61,6 @@ class TwitchController extends Controller
     private $api;
 
     /**
-     * @var TwitchEmotesApiRepository
-     */
-    private $emotes;
-
-    /**
      * The 'Accept' header to receive Twitch API V5 responses.
      *
      * @var array
@@ -78,12 +71,10 @@ class TwitchController extends Controller
      * Initializes the controller with a reference to TwitchApiController.
      *
      * @param TwitchApiRepository $apiRepository
-     * @param TwitchEmotesApiRepository $emotesApi
      */
-    public function __construct(TwitchApiRepository $apiRepository, TwitchEmotesApiRepository $emotesApi)
+    public function __construct(TwitchApiRepository $apiRepository)
     {
         $this->api = $apiRepository;
-        $this->emotes = $emotesApi;
         $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
     }
 

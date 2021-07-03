@@ -1957,12 +1957,17 @@ class TwitchController extends Controller
 
         /**
          * At this point we only want the emote codes.
+         *
+         * `array_values` is used because it seems that sometimes it returns an array with missing keys.
+         * When JSON-encoding it, it turns it into an object.
          */
-        $emoteCodes = array_map(
-            function($emote) {
-                return $emote['code'];
-            },
-            $emotes
+        $emoteCodes = array_values(
+            array_map(
+                function($emote) {
+                    return $emote['code'];
+                },
+                $emotes
+            )
         );
 
         if ($wantsJson) {

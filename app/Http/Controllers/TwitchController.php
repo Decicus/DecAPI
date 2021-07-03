@@ -1875,9 +1875,16 @@ class TwitchController extends Controller
         }
 
         try {
-            $emotes = $this->emotes->channel($channel);
+            $emotes = $this->api->channelEmotesById($channel);
+
+            /**
+             * We only care about subscriber emotes for this API endpoint.
+             */
+            $emotes = array_filter($emotes, function($emote) {
+                return $emote['type'] === 'subscriptions';
+            });
         }
-        catch (TwitchEmotesApiException $ex) {
+        catch (TwitchApiException $ex) {
             if ($wantsJson) {
                 return $this->errorJson([
                     'error' => 'API error',
@@ -1886,7 +1893,7 @@ class TwitchController extends Controller
                 ], 500);
             }
 
-            return Helper::text('[TwitchEmotes API Error] ' . $ex->getMessage());
+            return Helper::text('[Twitch API Error] ' . $ex->getMessage());
         }
         catch (Exception $ex)
         {
@@ -1901,7 +1908,7 @@ class TwitchController extends Controller
             return Helper::text(__('generic.error_loading_data_api'));
         }
 
-        if (empty($emotes['emotes'])) {
+        if (empty($emotes)) {
             $message = __('twitch.channel_missing_subemotes');
             if ($wantsJson) {
                 return $this->errorJson(['message' => $message], 404);
@@ -1910,23 +1917,62 @@ class TwitchController extends Controller
             return Helper::text($message);
         }
 
-        // We only care about the emote codes.
-        // or do we?
+        /**
+         * Changes were made this setup pretty scuffed when migrating to Twitch's Helix API.
+         *
+         * Ideally I'd wanna move most of the logic in terms of filtering and sorting
+         * into the collection and make the repository function return the collection.
+         *
+         * But right now I'm too lazy to think about a clever way, so this is what I'm doing.
+         */
         if ($wantsPlans) {
-            $plans = $emotes['plans'];
-            $emotesData = $emotes['emotes'];
-            $emotesTiers = $plans->sortEmotes($emotesData);
-            return $this->json([
+            /**
+             * Map the tiers from the Twitch API
+             */
+            $tierMapping = [
+                '1000' => 'tier1',
+                '2000' => 'tier2',
+                '3000' => 'tier3',
+            ];
+
+            /**
+             * Create an 'empty skeleton' for the response.
+             */
+            $emoteData = [
                 'emotes' => [
-                    'tier1' => $emotesTiers['$4.99'],
-                    'tier2' => $emotesTiers['$9.99'],
-                    'tier3' => $emotesTiers['$24.99'],
+                    'tier1' => [],
+                    'tier2' => [],
+                    'tier3' => [],
                 ],
-            ]);
+            ];
+
+            /**
+             * Go through each emote and add it to the response based on the tier.
+             */
+            foreach ($emotes as $emote)
+            {
+                $tier = $emote['tier'];
+
+                if (!isset($tierMapping[$tier])) {
+                    continue;
+                }
+
+                $tierName = $tierMapping[$tier];
+                $emoteData[$tierName][] = $emote['code'];
+            }
+
+            return $this->json($emoteData);
         }
 
-        $emotes = $emotes['emotes'];
-        $emoteCodes = $emotes->codes();
+        /**
+         * At this point we only want the emote codes.
+         */
+        $emoteCodes = array_map(
+            function($emote) {
+                return $emote['code'];
+            },
+            $emotes
+        );
 
         if ($wantsJson) {
             return $this->json([

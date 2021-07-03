@@ -167,11 +167,6 @@ return [
         App\Providers\TwitchApiProvider::class,
 
         /**
-         * TwitchEmotes.com API
-         */
-        App\Providers\TwitchEmotesApiProvider::class,
-
-        /**
          * BetterTTV
          */
         App\Providers\BttvApiProvider::class,

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources\TwitchEmotes;
+namespace App\Http\Resources\Twitch;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class EmotesCollection extends ResourceCollection
+class EmoteCollection extends ResourceCollection
 {
     /**
      * Return the emote codes

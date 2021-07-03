@@ -1,7 +1,7 @@
 <?php
     return [
         /**
-         * $endpoint => $seconds
+         * $endpoint => $seconds (unless otherwise specified)
          *
          * $seconds = how long a value per channel / user should be cached.
          */
@@ -12,6 +12,13 @@
             'status' => 60,
             'subpoints' => 120,
             'viewercount' => 60,
+
+            /**
+             * TwitchApiRepository
+             *
+             * `channel_emotes` specifies minutes via `addMinutes()`.
+             */
+            'channel_emotes' => 60,
         ],
     ];
 ?>

@@ -9,6 +9,8 @@ use App\Exceptions\TwitchFormatException;
 
 use App\Http\Resources\Twitch as Resource;
 
+use Cache;
+
 class TwitchApiRepository
 {
     /**
@@ -91,6 +93,62 @@ class TwitchApiRepository
 
         $channels = $this->channelsByIds([$id]);
         return $channels[0];
+    }
+
+    /**
+     * Sends a request to the `channel emotes` endpoint: https://dev.twitch.tv/docs/api/reference#get-channel-emotes
+     *
+     * @param array $fields
+     *
+     * @return App\Http\Resources\Twitch\EmoteCollection
+     * @throws TwitchApiException
+     */
+    public function channelEmotes($fields = [])
+    {
+        $request = $this->client->get('/chat/emotes', $fields);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $channels = collect($request['data']);
+        return Resource\EmoteCollection::make($channels)
+                                       ->resolve();
+    }
+
+    /**
+     * Retrieve channel emote information by the channel's ID.
+     *
+     * @param string $id
+     * @return App\Http\Resources\Twitch\EmoteCollection
+     * @throws App\Exceptions\TwitchApiException|App\Exceptions\TwitchFormatException
+     */
+    public function channelEmotesById($id = '')
+    {
+        if (!is_string($id) && !is_int($id))
+        {
+            throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
+        }
+
+        /**
+         * Return cached emotes for this channel, if any.
+         */
+        $cacheKey = sprintf('TWITCH_API_CHANNEL_EMOTES_%s', $id);
+        if (Cache::has($cacheKey)) {
+            $cachedEmotes = Cache::get($cacheKey);
+            return $cachedEmotes;
+        }
+
+        $emotes = $this->channelEmotes(['broadcaster_id' => $id]);
+
+        /**
+         * Cache for amount of minutes as specified in config.
+         */
+        $cacheExpire = now()->addMinutes(config('twitch.cache.channel_emotes'));
+        Cache::put($cacheKey, $emotes, $cacheExpire);
+
+        return $emotes;
     }
 
     /**

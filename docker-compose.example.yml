@@ -22,6 +22,8 @@ services:
         restart: unless-stopped
         networks:
             - decapi
+        volumes:
+            - ./volumes/db:/var/lib/mysql
         environment:
             # Values are loaded from `.env`
             MYSQL_DATABASE: ${DB_DATABASE}

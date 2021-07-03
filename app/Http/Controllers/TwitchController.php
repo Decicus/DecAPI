@@ -1949,7 +1949,7 @@ class TwitchController extends Controller
                 }
 
                 $tierName = $tierMapping[$tier];
-                $emoteData[$tierName][] = $emote['code'];
+                $emoteData['emotes'][$tierName][] = $emote['code'];
             }
 
             return $this->json($emoteData);

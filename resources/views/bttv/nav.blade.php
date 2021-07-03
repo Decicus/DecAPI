@@ -5,4 +5,8 @@
             <a href="{{ route('bttv.home') }}" class="nav-link"><i class="fas fa-home fa-1x"></i> Home</a>
         </li>
     </ul>
+
+    <span class="navbar-text justify-content-end">
+        Powered by the <a href="https://betterttv.com/" class="navbar-link">BetterTTV</a> API.
+    </span>
 </nav>

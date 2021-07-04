@@ -100,16 +100,17 @@ class MiscController extends Controller
         $timezones = DateTimeZone::listIdentifiers();
         $tzlist = implode(PHP_EOL, $timezones);
         if (empty($tz)) {
-            return Helper::text("-- Available timezones:" . PHP_EOL . $tzlist);
+            return Helper::text(sprintf('-- Parameter `timezone` needs to be specified - Available timezones can be found here: %s', route('misc.timezones')));
         }
 
         if (!in_array($tz, $timezones)) {
-            return Helper::text(sprintf('-- Invalid timezone ("%s") - Available timezones:%s%s', $tz, PHP_EOL, $tzlist));
+            return Helper::text(sprintf('-- Invalid timezone specified ("%s") - Available timezones can be found here: %s', $tz, route('misc.timezones')));
         }
 
         $time = Carbon::now()
                 ->tz($tz)
                 ->format($format);
+
         return Helper::text($time);
     }
 

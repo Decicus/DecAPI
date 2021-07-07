@@ -1,11 +1,11 @@
-<div class="row mt-4 mb-2">
+<div class="row mt-4 mb-4">
 @foreach($emotes as $emote)
     @php
         $index = $loop->index + 1;
         $cdnUrl = sprintf('https://cdn.betterttv.net/emote/%s', $emote['id']);
     @endphp
 
-    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 text-center">
+    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 text-center mt-4 mb-4">
         <div class="card bg-secondary text-white">
             <div class="card-header bg-primary">
                 Emote code:
@@ -40,7 +40,7 @@
 
     @if ($index % 4 === 0)
         </div>
-        <div class="row mt-4 mb-2">
+        <div class="row">
     @endif
 @endforeach
 </div>

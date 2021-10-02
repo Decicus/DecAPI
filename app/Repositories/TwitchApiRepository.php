@@ -373,6 +373,28 @@ class TwitchApiRepository
     }
 
     /**
+     * Retrieves the bare minimum from the Helix subscriptions API,
+     * since we're only interested in the subscriber count/points.
+     *
+     * @param string $broadcasterId Channel ID
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function subscriptionsMeta($broadcasterId = '')
+    {
+        $cacheKey = sprintf('twitch_subscriptions-meta_%s', $broadcasterId);
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $data = $this->subscriptions($broadcasterId);
+        Cache::put($cacheKey, $data, config('twitch.cache.subscriptions_meta'));
+
+        return $data;
+    }
+
+    /**
      * Requests a specific subscription based on user ID (+ broadcaster ID).
      * https://dev.twitch.tv/docs/api/reference/#get-broadcaster-subscriptions
      *

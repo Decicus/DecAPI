@@ -27,6 +27,7 @@ class User extends JsonResource
             'offline_image' => $user['offline_image_url'],
             'view_count' => $user['view_count'],
             'email' => $user['email'] ?? null,
+            'created_at' => $user['created_at'],
         ];
     }
 }

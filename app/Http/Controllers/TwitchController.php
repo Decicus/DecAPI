@@ -283,6 +283,12 @@ class TwitchController extends Controller
                     $user = $this->api->userById($user);
                 }
 
+                if (empty($user)) {
+                    return Helper::text(__('twitch.user_not_found', [
+                        'user' => $user,
+                    ]));
+                }
+
                 $timestamp = $user['created_at'];
                 Cache::put($cacheKey, $timestamp, config('twitch.cache.created'));
             }
@@ -393,6 +399,12 @@ class TwitchController extends Controller
                 }
                 else {
                     $user = $this->api->userById($user);
+                }
+
+                if (empty($user)) {
+                    return Helper::text(__('twitch.user_not_found', [
+                        'user' => $user,
+                    ]));
                 }
 
                 $timestamp = $user['created_at'];

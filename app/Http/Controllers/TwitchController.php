@@ -40,7 +40,7 @@ class TwitchController extends Controller
      *
      * @var string
      */
-    private $subScopes = 'user_read+channel_subscriptions+channel:read:subscriptions+user:read:email';
+    private $subScopes = 'user_read+channel:read:subscriptions+user:read:email';
 
     /**
      * @var array
@@ -1598,78 +1598,86 @@ class TwitchController extends Controller
     public function subcount(Request $request, $subcount = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        $subtract = intval($request->input('subtract', 0));
-        $id = $request->input('id', 'false');
 
         if ($request->exists('logout')) {
             return redirect()->route('auth.twitch.logout');
         }
 
-        if (empty($channel) && !Auth::check()) {
+        if (empty($channel) && Auth::check()) {
+            $user = Auth::user();
+            $userData = $this->api->userById($user->id);
+            $name = $userData['login'];
+
+            $data = [
+                'page' => 'Subcount',
+                'route' => route('twitch.subcount', ['subcount' => 'subcount', 'channel' => $name])
+            ];
+            return view('twitch.subcount', $data);
+        }
+
+        if (empty($channel)) {
             return Helper::text(__('twitch.subcount_missing_channel'));
         }
 
-        if (!empty($channel)) {
-            $channel = strtolower($channel);
-            $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=' . $this->subScopes;
-            $needToReAuth = sprintf(__('twitch.subcount_needs_authentication'), $channel, $reAuth);
+        $subtract = intval($request->input('subtract', 0));
+        $id = $request->input('id', 'false');
+        $channel = strtolower(trim($channel));
+        $reAuth = route('auth.twitch.base') . '?redirect=subcount&scopes=' . $this->subScopes;
+        $needToReAuth = sprintf(__('twitch.subcount_needs_authentication'), $channel, $reAuth);
 
-            try {
-                $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
-            } catch (Exception $e) {
-                $field = $id === 'true' ? 'ID' : 'username';
-                return Helper::text('An error occurred when trying to find a channel with the ' . $field . ': ' . $channel);
-            }
-
-            if (empty($user)) {
-                return Helper::text($needToReAuth);
-            }
-
-            $scopes = explode('+', $user->scopes);
-            if (!in_array('channel_subscriptions', $scopes)) {
-                $needToReAuth .= '+' . implode('+', $scopes);
-                return Helper::text($needToReAuth);
-            }
-
-            try {
-                $token = Crypt::decrypt($user->access_token);
-            } catch (DecryptException $e) {
-                // Something weird happened with the encrypted token
-                // request channel owner to re-auth so it's encrypted properly
-                return Helper::text($needToReAuth);
-            }
-
-            if (empty($token)) {
-                return Helper::text($needToReAuth);
-            }
-
-            $data = $this->twitchApi->channelSubscriptions($user->id, $token, 1, 0, 'asc', $this->version);
-
-            // Invalid API response
-            if (empty($data)) {
-                return Helper::text(__('generic.error_loading_data_api'));
-            }
-
-            if (!empty($data['status'])) {
-                if ($data['status'] === 401) {
-                    return Helper::text($needToReAuth);
-                }
-
-                return Helper::text($data['message']);
-            }
-
-            return Helper::text($data['_total'] - $subtract);
+        try {
+            $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
+        } catch (Exception $e) {
+            $field = $id === 'true' ? 'ID' : 'username';
+            return Helper::text('An error occurred when trying to find a channel with the ' . $field . ': ' . $channel);
         }
 
-        $user = Auth::user();
-        $userData = $this->twitchApi->users($user->id, $this->version);
-        $name = $userData['name'];
+        if (empty($user)) {
+            return Helper::text($needToReAuth);
+        }
 
-        $data = [
-            'page' => 'Subcount',
-            'route' => route('twitch.subcount', ['subcount' => 'subcount', 'channel' => $name])
-        ];
-        return view('twitch.subcount', $data);
+        $scopes = explode('+', $user->scopes);
+        if (!in_array('channel:read:subscriptions', $scopes)) {
+            $needToReAuth .= '+' . implode('+', $scopes);
+            return Helper::text($needToReAuth);
+        }
+
+        try {
+            $token = Crypt::decrypt($user->access_token);
+        } catch (DecryptException $e) {
+            // Something weird happened with the encrypted token
+            // request channel owner to re-auth so it's encrypted properly
+            return Helper::text($needToReAuth);
+        }
+
+        if (empty($token)) {
+            return Helper::text($needToReAuth);
+        }
+
+        /**
+         * Retrieve subscriber data from Helix API,
+         * including subscriber count.
+         *
+         * This will return cached data if available.
+         */
+        $userId = $user->id;
+        try {
+            $this->api->setToken($token);
+            $subs = $this->api->subscriptionsMeta($userId);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.subcount_generic_error', [
+                'channel' => $channel,
+            ]));
+        }
+
+        $subcount = $subs['count'];
+        return Helper::text($subcount - $subtract);
     }
 
     /**
@@ -1682,91 +1690,77 @@ class TwitchController extends Controller
      */
     public function subpoints(Request $request, $channel = null)
     {
-        $id = $request->input('id', 'false');
+        if (empty($channel) && Auth::check()) {
+            $user = Auth::user();
+            $userData = $this->api->userById($user->id);
+            $name = $userData['login'];
 
-        if (empty($channel) && !Auth::check()) {
+            return view('twitch.subpoints', [
+                'page' => 'Subpoints',
+                'route' => route('twitch.subpoints', [
+                    'channel' => $name,
+                ]),
+            ]);
+        }
+
+        if (empty($channel)) {
             return Helper::text(__('twitch.subpoints_missing_channel'));
         }
 
-        if (!empty($channel)) {
-            $channel = strtolower($channel);
-            $reAuth = route('auth.twitch.base') . '?redirect=subpoints&scopes=' . $this->subScopes;
-            $needToReAuth = sprintf(__('twitch.subpoints_needs_authentication'), $channel, $reAuth);
+        $id = $request->input('id', 'false');
+        $channel = strtolower(trim($channel));
+        $reAuth = route('auth.twitch.base') . '?redirect=subpoints&scopes=' . $this->subScopes;
+        $needToReAuth = sprintf(__('twitch.subpoints_needs_authentication'), $channel, $reAuth);
 
-            try {
-                $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
-            } catch (Exception $e) {
-                $field = $id === 'true' ? 'ID' : 'username';
-                Log::error($e->getMessage());
-                return Helper::text('An error occurred when trying to find a channel with the ' . $field . ': ' . $channel);
-            }
-
-            if (empty($user)) {
-                return Helper::text($needToReAuth);
-            }
-
-            $scopes = explode('+', $user->scopes);
-            if (!in_array('channel:read:subscriptions', $scopes)) {
-                $needToReAuth .= '+' . implode('+', $scopes);
-                return Helper::text($needToReAuth);
-            }
-
-            /**
-             * Retrieve encrypted OAuth token from DB and attempt to decrypt.
-             */
-            try {
-                $token = Crypt::decrypt($user->access_token);
-            } catch (DecryptException $e) {
-                Log::error($e->getMessage());
-                return Helper::text($reAuth);
-            }
-
-            $cacheKey = 'twitch_subpoints_' . $user->id;
-
-            if (Cache::has($cacheKey)) {
-                $subpoints = Cache::get($cacheKey);
-                return Helper::text($subpoints);
-            }
-
-            /**
-             * Use OAuth token in Helix API requests and retrieve
-             * all subscribers for the specified channel
-             */
-            try {
-                $this->api->setToken($token);
-                $subs = $this->api->subscriptions($user->id);
-            }
-            catch (TwitchApiException $ex)
-            {
-                return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
-            }
-            catch (Exception $ex)
-            {
-                return Helper::text(__('twitch.subpoints_generic_error', [
-                    'channel' => $channel,
-                ]));
-            }
-
-            $subpoints = $subs['points'];
-
-            /**
-             * Cache subpoints for time specified in config/twitch.php (1 minute at the time of writing),
-             * to prevent excessive requests to the Twitch API.
-             */
-            Cache::put($cacheKey, $subpoints, config('twitch.cache.subpoints'));
-            return Helper::text($subpoints);
+        try {
+            $user = $id === 'true' ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
+        } catch (Exception $e) {
+            $field = $id === 'true' ? 'ID' : 'username';
+            Log::error($e->getMessage());
+            return Helper::text('An error occurred when trying to find a channel with the ' . $field . ': ' . $channel);
         }
 
-        $user = Auth::user();
-        $userData = $this->api->userById($user->id);
-        $name = $userData['login'];
+        if (empty($user)) {
+            return Helper::text($needToReAuth);
+        }
 
-        return view('twitch.subpoints', [
-            'page' => 'Subpoints',
-            'route' => route('twitch.subpoints', [
-                'channel' => $name,
-            ]),
-        ]);
+        $scopes = explode('+', $user->scopes);
+        if (!in_array('channel:read:subscriptions', $scopes)) {
+            $needToReAuth .= '+' . implode('+', $scopes);
+            return Helper::text($needToReAuth);
+        }
+
+        /**
+         * Retrieve encrypted OAuth token from DB and attempt to decrypt.
+         */
+        try {
+            $token = Crypt::decrypt($user->access_token);
+        } catch (DecryptException $e) {
+            Log::error($e->getMessage());
+            return Helper::text($reAuth);
+        }
+
+        /**
+         * Use OAuth token in Helix API requests and retrieve
+         * all subscribers for the specified channel
+         */
+        try {
+            $this->api->setToken($token);
+            $subs = $this->api->subscriptionsMeta($user->id);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.subpoints_generic_error', [
+                'channel' => $channel,
+            ]));
+        }
+
+        $subpoints = $subs['points'];
+        return Helper::text($subpoints);
     }
 
     /**

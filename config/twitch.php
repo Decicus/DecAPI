@@ -13,8 +13,14 @@
             // Stream title/status
             'status' => 60,
 
-            // Subscriber points
-            'subpoints' => 60,
+            /**
+             * Subscriptions meta API handler.
+             * Currently being used for subpoints/subcount and it's *shared*.
+             *
+             * Meaning if subpoints is fetched + cached, then subcount will also be cached for the same amount of time.
+             */
+            'subscriptions_meta' => 60,
+
             'viewercount' => 60,
 
             /**

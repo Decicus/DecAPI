@@ -70,6 +70,7 @@ return [
     'subage_needs_authentication' => '%s needs to authenticate to use subage (Subscription length): %s',
     'subcount_missing_channel' => 'Use ?channel=CHANNEL_NAME or /twitch/subcount/CHANNEL_NAME to get subcount.',
     'subcount_needs_authentication' => '%s needs to authenticate to use subcount: %s',
+    'subpoints_generic_error' => 'Unable to retrieve subscriber count for channel: :channel',
     'subpoints_missing_channel' => 'Please specify a channel name at the end of the URL - For example: /twitch/subpoints/CHANNEL_NAME',
     'subpoints_needs_authentication' => '%s needs to authenticate to use subpoints: %s',
     'subpoints_generic_error' => 'Unable to retrieve subscriber points for channel: :channel',

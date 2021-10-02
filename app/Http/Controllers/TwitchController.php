@@ -1683,11 +1683,6 @@ class TwitchController extends Controller
     public function subpoints(Request $request, $channel = null)
     {
         $id = $request->input('id', 'false');
-        $include = $request->input('include', '');
-        $subtract = intval($request->input('subtract', 0), 10);
-
-        // Turn $include into an array for future reference use.
-        $include = empty($include) ? [] : explode(',', $include);
 
         if (empty($channel) && !Auth::check()) {
             return Helper::text(__('twitch.subpoints_missing_channel'));
@@ -1730,12 +1725,6 @@ class TwitchController extends Controller
 
             if (Cache::has($cacheKey)) {
                 $subpoints = Cache::get($cacheKey);
-
-                /**
-                 * Subtract user-supplied value.
-                 */
-                $subpoints = $subpoints - $subtract;
-
                 return Helper::text($subpoints);
             }
 
@@ -1745,7 +1734,7 @@ class TwitchController extends Controller
              */
             try {
                 $this->api->setToken($token);
-                $subs = $this->api->subscriptionsAll($user->id);
+                $subs = $this->api->subscriptions($user->id);
             }
             catch (TwitchApiException $ex)
             {
@@ -1758,43 +1747,13 @@ class TwitchController extends Controller
                 ]));
             }
 
-            /**
-             * Mapping between tier => point value.
-             */
-            $tiers = [
-                '1000' => 1,
-                '2000' => 2,
-                '3000' => 6,
-            ];
-
-            $subpoints = 0;
-
-            foreach ($subs as $sub) {
-                $userId = $sub['user_id'];
-
-                /**
-                 * If the subscriber "user" is the broadcaster
-                 * we should ignore it as it doesn't count anyways.
-                 */
-                if ($userId === $user->id) {
-                    continue;
-                }
-
-                $tier = $sub['tier'];
-                $subpoints += $tiers[$tier];
-            }
+            $subpoints = $subs['points'];
 
             /**
-             * Cache subpoints for one minute,
+             * Cache subpoints for time specified in config/twitch.php (1 minute at the time of writing),
              * to prevent excessive requests to the Twitch API.
              */
             Cache::put($cacheKey, $subpoints, config('twitch.cache.subpoints'));
-
-            /**
-             * Subtract user-supplied value.
-             */
-            $subpoints = $subpoints - $subtract;
-
             return Helper::text($subpoints);
         }
 

@@ -1,6 +1,8 @@
 <?php
     return [
         /**
+         * Cache settings
+         *
          * $endpoint => $seconds (unless otherwise specified)
          *
          * $seconds = how long a value per channel / user should be cached.
@@ -10,7 +12,9 @@
             'game' => 60,
             // Stream title/status
             'status' => 60,
-            'subpoints' => 120,
+
+            // Subscriber points
+            'subpoints' => 60,
             'viewercount' => 60,
 
             /**

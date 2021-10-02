@@ -20,6 +20,8 @@ class Subscriptions extends JsonResource
 
         return [
             'subscriptions' => $subscriptions,
+            'points' => $resource['points'],
+            'count' => $resource['total'],
             'pagination' => $pagination,
         ];
     }

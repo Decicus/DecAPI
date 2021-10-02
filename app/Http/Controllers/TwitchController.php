@@ -269,23 +269,30 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        if ($id !== 'true') {
+        /**
+         * Retrieve from API if not in cache
+         */
+        $user = strtolower(trim($user));
+        $cacheKey = sprintf('twitch_accountage_%s', $user);
+        if (!Cache::has($cacheKey)) {
             try {
-                $user = $this->userByName($user)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
+                if ($id !== 'true') {
+                    $user = $this->api->userByUsername($user);
+                }
+                else {
+                    $user = $this->api->userById($user);
+                }
+
+                $timestamp = $user['created_at'];
+                Cache::put($cacheKey, $timestamp, config('twitch.cache.accountage'));
+            }
+            catch (TwitchApiException $ex) {
+                return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
             }
         }
 
-        $userData = $this->twitchApi->users($user, $this->version);
-
-        if (!empty($userData['status'])) {
-            return Helper::text($userData['message']);
-        }
-
-        $time = $userData['created_at'];
-        $time = Helper::getDateDiff($time, time(), $precision);
-
+        $timestamp = Cache::get($cacheKey);
+        $time = Helper::getDateDiff($timestamp, time(), $precision);
         return Helper::text($time);
     }
 

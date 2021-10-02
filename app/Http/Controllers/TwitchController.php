@@ -277,19 +277,19 @@ class TwitchController extends Controller
         if (!Cache::has($cacheKey)) {
             try {
                 if ($id !== 'true') {
-                    $user = $this->api->userByUsername($user);
+                    $userInfo = $this->api->userByUsername($user);
                 }
                 else {
-                    $user = $this->api->userById($user);
+                    $userInfo = $this->api->userById($user);
                 }
 
-                if (empty($user)) {
+                if (empty($userInfo)) {
                     return Helper::text(__('twitch.user_not_found', [
                         'user' => $user,
                     ]));
                 }
 
-                $timestamp = $user['created_at'];
+                $timestamp = $userInfo['created_at'];
                 Cache::put($cacheKey, $timestamp, config('twitch.cache.created'));
             }
             catch (TwitchApiException $ex) {
@@ -395,19 +395,19 @@ class TwitchController extends Controller
         if (!Cache::has($cacheKey)) {
             try {
                 if ($id !== 'true') {
-                    $user = $this->api->userByUsername($user);
+                    $userInfo = $this->api->userByUsername($user);
                 }
                 else {
-                    $user = $this->api->userById($user);
+                    $userInfo = $this->api->userById($user);
                 }
 
-                if (empty($user)) {
+                if (empty($userInfo)) {
                     return Helper::text(__('twitch.user_not_found', [
                         'user' => $user,
                     ]));
                 }
 
-                $timestamp = $user['created_at'];
+                $timestamp = $userInfo['created_at'];
                 Cache::put($cacheKey, $timestamp, config('twitch.cache.created'));
             }
             catch (TwitchApiException $ex) {

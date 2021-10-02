@@ -16,8 +16,10 @@
              * we do a relatively short cache time to not unnecessarily cache something for extended periods.
              *
              * 21600 seconds = 6 hours
+             *
+             * This cache is shared between `accountage` & `creation`
              */
-            'accountage' => 21600,
+            'created' => 21600,
 
             'avatar' => 300,
             'game' => 60,

@@ -273,7 +273,7 @@ class TwitchController extends Controller
          * Retrieve from API if not in cache
          */
         $user = strtolower(trim($user));
-        $cacheKey = sprintf('twitch_accountage_%s', $user);
+        $cacheKey = sprintf('twitch_user-created_%s', $user);
         if (!Cache::has($cacheKey)) {
             try {
                 if ($id !== 'true') {
@@ -284,7 +284,7 @@ class TwitchController extends Controller
                 }
 
                 $timestamp = $user['created_at'];
-                Cache::put($cacheKey, $timestamp, config('twitch.cache.accountage'));
+                Cache::put($cacheKey, $timestamp, config('twitch.cache.created'));
             }
             catch (TwitchApiException $ex) {
                 return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
@@ -364,6 +364,9 @@ class TwitchController extends Controller
         // https://secure.php.net/manual/en/timezones.php
         $allTimezones = DateTimeZone::listIdentifiers();
 
+        /**
+         * Check if specified timezone is valid.
+         */
         if (!in_array($tz, $allTimezones)) {
             return Helper::text(__('time.invalid_timezone', ['timezone' => $tz]));
         }
@@ -378,22 +381,30 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        if ($id !== 'true') {
+        /**
+         * Retrieve from API if not in cache
+         */
+        $user = strtolower(trim($user));
+        $cacheKey = sprintf('twitch_user-created_%s', $user);
+        if (!Cache::has($cacheKey)) {
             try {
-                $user = $this->userByName($user)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
+                if ($id !== 'true') {
+                    $user = $this->api->userByUsername($user);
+                }
+                else {
+                    $user = $this->api->userById($user);
+                }
+
+                $timestamp = $user['created_at'];
+                Cache::put($cacheKey, $timestamp, config('twitch.cache.created'));
+            }
+            catch (TwitchApiException $ex) {
+                return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
             }
         }
 
-        $userData = $this->twitchApi->users($user, $this->version);
-
-        if (!empty($userData['status'])) {
-            return Helper::text($userData['message']);
-        }
-
-        $time = $userData['created_at'];
-        $time = Carbon::parse($userData['created_at']);
+        $timestamp = Cache::get($cacheKey);
+        $time = Carbon::parse($timestamp);
         $time->setTimezone($tz);
 
         return Helper::text($time->format($format));

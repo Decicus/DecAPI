@@ -13,6 +13,20 @@ use Log;
 class YouTubeController extends Controller
 {
     /**
+     * Default output format for latest video API.
+     *
+     * @var string
+     */
+    protected $defaultFormat = '{title} - {url}';
+
+    /**
+     * Valid 'variables' for the output format in latest video API.
+     *
+     * @var array
+     */
+    protected $formatSearch = ['{id}', '{url}', '{title}'];
+
+    /**
      * Retrieves the latest public YouTube upload from the specified identifier.
      *
      * @param  Request $request
@@ -34,6 +48,12 @@ class YouTubeController extends Controller
         }
 
         $id = $request->input($type, null);
+        $format = $request->input('format', $this->defaultFormat);
+
+        if (empty(trim($format))) {
+            $format = $this->defaultFormat;
+        }
+
         $skip = intval($request->input('skip', 0));
         $max = 50;
 
@@ -104,6 +124,10 @@ class YouTubeController extends Controller
                 }
             );
 
+            if (empty($results)) {
+                return Helper::text('This channel has no public videos.');
+            }
+
             /**
              * Seems that YouTube sorts the API response for uploaded videos
              * by their upload timestamp, instead of their
@@ -123,10 +147,6 @@ class YouTubeController extends Controller
                 return strtotime($publishTwo) - strtotime($publishOne);
             });
 
-            if (empty($results)) {
-                return Helper::text('This channel has no public videos.');
-            }
-
             $total = count($results);
 
             // Check if the request skips a valid amount of videos.
@@ -135,10 +155,23 @@ class YouTubeController extends Controller
             }
 
             $video = $results[$skip];
-
             // Title can sometimes includes HTML entities (such as '&amp;' instead of '&')
             $title = htmlspecialchars_decode($video->snippet->title, ENT_QUOTES);
-            return Helper::text($title . ' - https://youtu.be/' . $video->contentDetails->videoId);
+            $videoId = $video->contentDetails->videoId;
+
+            /**
+             * See $this->formatSearch for a list of available variables.
+             */
+            $replacements = [
+                // {id}
+                $videoId,
+                // {url}
+                sprintf('https://youtu.be/%s', $videoId),
+                // {title}
+                $title,
+            ];
+
+            return Helper::text(str_replace($this->formatSearch, $replacements, $format));
         } catch (Exception $ex) {
             return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
         }

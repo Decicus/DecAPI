@@ -34,13 +34,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        // Cached Twitch username => ID mappings
         $schedule->command('twitch:userupdate')
-                 ->everyMinute();
+                 ->everyTwoHours();
 
+        // Authenticated channels for subcount/subpoints/subage etc.
         $schedule->command('twitch:authuserupdate')
-                ->hourly()
-                ->when(function() {
-                    return date('G') % 6 === 0;
-                });
+                 ->hourly();
     }
 }

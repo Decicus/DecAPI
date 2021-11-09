@@ -27,6 +27,11 @@
             'status' => 60,
 
             /**
+             * Follower count of a channel
+             */
+            'followcount' => 60,
+
+            /**
              * Subscriptions meta API handler.
              * Currently being used for subpoints/subcount and it's *shared*.
              *

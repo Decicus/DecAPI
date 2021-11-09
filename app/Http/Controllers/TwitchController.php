@@ -472,23 +472,17 @@ class TwitchController extends Controller
             }
         }
 
-        $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->version);
-        $status = $getFollow['status'] ?? null;
-        if (!empty($status)) {
-            /**
-             * 404 = Follow not found, when :user isn't following :channel.
-             */
-            if ($status === 404) {
-                return Helper::text(__('twitch.follow_not_found', [
-                    'user' => $username ?? $user,
-                    'channel' => $channelName ?? $channel,
-                ]));
-            }
-
-            return Helper::text($getFollow['message']);
+        $follow = $this->api->followRelationship($channel, $user);
+        if (empty($follow)) {
+            return Helper::text(__('twitch.follow_not_found', [
+                'user' => $username ?? $user,
+                'channel' => $channelName ?? $channel,
+            ]));
         }
 
-        return Helper::text(Helper::getDateDiff($getFollow['created_at'], time(), $precision));
+        $follow = $follow[0];
+
+        return Helper::text(Helper::getDateDiff($follow['followed_at'], time(), $precision));
     }
 
     /**
@@ -520,6 +514,11 @@ class TwitchController extends Controller
             }
         }
 
+        $cacheKey = sprintf('twitch_followcount_%s', $channel);
+        if (Cache::has($cacheKey)) {
+            return Helper::text(Cache::get($cacheKey));
+        }
+
         try {
             $getFollowers = $this->api->followsChannel($channel);
         }
@@ -533,7 +532,13 @@ class TwitchController extends Controller
             return Helper::text('An error has occurred requesting followcount for: ' . $channel);
         }
 
-        return Helper::text($getFollowers['total']);
+        if (empty($getFollowers)) {
+            return Helper::text('An error has occurred requesting followcount for: ' . $channel);
+        }
+
+        $count = $getFollowers['total'];
+        Cache::put($cacheKey, $count, config('twitch.cache.followcount'));
+        return Helper::text($count);
     }
 
     /**

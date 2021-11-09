@@ -1706,6 +1706,15 @@ class TwitchController extends Controller
             ]));
         }
 
+        /**
+         * In some scenarios this returns `null` and I'm not entirely sure why yet.
+         */
+        if (empty($subs)) {
+            return Helper::text(__('twitch.subcount_generic_error', [
+                'channel' => $channel,
+            ]));
+        }
+
         $subcount = $subs['count'];
         return Helper::text($subcount - $subtract);
     }
@@ -1784,6 +1793,15 @@ class TwitchController extends Controller
         }
         catch (Exception $ex)
         {
+            return Helper::text(__('twitch.subpoints_generic_error', [
+                'channel' => $channel,
+            ]));
+        }
+
+        /**
+         * In some scenarios this returns `null` and I'm not entirely sure why yet.
+         */
+        if (empty($subs)) {
             return Helper::text(__('twitch.subpoints_generic_error', [
                 'channel' => $channel,
             ]));

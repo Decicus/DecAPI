@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 
+use App\Helpers\Helper;
 use App\IpBlacklist;
 use Cache;
 use Log;
@@ -35,9 +36,15 @@ class IPBasedBlacklist
                 return $next($request);
             }
 
-            Log::Info(sprintf('Blocked %s from accessing %s due to reason: %s', $ip, $request->fullUrl(), $blacklistIp->reason));
-            return response()
-                   ->view('errors.503', [], 503);
+            $reason = $blacklistIp->reason ?? '';
+            $contact = env('CONTACT_URL', null);
+            $format = 'Your IP address has been blocked for the following reason: %s';
+
+            if (!empty($contact)) {
+                $format .= sprintf(' | Please contact for more information: %s', $contact);
+            }
+
+            return Helper::text(sprintf($format, trim($reason)), 429);
         }
         catch (Exception $ex)
         {

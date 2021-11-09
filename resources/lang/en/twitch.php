@@ -17,7 +17,7 @@ return [
      * Related to followers
      */
     'cannot_follow_self' => 'A user cannot follow themself.',
-    'error_followers' => 'An error occurred retrieving your followers.',
+    'error_followers' => 'An error has occurred retrieving followers for :channel',
     'follow_not_found' => ':user does not follow :channel',
     'no_followers' => 'You do not have any followers :(',
     'invalid_api_data' => 'Twitch API returned invalid data.',

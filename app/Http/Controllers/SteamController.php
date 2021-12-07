@@ -10,6 +10,8 @@ use App\Http\Controllers\Controller;
 use App\Helpers\Helper;
 use Steam;
 
+use GuzzleHttp\Exception\ClientException;
+
 use Cache;
 use Exception;
 use Log;
@@ -296,12 +298,28 @@ class SteamController extends Controller
 
             $hours = round($game->playtimeForever / 60, $round);
             return Helper::text(sprintf($hoursFormat, $hours));
-        } catch (Exception $e) {
-            Log::error('Error occurred in /steam/hours:');
-            Log::error($e);
-
+        }
+        catch (Exception $e) {
             $errorFormat = 'An error occurred retrieving hours for Steam ID: %s with app ID: %s%s';
-            return Helper::text(sprintf($errorFormat, $playerId, $appId, ($hasApiKey ? ' - Using custom Steam API key.' : '')));
+            $errorApiKey = ($hasApiKey ? ' - Using custom Steam API key.' : '');
+
+            /**
+             * Handle client exceptions differently.
+             * Mainly for 403 errors with custom API keys.
+             */
+            $parentEx = $e->getPrevious();
+            if ($parentEx !== null && $parentEx instanceof ClientException) {
+                $response = $parentEx->getResponse();
+
+                $errorFormat = 'Error from Steam API: %s %s - Steam ID: %s - App ID: %s%s';
+                $statusCode = $response->getStatusCode();
+                $reasonPhrase = $response->getReasonPhrase();
+
+                $message = sprintf($errorFormat, $statusCode, $reasonPhrase, $playerId, $appId, $errorApiKey);
+                return Helper::text($message);
+            }
+
+            return Helper::text(sprintf($errorFormat, $playerId, $appId, $errorApiKey));
         }
     }
 

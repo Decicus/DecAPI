@@ -25,7 +25,7 @@ class MiscController extends Controller
         $from = $request->input('from', null);
         $to = $request->input('to', null);
         $round = intval($request->input('round', 2));
-        $currencies = config('fixer.currencies');
+        $currencies = config('currency.currencies');
 
         $listUrl = route('misc.currency', 'currency') . '?list';
 
@@ -45,7 +45,7 @@ class MiscController extends Controller
             return Helper::text('The "to" parameter has to be specified');
         }
 
-        $value = floatval(str_replace(',', null, $value));
+        $value = floatval(str_replace(',', '', $value));
         $from = strtoupper(trim($from));
         $to = strtoupper(trim($to));
 
@@ -54,15 +54,14 @@ class MiscController extends Controller
         }
 
         if (!in_array($from, $currencies)) {
-            return Helper::text('Invalid "from" currency specified - Available currencies can be found here: ' . $listUrl);
+            return Helper::text(sprintf('Invalid "from" currency specified (%s) - Available currencies can be found here: %s', $from, $listUrl));
         }
 
         if (!in_array($to, $currencies)) {
-            return Helper::text('Invalid "to" currency specified - Available currencies can be found here: ' . $listUrl);
+            return Helper::text(sprintf('Invalid "to" currency specified (%s) - Available currencies can be found here: %s', $to, $listUrl));
         }
 
-        $apiKey = config('fixer.api_key');
-        $apiUrl = sprintf('https://data.fixer.io/api/latest?base=%s&symbols=%s&access_key=%s', $from, $to, $apiKey);
+        $apiUrl = sprintf('https://api.exchangerate.host/latest?base=%s&symbols=%s', $from, $to);
         try {
             $convert = Helper::get($apiUrl);
         }

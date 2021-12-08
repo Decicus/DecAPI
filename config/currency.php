@@ -1,10 +1,9 @@
 <?php
     /**
-     * Fixer currency API
-     * https://fixer.io/
+     * Currency API
+     * https://exchangerate.host/
      */
     return [
-        'api_key' => env('FIXER_API_KEY', null),
         'currencies' => [
             'AED',
             'AFN',
@@ -31,13 +30,13 @@
             'BTN',
             'BWP',
             'BYN',
-            'BYR',
             'BZD',
             'CAD',
             'CDF',
             'CHF',
             'CLF',
             'CLP',
+            'CNH',
             'CNY',
             'COP',
             'CRC',
@@ -94,8 +93,6 @@
             'LKR',
             'LRD',
             'LSL',
-            'LTL',
-            'LVL',
             'LYD',
             'MAD',
             'MDL',
@@ -105,6 +102,7 @@
             'MNT',
             'MOP',
             'MRO',
+            'MRU',
             'MUR',
             'MVR',
             'MWK',
@@ -140,7 +138,9 @@
             'SLL',
             'SOS',
             'SRD',
+            'SSP',
             'STD',
+            'STN',
             'SVC',
             'SYP',
             'SZL',
@@ -158,7 +158,7 @@
             'USD',
             'UYU',
             'UZS',
-            'VEF',
+            'VES',
             'VND',
             'VUV',
             'WST',
@@ -168,10 +168,11 @@
             'XCD',
             'XDR',
             'XOF',
+            'XPD',
             'XPF',
+            'XPT',
             'YER',
             'ZAR',
-            'ZMK',
             'ZMW',
             'ZWL',
         ],

@@ -48,8 +48,6 @@ The following things are required for setting this up:
         - `X` and `YYYY` are numbers, and are just **placeholders**.
     - **Steam**: You can obtain a Steam API key here: [Steam API Developer Portal](https://steamcommunity.com/dev)
     - **Twitter**: Create a [developer application on Twitter](https://apps.twitter.com/) and insert the consumer key & consumer secret.
-    - **Fixer** - Currency API: To have access to all the currencies, you need to have a pain plan from [fixer.io](https://fixer.io/).
-        - For a limited time you can also register for the legacy plan, which is a better version of the free plan: [Fixer - Important announcement](https://github.com/fixerAPI/fixer#fixer----important-announcement) (bottom of the section)
 - Run `composer install` in the project directory.
 - Run `php artisan key:generate` from the command line in the base project directory, to generate the application key.
 - Run `php artisan migrate` from the command line in the base project directory.

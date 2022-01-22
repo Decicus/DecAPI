@@ -230,7 +230,6 @@ class TwitchController extends Controller
             'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
             'total_views' => 'total_views/{CHANNEL}',
-            'upload' => 'upload/{CHANNEL}',
             'uptime' => 'uptime/{CHANNEL}',
             'viewercount' => 'viewercount/{CHANNEL}',
             'videos' => 'videos/{CHANNEL}',
@@ -2054,55 +2053,6 @@ class TwitchController extends Controller
         }
 
         return Helper::text($data['view_count']);
-    }
-
-    /**
-     * Finds the specified channel's latest video upload.
-     *
-     * @param  Request $request
-     * @param  String  $channel Channel name
-     * @return Response
-     */
-    public function upload(Request $request, $channel = null)
-    {
-        $id = $request->input('id', 'false');
-        $channelName = null;
-
-        if (empty($channel)) {
-            $nb = new Nightbot($request);
-            if (empty($nb->channel)) {
-                return Helper::text(__('generic.channel_name_required'));
-            }
-
-            $channel = $nb->channel['providerId'];
-            $id = 'true';
-        }
-
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately and override $channel
-                $channelName = $channel;
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
-        }
-
-        $video = $this->twitchApi->videos($request, $channel, ['upload'], 1, 0, $this->version);
-
-        if (!empty($video['status'])) {
-            return Helper::text($video['message']);
-        }
-
-        if (empty($video['videos'])) {
-            return Helper::text(__('twitch.no_uploads', [
-                'channel' => ($channelName ?: $channel),
-            ]));
-        }
-
-        $upload = $video['videos'][0];
-        $text = sprintf('%s - %s', $upload['title'], $upload['url']);
-        return Helper::text($text);
     }
 
     /**

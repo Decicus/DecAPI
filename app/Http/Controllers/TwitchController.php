@@ -127,8 +127,8 @@ class TwitchController extends Controller
     protected function userByName($name)
     {
         try {
-            return $this->twitchApi->userByName($name);
-        } catch (Exception $e) {
+            return $this->api->userByName($name);
+        } catch (TwitchApiException $e) {
             throw $e;
         }
     }

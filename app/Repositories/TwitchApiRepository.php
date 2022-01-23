@@ -525,4 +525,55 @@ class TwitchApiRepository
         $users = ['login' => $usernames];
         return $this->users($users);
     }
+
+    /**
+     * Similar to `userByUsername()`. However returns a `CachedTwitchUser` model.
+     *
+     * @param string $username
+     *
+     * @return App\CachedTwitchUser
+     * @throws TwitchApiException
+     */
+    public function userByName($username = '')
+    {
+        if (!is_string($username)) {
+            $type = gettype($username);
+            throw new TwitchFormatException('String expected, got: ' . $type);
+        }
+
+        if (empty($username)) {
+            throw new TwitchFormatException('Twitch username cannot be empty.');
+        }
+
+        $username = trim(strtolower($username));
+        $cachedUser = CachedTwitchUser::where(['username' => $username])->first();
+
+        if (!empty($cachedUser)) {
+            return $cachedUser;
+        }
+
+        $user = $this->userByUsername($username);
+
+        if (empty($user)) {
+            throw new TwitchApiException('User not found: ' . $username);
+        }
+
+        $userId = $user['id'];
+        $username = $user['login'];
+
+        $checkId = CachedTwitchUser::where(['id' => $userId])->first();
+        if (!empty($checkId)) {
+            $checkId->username = $username;
+            $checkId->save();
+
+            return $checkId;
+        }
+
+        $cachedUser = new CachedTwitchUser;
+        $cachedUser->id = $userId;
+        $cachedUser->username = $username;
+        $cachedUser->save();
+
+        return $cachedUser;
+    }
 }

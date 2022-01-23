@@ -9,6 +9,7 @@ use App\Exceptions\TwitchFormatException;
 
 use App\Http\Resources\Twitch as Resource;
 
+use App\CachedTwitchUser;
 use Cache;
 
 class TwitchApiRepository
@@ -417,6 +418,37 @@ class TwitchApiRepository
         }
 
         return $subscriptions[0];
+    }
+
+    /**
+     * Retrieves a list of channels that the specified user is following, as well as the total number of channels.
+     *
+     * @param string $userId Twitch user ID of the user.
+     * @param integer $first Maximum number of objects to return. Maximum: 100. Default: 20.
+     * @param string $after Cursor used for pagination.
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function userFollows($userId = '', $first = 20, $after = '')
+    {
+        $params = [
+            'from_id' => $userId,
+            'first' => $first,
+            'after' => $after,
+        ];
+
+        $request = $this->client->get('/users/follows', $params);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $followData = collect($request);
+
+        return Resource\Follow::make($followData)
+                              ->resolve();
     }
 
     /**

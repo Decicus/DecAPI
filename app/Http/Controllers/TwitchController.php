@@ -739,97 +739,42 @@ class TwitchController extends Controller
             }
         }
 
-        $direction = $request->input('direction', 'desc');
         $limit = intval($request->input('limit', 25));
-        $offset = intval($request->input('offset', 0));
         $separator = $request->input('separator', ', ');
 
-        // Fields inside the `channels` object that will be returned in the JSON response.
-        // See: https://dev.twitch.tv/docs/v5/reference/users/#get-user-follows for reference
-        // `created_at` in the root object is always included.
-        $inputFields = $request->input('fields', 'name,_id');
-
-        // Similar to $inputFields, except this is the single field used from the
-        // `channel` object whenever a text response is returned (default).
-        $textField = $request->input('field', 'name');
-
-        if ($limit < 0 || $limit > 100) {
+        if ($limit < 1 || $limit > 100) {
             $errorText = __('generic.invalid_limit', ['limit' => $limit]);
-            if ($request->wantsJson()) {
-                return Helper::json(['error' => $errorText], 400);
-            }
-
             return Helper::text($errorText);
         }
 
-        if ($offset < 0) {
-            $errorText = __('generic.invalid_offset', ['offset' => $offset]);
-            if ($request->wantsJson()) {
-                return Helper::json(['error' => $errorText], 400);
-            }
-
-            return Helper::text($errorText);
+        try {
+            $channels = $this->api->userFollows($user, $limit);
         }
-
-        $channels = $this->twitchApi->userFollowsChannels($user, $limit, $offset, $direction, $this->version);
-
-        if (isset($channels['error'])) {
-            if ($request->wantsJson()) {
-                return Helper::json($channels, $channels['status']);
-            }
-
-            return Helper::text($channels['error'] . ' - ' . $channels['message']);
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex) {
+            return Helper::text(sprintf('An error has occurred retrieving followed channels for user %s', $user));
         }
 
         $follows = $channels['follows'];
 
         if (!is_array($follows)) {
             Log:error(sprintf('/twitch/following: `Follows` key for user %s invalid. Array expected, got: %s', $user, gettype($follows)));
-
-            if ($request->wantsJson()) {
-                return Helper::json([
-                    'error' => __('twitch.invalid_api_data'),
-                    'status' => 500,
-                ], 500);
-            }
-
             return Helper::text(__('twitch.unable_get_following'));
         }
 
         if (count($follows) === 0) {
-            if ($request->wantsJson()) {
-                return Helper::json($follows);
-            }
-
             return Helper::text(__('twitch.end_following_list'));
         }
 
-        $list = [];
-        if ($request->wantsJson()) {
-            $fields = array_map('trim', explode(',', $inputFields));
-            $availableFields = array_keys($follows[0]['channel']);
-            $validFields = array_filter($fields, function ($field) use ($availableFields) {
-                return in_array($field, $availableFields);
-            });
-
-            foreach ($follows as $follow) {
-                $currentFollow = [
-                    'follow_created' => $follow['created_at'],
-                ];
-
-                foreach ($validFields as $field) {
-                    $currentFollow[$field] = $follow['channel'][$field];
-                }
-
-                $list[] = $currentFollow;
-            }
-
-            return Helper::json($list);
-        }
-
-        foreach ($follows as $follow) {
-            $list[] = $follow['channel'][$textField];
-        }
+        $list = array_map(
+            function ($follow) {
+                return $follow['to_name'];
+            },
+            $follows
+        );
 
         return Helper::text(implode($separator, $list));
     }

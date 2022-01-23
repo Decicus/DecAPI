@@ -973,22 +973,18 @@ class TwitchController extends Controller
             }
         }
 
-        $fetchHighlight = $this->twitchApi->videos($request, $channel, ['highlight'], 1, 0, $this->version);
+        $highlights = $this->api->channelVideos($channel, 'highlight');
 
-        if (!empty($fetchHighlight['status'])) {
-            return Helper::text($fetchHighlight['message']);
-        }
-
-        if (empty($fetchHighlight['videos'])) {
+        if (empty($highlights)) {
             return Helper::text(__('twitch.no_highlights', [
                 'channel' => ($channelName ?: $channel)
             ]));
         }
 
-        $highlight = $fetchHighlight['videos'][0];
+        $highlight = $highlights[0];
         $title = $highlight['title'];
         $url = $highlight['url'];
-        return Helper::text($title . ' - ' . $url);
+        return Helper::text(sprintf('%s - %s', $title, $url));
     }
 
     /**
@@ -1004,7 +1000,6 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $channelName = null;
         $limit = intval($request->input('count', 100));
-        $offset = intval($request->input('offset', 0));
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
@@ -1027,31 +1022,19 @@ class TwitchController extends Controller
             }
         }
 
-        $data = $this->twitchApi->videos($request, $channel, ['highlight'], $limit, $offset, $this->version);
+        $highlights = $this->api->channelVideos($channel, 'highlight', $limit);
 
-        if (!empty($data['status'])) {
-            return Helper::text($data['message'], $data['status']);
-        }
-
-        if (empty($data['videos'])) {
+        if (empty($highlights)) {
             return Helper::text(__('twitch.no_highlights', ['channel' => ($channelName ?: $channel)]));
         }
 
-        $highlights = $data['videos'];
         $random = array_rand($highlights);
-        $vid = $highlights[$random];
-        $format = '%s: %s';
-        $text = [
-            $vid['title'],
-            $vid['url']
-        ];
+        $video = $highlights[$random];
 
-        if ($request->exists('game')) {
-            array_unshift($text, $vid['game']);
-            $format = '%s - ' . $format;
-        }
+        $title = $video['title'];
+        $url = $video['url'];
 
-        return Helper::text(vsprintf($format, $text));
+        return Helper::text(sprintf('%s - %s', $title, $url));
     }
 
     /**

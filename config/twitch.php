@@ -47,6 +47,11 @@
              * `channel_emotes` specifies minutes via `addMinutes()`.
              */
             'channel_emotes' => 60,
+
+            /**
+             * Used by `channelVideos()` in TwitchApiRepository.
+             */
+            'channel_videos' => 180,
         ],
     ];
 ?>

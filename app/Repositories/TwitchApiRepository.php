@@ -153,6 +153,35 @@ class TwitchApiRepository
     }
 
     /**
+     * Get videos (VODs, highlights etc.) of the specified channel.
+     *
+     * @param string $userId
+     * @param string $type Type of video (all, upload, archive, highlight). Default: `all`
+     * @param integer $first
+     *
+     * @return array
+     */
+    public function channelVideos($userId = '', $type = 'all', $first = 20)
+    {
+        $cacheKey = sprintf('TWITCH_API_CHANNEL_VIDEOS_%s_%s_%s', $userId, $type, $first);
+        if (Cache::has($cacheKey)) {
+            $cachedVideos = Cache::get($cacheKey);
+            return $cachedVideos;
+        }
+
+        $params = [
+            'user_id' => $userId,
+            'type' => $type,
+            'first' => $first,
+        ];
+
+        $videos = $this->videos($params);
+        Cache::put($cacheKey, $videos, config('twitch.cache.channel_videos'));
+
+        return $videos;
+    }
+
+    /**
      * Retrieves the channel's followers, as well as the total number of followers.
      *
      * @param string $toId Twitch user ID of the channel
@@ -559,7 +588,8 @@ class TwitchApiRepository
     }
 
     /**
-     * Similar to `userByUsername()`. However returns a `CachedTwitchUser` model.
+     * Similar to `userByUsername()`, but returns a `CachedTwitchUser` model.
+     * Will check the cache before querying the Twitch API.
      *
      * @param string $username
      *
@@ -607,5 +637,28 @@ class TwitchApiRepository
         $cachedUser->save();
 
         return $cachedUser;
+    }
+
+    /**
+     * Requests the video resource: https://dev.twitch.tv/docs/api/reference#get-videos
+     *
+     * @param array $params
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function videos($params = [])
+    {
+        $request = $this->client->get('/videos', $params);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $videos = collect($request['data']);
+
+        return Resource\VideoCollection::make($videos)
+                                       ->resolve();
     }
 }

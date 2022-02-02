@@ -13,10 +13,7 @@ return [
     |
     */
 
-    /**
-     * *NOTE*: These aren't used by DecAPI and therefore do not need to be translated.
-     */
-    'failed' => 'These credentials do not match our records.',
-    'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+    'failed' => 'Deze credentials komen niet overeen met onze gegevens.',
+    'throttle' => 'Te veel login pogingen. Probeer het nog eens over :seconds seconden.',
 
 ];

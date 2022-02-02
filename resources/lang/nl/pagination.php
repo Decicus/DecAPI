@@ -13,10 +13,7 @@ return [
     |
     */
 
-    /**
-     * *NOTE*: These aren't used by DecAPI and therefore do not need to be translated.
-     */
-    'previous' => '&laquo; Previous',
-    'next'     => 'Next &raquo;',
+    'previous' => '&laquo; Vorige',
+    'next'     => 'Volgende &raquo;',
 
 ];

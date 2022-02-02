@@ -13,13 +13,10 @@ return [
     |
     */
 
-    /**
-     * *NOTE*: These aren't used by DecAPI and therefore do not need to be translated.
-     */
-    'password' => 'Passwords must be at least six characters and match the confirmation.',
-    'reset' => 'Your password has been reset!',
-    'sent' => 'We have e-mailed your password reset link!',
-    'token' => 'This password reset token is invalid.',
-    'user' => "We can't find a user with that e-mail address.",
+    'password' => 'Wachtwoorden moeten minstens zes karakters hebben en overeenkomen met de confirmatie.',
+    'reset' => 'Je wachtwoord is gereset!',
+    'sent' => 'We hebben je een wachtwoord reset link gemaild!',
+    'token' => 'Dit wachtwoord reset token is invalide.',
+    'user' => 'Er is geen gebruiker bekend met dit e-mail adres.',
 
 ];

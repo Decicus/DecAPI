@@ -293,7 +293,17 @@ class TwitchApiRepository
             throw new TwitchFormatException('String expected, got: ' . $type);
         }
 
-        return $this->streamsByNames([$username]);
+        $cacheKey = sprintf('TWITCH_API_STREAM_BY_NAME_%s', $username);
+
+        if (Cache::has($cacheKey)) {
+            $cachedStream = Cache::get($cacheKey);
+            return $cachedStream;
+        }
+
+        $streams = $this->streamsByNames([$username]);
+        Cache::put($cacheKey, $streams, config('twitch.cache.stream_by_name'));
+
+        return $streams;
     }
 
     /**

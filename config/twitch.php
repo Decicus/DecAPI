@@ -39,7 +39,7 @@
              */
             'subscriptions_meta' => 60,
 
-            'viewercount' => 60,
+            'viewercount' => 180,
 
             /**
              * TwitchApiRepository
@@ -52,6 +52,11 @@
              * Used by `channelVideos()` in TwitchApiRepository.
              */
             'channel_videos' => 180,
+
+            /**
+             * Used by `streamByName()` in TwitchApiRepository.
+             */
+            'stream_by_name' => 120,
         ],
     ];
 ?>

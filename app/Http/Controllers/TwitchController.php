@@ -2008,6 +2008,9 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
+        /**
+         * TODO: Add caching of `created_at` for stream.
+         */
         try {
             if ($id === 'true') {
                 $streams = $this->api->streamById($channel);
@@ -2050,7 +2053,6 @@ class TwitchController extends Controller
     public function viewercount(Request $request, $channel = null)
     {
         $id = $request->input('id', 'false');
-        $channelName = null;
 
         if (empty($channel)) {
             $nb = new Nightbot($request);
@@ -2062,16 +2064,6 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately for potential messages and override $channel
-                $channelName = $channel;
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
-        }
-
         /**
          * Load viewercount from cache to prevent unneccessary API request.
          */
@@ -2080,18 +2072,33 @@ class TwitchController extends Controller
             return Helper::text(Cache::get($cacheKey));
         }
 
-        $stream = $this->twitchApi->streams($channel, $this->version);
-
-        if (!empty($stream['status'])) {
-            return Helper::text($stream['message']);
+        try {
+            if ($id === 'true') {
+                $streams = $this->api->streamById($channel);
+            }
+            else {
+                $streams = $this->api->streamByName($channel);
+            }
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.stream_get_error', [
+                'channel' => $channel,
+            ]));
         }
 
-        if (empty($stream['stream'])) {
-            $channel = $channelName ?: $channel;
-            return Helper::text($channel . ' is offline');
+        $stream = $streams['streams'][0] ?? [];
+
+        if (empty($stream)) {
+            $offline = __('twitch.stream_offline', ['channel' => $channel]);
+            return Helper::text($offline);
         }
 
-        $viewers = $stream['stream']['viewers'];
+        $viewers = $stream['viewers'];
         // Add viewercount to the cache and cache it for 60 seconds.
         Cache::put($cacheKey, $viewers, config('twitch.cache.viewercount'));
         return Helper::text($viewers);

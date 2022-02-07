@@ -13,7 +13,7 @@ return [
      * Related to followers
      */
     'cannot_follow_self' => 'En bruker kan ikke følge seg selv.',
-    'error_followers' => 'En feil oppstod ved henting av følgere.',
+    'error_followers' => 'En feil oppstod ved henting av følgere for kanal: :channel',
     'no_followers' => 'Du har ingen følgere :(',
     'invalid_api_data' => 'Twitch API returnerte ugyldig data.',
     'unable_get_following' => 'Får ikke hentet gyldig data for den oppgitte brukeren.',

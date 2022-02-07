@@ -9,6 +9,7 @@ use App\Exceptions\TwitchFormatException;
 
 use App\Http\Resources\Twitch as Resource;
 
+use App\CachedTwitchUser;
 use Cache;
 
 class TwitchApiRepository
@@ -149,6 +150,35 @@ class TwitchApiRepository
         Cache::put($cacheKey, $emotes, $cacheExpire);
 
         return $emotes;
+    }
+
+    /**
+     * Get videos (VODs, highlights etc.) of the specified channel.
+     *
+     * @param string $userId
+     * @param string $type Type of video (all, upload, archive, highlight). Default: `all`
+     * @param integer $first
+     *
+     * @return array
+     */
+    public function channelVideos($userId = '', $type = 'all', $first = 20)
+    {
+        $cacheKey = sprintf('TWITCH_API_CHANNEL_VIDEOS_%s_%s_%s', $userId, $type, $first);
+        if (Cache::has($cacheKey)) {
+            $cachedVideos = Cache::get($cacheKey);
+            return $cachedVideos;
+        }
+
+        $params = [
+            'user_id' => $userId,
+            'type' => $type,
+            'first' => $first,
+        ];
+
+        $videos = $this->videos($params);
+        Cache::put($cacheKey, $videos, config('twitch.cache.channel_videos'));
+
+        return $videos;
     }
 
     /**
@@ -420,6 +450,37 @@ class TwitchApiRepository
     }
 
     /**
+     * Retrieves a list of channels that the specified user is following, as well as the total number of channels.
+     *
+     * @param string $userId Twitch user ID of the user.
+     * @param integer $first Maximum number of objects to return. Maximum: 100. Default: 20.
+     * @param string $after Cursor used for pagination.
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function userFollows($userId = '', $first = 20, $after = '')
+    {
+        $params = [
+            'from_id' => $userId,
+            'first' => $first,
+            'after' => $after,
+        ];
+
+        $request = $this->client->get('/users/follows', $params);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $followData = collect($request);
+
+        return Resource\Follow::make($followData)
+                              ->resolve();
+    }
+
+    /**
      * Requests the user resource: https://dev.twitch.tv/docs/api/reference/#get-users
      *
      * @param array $users
@@ -524,5 +585,80 @@ class TwitchApiRepository
 
         $users = ['login' => $usernames];
         return $this->users($users);
+    }
+
+    /**
+     * Similar to `userByUsername()`, but returns a `CachedTwitchUser` model.
+     * Will check the cache before querying the Twitch API.
+     *
+     * @param string $username
+     *
+     * @return App\CachedTwitchUser
+     * @throws TwitchApiException
+     */
+    public function userByName($username = '')
+    {
+        if (!is_string($username)) {
+            $type = gettype($username);
+            throw new TwitchFormatException('String expected, got: ' . $type);
+        }
+
+        if (empty($username)) {
+            throw new TwitchFormatException('Twitch username cannot be empty.');
+        }
+
+        $username = trim(strtolower($username));
+        $cachedUser = CachedTwitchUser::where(['username' => $username])->first();
+
+        if (!empty($cachedUser)) {
+            return $cachedUser;
+        }
+
+        $user = $this->userByUsername($username);
+
+        if (empty($user)) {
+            throw new TwitchApiException('User not found: ' . $username);
+        }
+
+        $userId = $user['id'];
+        $username = $user['login'];
+
+        $checkId = CachedTwitchUser::where(['id' => $userId])->first();
+        if (!empty($checkId)) {
+            $checkId->username = $username;
+            $checkId->save();
+
+            return $checkId;
+        }
+
+        $cachedUser = new CachedTwitchUser;
+        $cachedUser->id = $userId;
+        $cachedUser->username = $username;
+        $cachedUser->save();
+
+        return $cachedUser;
+    }
+
+    /**
+     * Requests the video resource: https://dev.twitch.tv/docs/api/reference#get-videos
+     *
+     * @param array $params
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function videos($params = [])
+    {
+        $request = $this->client->get('/videos', $params);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $videos = collect($request['data']);
+
+        return Resource\VideoCollection::make($videos)
+                                       ->resolve();
     }
 }

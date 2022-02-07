@@ -27,6 +27,11 @@
             'status' => 60,
 
             /**
+             * Follower count of a channel
+             */
+            'followcount' => 60,
+
+            /**
              * Subscriptions meta API handler.
              * Currently being used for subpoints/subcount and it's *shared*.
              *
@@ -42,6 +47,11 @@
              * `channel_emotes` specifies minutes via `addMinutes()`.
              */
             'channel_emotes' => 60,
+
+            /**
+             * Used by `channelVideos()` in TwitchApiRepository.
+             */
+            'channel_videos' => 180,
         ],
     ];
 ?>

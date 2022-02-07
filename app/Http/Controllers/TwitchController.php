@@ -127,8 +127,8 @@ class TwitchController extends Controller
     protected function userByName($name)
     {
         try {
-            return $this->twitchApi->userByName($name);
-        } catch (Exception $e) {
+            return $this->api->userByName($name);
+        } catch (TwitchApiException $e) {
             throw $e;
         }
     }
@@ -230,7 +230,6 @@ class TwitchController extends Controller
             'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
             'total_views' => 'total_views/{CHANNEL}',
-            'upload' => 'upload/{CHANNEL}',
             'uptime' => 'uptime/{CHANNEL}',
             'viewercount' => 'viewercount/{CHANNEL}',
             'videos' => 'videos/{CHANNEL}',
@@ -456,15 +455,14 @@ class TwitchController extends Controller
             return Helper::text(__('twitch.cannot_follow_self'));
         }
 
+        /**
+         * Save username/channel name in separate variables before
+         * overwriting them to use in later calls.
+         */
+        $username = $user;
+        $channelName = $channel;
         if ($id !== 'true') {
             try {
-                /**
-                 * Save username/channel name in separate variables before
-                 * overwriting them to use in later calls.
-                 */
-                $username = $user;
-                $channelName = $channel;
-
                 $channel = $this->userByName($channel)->id;
                 $user = $this->userByName($user)->id;
             } catch (Exception $e) {
@@ -472,23 +470,27 @@ class TwitchController extends Controller
             }
         }
 
-        $getFollow = $this->twitchApi->followRelationship($user, $channel, $this->version);
-        $status = $getFollow['status'] ?? null;
-        if (!empty($status)) {
-            /**
-             * 404 = Follow not found, when :user isn't following :channel.
-             */
-            if ($status === 404) {
-                return Helper::text(__('twitch.follow_not_found', [
-                    'user' => $username ?? $user,
-                    'channel' => $channelName ?? $channel,
-                ]));
-            }
-
-            return Helper::text($getFollow['message']);
+        try {
+            $follow = $this->api->followRelationship($channel, $user);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex) {
+            return Helper::text(sprintf('An error has occurred requesting followage between %s (channel) and %s (user)', $channelName, $username));
         }
 
-        return Helper::text(Helper::getDateDiff($getFollow['created_at'], time(), $precision));
+        if (empty($follow)) {
+            return Helper::text(__('twitch.follow_not_found', [
+                'user' => $username,
+                'channel' => $channelName,
+            ]));
+        }
+
+        $follow = $follow[0];
+
+        return Helper::text(Helper::getDateDiff($follow['followed_at'], time(), $precision));
     }
 
     /**
@@ -520,6 +522,11 @@ class TwitchController extends Controller
             }
         }
 
+        $cacheKey = sprintf('twitch_followcount_%s', $channel);
+        if (Cache::has($cacheKey)) {
+            return Helper::text(Cache::get($cacheKey));
+        }
+
         try {
             $getFollowers = $this->api->followsChannel($channel);
         }
@@ -533,7 +540,13 @@ class TwitchController extends Controller
             return Helper::text('An error has occurred requesting followcount for: ' . $channel);
         }
 
-        return Helper::text($getFollowers['total']);
+        if (empty($getFollowers)) {
+            return Helper::text('An error has occurred requesting followcount for: ' . $channel);
+        }
+
+        $count = $getFollowers['total'];
+        Cache::put($cacheKey, $count, config('twitch.cache.followcount'));
+        return Helper::text($count);
     }
 
     /**
@@ -630,20 +643,14 @@ class TwitchController extends Controller
     {
         $channel = $channel ?: $request->input('channel', null);
         $count = intval($request->input('count', 1));
-        $offset = intval($request->input('offset', 0));
-        $cursor = $request->input('cursor', '');
-        $direction = $request->input('direction', 'desc');
         $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
         $separator = $request->input('separator', ', ');
-        $useUsernames = $request->exists('username');
-
-        // Fields inside the `user` object that will be returned in the JSON response.
-        // See: https://dev.twitch.tv/docs/v5/reference/channels/#get-channel-followers for reference
-        // `created_at` in the root object for each follow is always included.
-        $inputFields = $request->input('fields', 'name,_id');
 
         $id = $request->input('id', 'false');
 
+        /**
+         * If no channel is specified, we check if it's a Nightbot request.
+         */
         if (empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel)) {
@@ -654,6 +661,10 @@ class TwitchController extends Controller
             $id = 'true';
         }
 
+        /**
+         * ID isn't specified, so we convert from Twitch username to ID.
+         */
+        $channelName = $channel;
         if ($id !== 'true') {
             try {
                 $channel = $this->userByName($channel)->id;
@@ -663,83 +674,46 @@ class TwitchController extends Controller
         }
 
         if ($count > 100) {
-            if ($request->wantsJson()) {
-                return Helper::json(['error' => __('generic.max_count', ['value' => 100])], 400);
-            }
-
             return Helper::text(__('generic.max_count', ['value' => 100]));
         }
 
-        $followers = $this->twitchApi->channelFollows($channel, $count, $offset, $direction, $this->version, $cursor);
-
-        if (!empty($followers['status'])) {
-            if ($request->wantsJson()) {
-                return Helper::json($followers, $followers['status']);
-            }
-
-            return Helper::text($followers['message']);
+        try {
+            $followers = $this->api->followsChannel($channel, $count);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex) {
+            return Helper::text(sprintf('An error has occurred retrieving followers for %s', $channelName));
         }
 
-        if (!isset($followers['follows'])) {
-            if ($request->wantsJson()) {
-                return Helper::json(['error' => __('twitch.error_followers'), 500]);
-            }
+        if (empty($followers) || !isset($followers['follows'])) {
+            $message = __('twitch.error_followers', [
+                'channel' => $channelName,
+            ]);
 
-            return Helper::text(__('twitch.error_followers'));
+            return Helper::text($message);
         }
 
         $follows = $followers['follows'];
 
-        if (count($follows) === 0) {
-            if ($request->wantsJson()) {
-                return Helper::json([
-                    'cursor' => null,
-                    'total' => $followers['_total'],
-                    'followers' => [],
-                ]);
-            }
-
+        if (empty($follows)) {
             return Helper::text(__('twitch.no_followers'));
         }
 
         $users = [];
-        if ($request->wantsJson()) {
-            $fields = array_map('trim', explode(',', $inputFields));
-            $availableFields = array_keys($follows[0]['user']);
-            $validFields = array_filter($fields, function ($field) use ($availableFields) {
-                return in_array($field, $availableFields);
-            });
-
-            foreach ($follows as $follow) {
-                $currentFollow = [
-                    'follow_created' => $follow['created_at'],
-                ];
-
-                foreach ($validFields as $field) {
-                    $currentFollow[$field] = $follow['user'][$field];
-                }
-
-                $users[] = $currentFollow;
-            }
-
-            return Helper::json([
-                'cursor' => (isset($followers['_cursor']) ? $followers['_cursor'] : null),
-                'total' => $followers['_total'],
-                'followers' => $users,
-            ]);
-        }
-
         $currentNumber = 0;
         foreach ($follows as $user) {
-            $user = $user['user'];
-            $name = $user['name'];
+            $name = $user['from_name'];
+            $currentNumber++;
 
-            if (!$useUsernames && !empty($user['display_name'])) {
-                $name = $user['display_name'];
+            if ($showNumbers) {
+                $users[] = sprintf('%d. %s', $currentNumber, $name);
+                continue;
             }
 
-            $currentNumber++;
-            $users[] = ($showNumbers ? $currentNumber . '. ' : '') . $name;
+            $users[] = $name;
         }
 
         return Helper::text(implode($separator, $users));
@@ -765,97 +739,42 @@ class TwitchController extends Controller
             }
         }
 
-        $direction = $request->input('direction', 'desc');
         $limit = intval($request->input('limit', 25));
-        $offset = intval($request->input('offset', 0));
         $separator = $request->input('separator', ', ');
 
-        // Fields inside the `channels` object that will be returned in the JSON response.
-        // See: https://dev.twitch.tv/docs/v5/reference/users/#get-user-follows for reference
-        // `created_at` in the root object is always included.
-        $inputFields = $request->input('fields', 'name,_id');
-
-        // Similar to $inputFields, except this is the single field used from the
-        // `channel` object whenever a text response is returned (default).
-        $textField = $request->input('field', 'name');
-
-        if ($limit < 0 || $limit > 100) {
+        if ($limit < 1 || $limit > 100) {
             $errorText = __('generic.invalid_limit', ['limit' => $limit]);
-            if ($request->wantsJson()) {
-                return Helper::json(['error' => $errorText], 400);
-            }
-
             return Helper::text($errorText);
         }
 
-        if ($offset < 0) {
-            $errorText = __('generic.invalid_offset', ['offset' => $offset]);
-            if ($request->wantsJson()) {
-                return Helper::json(['error' => $errorText], 400);
-            }
-
-            return Helper::text($errorText);
+        try {
+            $channels = $this->api->userFollows($user, $limit);
         }
-
-        $channels = $this->twitchApi->userFollowsChannels($user, $limit, $offset, $direction, $this->version);
-
-        if (isset($channels['error'])) {
-            if ($request->wantsJson()) {
-                return Helper::json($channels, $channels['status']);
-            }
-
-            return Helper::text($channels['error'] . ' - ' . $channels['message']);
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex) {
+            return Helper::text(sprintf('An error has occurred retrieving followed channels for user %s', $user));
         }
 
         $follows = $channels['follows'];
 
         if (!is_array($follows)) {
             Log:error(sprintf('/twitch/following: `Follows` key for user %s invalid. Array expected, got: %s', $user, gettype($follows)));
-
-            if ($request->wantsJson()) {
-                return Helper::json([
-                    'error' => __('twitch.invalid_api_data'),
-                    'status' => 500,
-                ], 500);
-            }
-
             return Helper::text(__('twitch.unable_get_following'));
         }
 
         if (count($follows) === 0) {
-            if ($request->wantsJson()) {
-                return Helper::json($follows);
-            }
-
             return Helper::text(__('twitch.end_following_list'));
         }
 
-        $list = [];
-        if ($request->wantsJson()) {
-            $fields = array_map('trim', explode(',', $inputFields));
-            $availableFields = array_keys($follows[0]['channel']);
-            $validFields = array_filter($fields, function ($field) use ($availableFields) {
-                return in_array($field, $availableFields);
-            });
-
-            foreach ($follows as $follow) {
-                $currentFollow = [
-                    'follow_created' => $follow['created_at'],
-                ];
-
-                foreach ($validFields as $field) {
-                    $currentFollow[$field] = $follow['channel'][$field];
-                }
-
-                $list[] = $currentFollow;
-            }
-
-            return Helper::json($list);
-        }
-
-        foreach ($follows as $follow) {
-            $list[] = $follow['channel'][$textField];
-        }
+        $list = array_map(
+            function ($follow) {
+                return $follow['to_name'];
+            },
+            $follows
+        );
 
         return Helper::text(implode($separator, $list));
     }
@@ -1054,22 +973,18 @@ class TwitchController extends Controller
             }
         }
 
-        $fetchHighlight = $this->twitchApi->videos($request, $channel, ['highlight'], 1, 0, $this->version);
+        $highlights = $this->api->channelVideos($channel, 'highlight');
 
-        if (!empty($fetchHighlight['status'])) {
-            return Helper::text($fetchHighlight['message']);
-        }
-
-        if (empty($fetchHighlight['videos'])) {
+        if (empty($highlights)) {
             return Helper::text(__('twitch.no_highlights', [
                 'channel' => ($channelName ?: $channel)
             ]));
         }
 
-        $highlight = $fetchHighlight['videos'][0];
+        $highlight = $highlights[0];
         $title = $highlight['title'];
         $url = $highlight['url'];
-        return Helper::text($title . ' - ' . $url);
+        return Helper::text(sprintf('%s - %s', $title, $url));
     }
 
     /**
@@ -1085,7 +1000,6 @@ class TwitchController extends Controller
         $channel = $channel ?: $request->input('channel', null);
         $channelName = null;
         $limit = intval($request->input('count', 100));
-        $offset = intval($request->input('offset', 0));
         $id = $request->input('id', 'false');
 
         if (empty($channel)) {
@@ -1108,31 +1022,19 @@ class TwitchController extends Controller
             }
         }
 
-        $data = $this->twitchApi->videos($request, $channel, ['highlight'], $limit, $offset, $this->version);
+        $highlights = $this->api->channelVideos($channel, 'highlight', $limit);
 
-        if (!empty($data['status'])) {
-            return Helper::text($data['message'], $data['status']);
-        }
-
-        if (empty($data['videos'])) {
+        if (empty($highlights)) {
             return Helper::text(__('twitch.no_highlights', ['channel' => ($channelName ?: $channel)]));
         }
 
-        $highlights = $data['videos'];
         $random = array_rand($highlights);
-        $vid = $highlights[$random];
-        $format = '%s: %s';
-        $text = [
-            $vid['title'],
-            $vid['url']
-        ];
+        $video = $highlights[$random];
 
-        if ($request->exists('game')) {
-            array_unshift($text, $vid['game']);
-            $format = '%s - ' . $format;
-        }
+        $title = $video['title'];
+        $url = $video['url'];
 
-        return Helper::text(vsprintf($format, $text));
+        return Helper::text(sprintf('%s - %s', $title, $url));
     }
 
     /**
@@ -2079,55 +1981,6 @@ class TwitchController extends Controller
         }
 
         return Helper::text($data['view_count']);
-    }
-
-    /**
-     * Finds the specified channel's latest video upload.
-     *
-     * @param  Request $request
-     * @param  String  $channel Channel name
-     * @return Response
-     */
-    public function upload(Request $request, $channel = null)
-    {
-        $id = $request->input('id', 'false');
-        $channelName = null;
-
-        if (empty($channel)) {
-            $nb = new Nightbot($request);
-            if (empty($nb->channel)) {
-                return Helper::text(__('generic.channel_name_required'));
-            }
-
-            $channel = $nb->channel['providerId'];
-            $id = 'true';
-        }
-
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately and override $channel
-                $channelName = $channel;
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
-        }
-
-        $video = $this->twitchApi->videos($request, $channel, ['upload'], 1, 0, $this->version);
-
-        if (!empty($video['status'])) {
-            return Helper::text($video['message']);
-        }
-
-        if (empty($video['videos'])) {
-            return Helper::text(__('twitch.no_uploads', [
-                'channel' => ($channelName ?: $channel),
-            ]));
-        }
-
-        $upload = $video['videos'][0];
-        $text = sprintf('%s - %s', $upload['title'], $upload['url']);
-        return Helper::text($text);
     }
 
     /**

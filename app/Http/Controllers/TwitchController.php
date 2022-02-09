@@ -2009,7 +2009,7 @@ class TwitchController extends Controller
         }
 
         /**
-         * TODO: Add caching of `created_at` for stream.
+         * streamByName()/streamById() caches for up to 2 minutes (defined in config/twitch.php)
          */
         try {
             if ($id === 'true') {
@@ -2065,13 +2065,8 @@ class TwitchController extends Controller
         }
 
         /**
-         * Load viewercount from cache to prevent unneccessary API request.
+         * streamByName()/streamById() caches for up to 2 minutes (defined in config/twitch.php)
          */
-        $cacheKey = sprintf('twitch_viewercount_%s', md5($channel));
-        if (Cache::has($cacheKey)) {
-            return Helper::text(Cache::get($cacheKey));
-        }
-
         try {
             if ($id === 'true') {
                 $streams = $this->api->streamById($channel);
@@ -2099,8 +2094,6 @@ class TwitchController extends Controller
         }
 
         $viewers = $stream['viewers'];
-        // Add viewercount to the cache and cache it for 60 seconds.
-        Cache::put($cacheKey, $viewers, config('twitch.cache.viewercount'));
         return Helper::text($viewers);
     }
 

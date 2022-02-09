@@ -256,7 +256,16 @@ class TwitchApiRepository
             throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
         }
 
-        return $this->streamsByIds([$id]);
+        $cacheKey = sprintf('TWITCH_API_STREAM_BY_ID_%s', $id);
+        if (Cache::has($cacheKey)) {
+            $cachedStream = Cache::get($cacheKey);
+            return $cachedStream;
+        }
+
+        $streams = $this->streamsByIds([$id]);
+        Cache::put($cacheKey, $streams, config('twitch.cache.stream_by_id'));
+
+        return $streams;
     }
 
     /**

@@ -5,8 +5,10 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
 use App\CachedTwitchUser;
+use App\Providers\TwitchApiProvider;
 use GuzzleHttp\Client;
 
+use App\Repositories\TwitchApiRepository;
 use Log;
 
 class UpdateCachedTwitchUsers extends Command
@@ -26,19 +28,25 @@ class UpdateCachedTwitchUsers extends Command
     protected $description = 'Updates the cached Twitch users table.';
 
     /**
+     * @var TwitchApiRepository
+     */
+    private $api;
+
+    /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(TwitchApiRepository $repository)
     {
         parent::__construct();
+        $this->api = $repository;
     }
 
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
     public function handle()
     {
@@ -50,44 +58,44 @@ class UpdateCachedTwitchUsers extends Command
             Log::info(sprintf('Deleted %d cached users older than %s', $deletedUsers, $oneMonthAgo));
         }
 
-        $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHours(1))->get();
-        $client = new Client;
-        $settings = [
-            'headers' => [
-                'Accept' => 'application/vnd.twitchtv.v5+json',
-                'Client-ID' => env('TWITCH_CLIENT_ID')
-            ],
-            'http_errors' => false
-        ];
+        $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHour(1))->get();
+        Log::info(sprintf('Refreshing %d cached users', $users->count()));
 
-        foreach ($users as $user) {
-            $request = $client->request('GET', 'https://api.twitch.tv/kraken/users/' . $user->id, $settings);
+        $userChunks = $users->chunk(100);
+        
+        $deleted = 0;
+        $updated = 0;
 
-            $body = json_decode($request->getBody(), true);
-            $status = $request->getStatusCode();
-            if ($status !== 200) {
-                $errorMessage = $body['message'];
-                if (!empty($errorMessage)) {
-                    Log::info($body['status'] . ' - ' . $errorMessage);
+        foreach ($userChunks as $chunk)
+        {
+            $ids = $chunk->pluck('id')->toArray();
+            $apiUsers = $this->api->usersByIds($ids);
+
+            foreach ($chunk as $cachedUser)
+            {
+                $id = $cachedUser->id;
+                $apiUser = array_filter($apiUsers, function ($user) use ($id) {
+                    return $user['id'] === $id;
+                });
+
+                /**
+                 * Banned, deleted etc.
+                 */
+                if (empty($apiUser)) {
+                    $cachedUser->delete();
+                    $deleted++;
+                    continue;
                 }
 
-                // Delete banned/deleted/non-existing users.
-                if ($status === 422 || $status === 404) {
-                    Log::info('Deleting user: ' . $user->id);
-                    $user->delete();
-                }
-
-                continue;
+                $apiUser = array_shift($apiUser);
+                
+                $cachedUser->username = $apiUser['login'];
+                $cachedUser->updated_at = Carbon::now();
+                $cachedUser->save();
+                $updated++;
             }
-
-            if ($user->username !== $body['name']) {
-                $user->username = $body['name'];
-                $user->save();
-                continue;
-            }
-
-            $user->updated_at = Carbon::now();
-            $user->save();
         }
+
+        Log::info(sprintf('Deleted %d cached users and updated %d cached users', $deleted, $updated));
     }
 }

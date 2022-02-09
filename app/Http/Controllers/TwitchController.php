@@ -40,7 +40,7 @@ class TwitchController extends Controller
      *
      * @var string
      */
-    private $subScopes = 'user_read+channel:read:subscriptions+user:read:email';
+    private $subScopes = 'channel:read:subscriptions+user:read:email';
 
     /**
      * @var array

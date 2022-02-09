@@ -2120,15 +2120,12 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                // Store channel name separately for potential messages and override $channel
-                $channelName = $channel;
                 $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
             }
         }
 
-        $offset = intval($request->input('offset', 0));
         $limit = intval($request->input('limit', 1));
         $broadcastTypes = $request->input('broadcast_type', 'archive');
         $separator = $request->input('separator', ' | ');
@@ -2140,74 +2137,28 @@ class TwitchController extends Controller
                 'max' => '100',
             ]);
 
-            if ($request->wantsJson()) {
-                return Helper::json([
-                    'error' => $limitError,
-                    'status' => 400,
-                ], 400);
-            }
-
             return Helper::text($limitError);
         }
 
-        if ($offset < 0) {
-            $offsetError = __('twitch.invalid_offset_parameter', [
-                'min' => '0',
-            ]);
-
-            if ($request->wantsJson()) {
-                return Helper::json([
-                    'error' => $offsetError,
-                    'status' => 400,
-                ], 400);
-            }
-
-            return Helper::text($offsetError);
-        }
-
-        $videos = $this->twitchApi->videos($request, $channel, explode(',', $broadcastTypes), $limit, $offset, $this->version);
-
-        if (!empty($videos['status'])) {
-            if ($request->wantsJson()) {
-                return Helper::json($videos, $videos['status']);
-            }
-
-            return Helper::text($videos['status'] . ' - ' . $videos['message']);
-        }
-
-        if (!isset($videos['videos'])) {
-            if ($request->wantsJson()) {
-                return Helper::json([
-                    'error' => __('generic.error_loading_data_api'),
-                    'status' => 503,
-                ], 503);
-            }
-
-            return Helper::text(__('generic.error_loading_data_api'));
-        }
-
-        $videoList = $videos['videos'];
-        if (count($videoList) === 0) {
-            if ($request->wantsJson()) {
-                return Helper::json([
-                    'total' => $videos['_total'],
-                    'videos' => $videoList,
-                ]);
-            }
-
-            return Helper::text(__('twitch.end_of_video_list'));
-        }
-
-        if ($request->wantsJson()) {
-            return Helper::json([
-                'total' => $videos['_total'],
-                'videos' => $videoList,
-            ]);
-        }
-
         $formattedVideos = [];
-        foreach ($videoList as $video) {
-            $formattedVideos[] = str_replace(['${title}', '${url}'], [$video['title'], $video['url']], $format);
+        try {
+            $videos = $this->api->channelVideos($channel, $broadcastTypes, $limit);
+            
+            foreach ($videos as $video) {
+                $formattedVideos[] = str_replace(['${title}', '${url}'], [$video['title'], $video['url']], $format);
+            }
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.error_loading_data_api'));
+        }
+
+        if (count($formattedVideos) === 0) {
+            return Helper::text(__('twitch.end_of_video_list'));
         }
 
         return Helper::text(implode($separator, $formattedVideos));

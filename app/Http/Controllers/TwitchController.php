@@ -17,6 +17,7 @@ use App\TwitchHelpArticle as HelpArticle;
 use App\Repositories\TwitchApiRepository;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use DateTimeZone;
 
 use Crypt;
@@ -2188,8 +2189,6 @@ class TwitchController extends Controller
 
         if ($id !== 'true') {
             try {
-                // Store channel name separately for potential messages and override $channel
-                $channelName = $channel;
                 $channel = $this->userByName($channel)->id;
             } catch (Exception $e) {
                 return Helper::text($e->getMessage());
@@ -2198,29 +2197,33 @@ class TwitchController extends Controller
 
         // The amount of minutes to go back in the VOD.
         $minutes = intval($request->input('minutes', 5));
-        $offset = intval($request->input('offset', 0));
-
-        if ($minutes < 1) {
+        if ($minutes < 0) {
             return Helper::text(__('twitch.invalid_minutes_parameter', [
                 'min' => $minutes,
             ]));
         }
 
-        $video = $this->twitchApi->videos($request, $channel, ['archive'], 1, $offset, $this->version);
-
-        if (!empty($video['status'])) {
-            return Helper::text($video['message']);
+        try {
+            $videos = $this->api->channelVideos($channel, 'archive', 1);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.error_loading_data_api'));
         }
 
-        if (empty($video['videos'])) {
-            return Helper::text(__('twitch.no_vods', [
-                'channel' => ($channelName ?: $channel),
-            ]));
+        $vod = $videos[0] ?? [];
+        if (empty($vod)) {
+            return Helper::text(__('twitch.no_vods'));
         }
 
-        $vod = $video['videos'][0];
+        $interval = CarbonInterval::fromString($vod['duration']);
+        $totalSeconds = $interval->totalSeconds;
 
-        if (($minutes * 60) > $vod['length']) {
+        if (($minutes * 60) > $totalSeconds) {
             return Helper::text(__('twitch.vodreplay_minutes_too_high', [
                 'min' => $minutes,
             ]));
@@ -2229,11 +2232,12 @@ class TwitchController extends Controller
         $vodStart = Carbon::parse($vod['created_at']);
         $vodEnd = $vodStart
                   ->copy()
-                  ->addSeconds($vod['length']);
+                  ->addSeconds($totalSeconds);
 
         $difference = $vodStart->diffAsCarbonInterval($vodEnd->subMinutes($minutes));
 
-        $url = sprintf('%s?t=%dh%dm%ds', $vod['url'], $difference->hours, $difference->minutes, $difference->seconds);
+        $hours = ($difference->hours + ($difference->dayz * 24));
+        $url = sprintf('%s?t=%dh%dm%ds', $vod['url'], $hours, $difference->minutes, $difference->seconds);
         return Helper::text($url);
     }
 }

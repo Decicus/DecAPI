@@ -401,6 +401,12 @@ class TwitchApiRepository
      */
     public function subscriptionsAll($broadcasterId = '')
     {
+        $cacheKey = sprintf('TWITCH_SUBSCRIPTIONS_ALL_%s', $broadcasterId);
+        if (Cache::has($cacheKey)) {
+            $cachedSubscriptions = Cache::get($cacheKey);
+            return $cachedSubscriptions;
+        }
+
         $data = $this->subscriptions($broadcasterId, null, 100);
         $subscriptions = $data['subscriptions'];
 
@@ -417,6 +423,8 @@ class TwitchApiRepository
 
             $subscribers = array_merge($subscribers, $subscriptions->resolve());
         }
+
+        Cache::put($cacheKey, $subscribers, config('twitch.cache.subscriptions_all'));
 
         return $subscribers;
     }

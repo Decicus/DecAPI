@@ -19,11 +19,15 @@ class Subscription extends JsonResource
         return [
             'broadcaster_id' => $subscription['broadcaster_id'],
             'broadcaster_name' => $subscription['broadcaster_name'],
+            'gifter_id' => $subscription['gifter_id'],
+            'gifter_name' => $subscription['gifter_name'],
+            'gifter_login' => $subscription['gifter_login'],
             'gift' => $subscription['is_gift'],
             'plan' => $subscription['plan_name'],
             'tier' => $subscription['tier'],
             'user_id' => $subscription['user_id'],
             'user_name' => $subscription['user_name'],
+            'user_login' => $subscription['user_login'],
         ];
     }
 }

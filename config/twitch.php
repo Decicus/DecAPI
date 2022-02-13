@@ -40,6 +40,11 @@
             'subscriptions_meta' => 60,
 
             /**
+             * For fetching all subscriptions of a broadcaster.
+             */
+            'subscriptions_all' => 120,
+
+            /**
              * TwitchApiRepository
              *
              * `channel_emotes` specifies minutes via `addMinutes()`.

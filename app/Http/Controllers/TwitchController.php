@@ -135,64 +135,6 @@ class TwitchController extends Controller
     }
 
     /**
-     * TODO: Move this to a proper location, same with `userByName()`.
-     * Retrieves usernames by their IDs.
-     *
-     * First it checks the local database cache (`CachedTwitchUser`).
-     * Any IDs that haven't been cached is then queued up for querying the API,
-     * in batches of 100 IDs per request. Results are then cached for next time.
-     *
-     * @param array $ids Array of Twitch user IDs
-     * @return App\CachedTwitchUser Collection of CachedTwitchUsers instances.
-     */
-    private function usernamesByIds($ids = [])
-    {
-        $cachedUsers = CachedTwitchUser
-                        ::whereIn('id', $ids)
-                        ->get();
-
-        /**
-         * Filter away IDs that have already been retrieved
-         * from cached users.
-         */
-        $cachedUserIds = $cachedUsers
-                            ->pluck('id')
-                            ->toArray();
-        $checkIds = array_diff($ids, $cachedUserIds);
-
-        /**
-         * Take the missing IDs, split them into 100 chunks
-         * Use said chunks to request user information.
-         */
-        $idChunks = array_chunk($checkIds, 100);
-        foreach ($idChunks as $chunk)
-        {
-            /**
-             * Retrieve information about all the user IDs
-             */
-            $users = $this->api->usersByIds($chunk);
-
-            /**
-             * Cache user IDs and add it to the original `cachedUsers`.
-             * Next time most users should be loaded from database.
-             */
-            foreach ($users as $user)
-            {
-                $cacheUser = new CachedTwitchUser([
-                    'id' => $user['id'],
-                    'username' => $user['login'],
-                ]);
-
-                $cacheUser->save();
-
-                $cachedUsers->push($cacheUser);
-            }
-        }
-
-        return $cachedUsers;
-    }
-
-    /**
      * The base API request
      *
      * @return response
@@ -1209,30 +1151,40 @@ class TwitchController extends Controller
     }
 
     /**
+     * Twitch Helix API doesn't include any form of timestamps
+     * Therefore the API has been deprecated.
+     */
+    public function latestSub(Request $request)
+    {
+        $status = 410;
+
+        /**
+         * Return status code 200 for Nightbot requests
+         * Since Nightbot responds with a generic error message on non-2xx.
+         */
+        $nb = new Nightbot($request);
+        if (!empty($nb->channel)) {
+            $status = 200;
+        }
+
+        return Helper::text('410 Gone - Not supported by the new Twitch API', $status);
+    }
+
+    /**
      * Get a random / latest subscriber from the channel that belongs to the OAuth token if provided, otherwise the specified channel
      *
      * @param  Request $request
      * @param  string  $channel
      * @return Response
      */
-    public function subList(Request $request, $channel = null)
+    public function randomSub(Request $request, $channel = null)
     {
-        $actions = ['random', 'latest'];
-        $action = isset($request->route()->getAction()['action']) ? $request->route()->getAction()['action'] : 'random';
-
-        if (!in_array($action, $actions)) {
-            return Helper::text(__('twitch.sub_invalid_action', [
-                'actions' => implode(', ', $actions),
-            ]));
-        }
-
         if ($request->exists('logout')) {
             return redirect()->route('auth.twitch.logout');
         }
 
         $id = false;
         $channel = $channel ?: $request->input('channel', null);
-        $token = $request->input('token', null);
         $amount = intval($request->input('count', 1));
 
         // Fallback to 1
@@ -1240,132 +1192,112 @@ class TwitchController extends Controller
             $amount = 1;
         }
 
-        $field = $request->input('field', 'name');
+        $field = $request->input('field', 'user_name');
         $separator = $request->input('separator', ', ');
         $needToReAuth = '';
+        $action = 'random';
 
-        if (!empty($token)) {
-            $tokenData = $this->twitchApi->base($token, $this->version)['token'];
-            if ($tokenData['valid'] === false) {
-                return Helper::text('The specified OAuth token is invalid.');
-            }
-        } elseif(empty($channel) && Auth::check()) {
+        if(empty($channel) && Auth::check()) {
             $user = Auth::user();
-            $userData = $this->twitchApi->users($user->id, $this->version);
+            $userData = $this->api->userById($user->id);
 
             $data = [
                 'page' => ucfirst($action) . ' subscriber',
                 'route' => route('twitch.' . $action . '_sub'),
                 'action' => $action,
-                'channel' => $userData['name']
+                'channel' => $userData['login'],
             ];
+
             return view('twitch.sublist', $data);
-        } else {
-            if (empty($channel)) {
-                $nb = new Nightbot($request);
-                if (empty($nb->channel)) {
-                    return Helper::text(__('generic.user_channel_name_required'));
-                }
-                $channel = $nb->channel['providerId'];
-                $id = true;
-            }
-
-            $channel = trim($channel);
-            $reAuth = route('auth.twitch.base') . sprintf('?redirect=%ssub&scopes=%s', $action, $this->subScopes);
-            $needToReAuth = sprintf(__('twitch.sub_needs_authentication'), $id === true ? $nb->channel['displayName'] : $channel, $action, $action, $reAuth);
-
-            try {
-                $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
-            } catch (Exception $e) {
-                return Helper::text('An error occurred when trying to find channel or user.');
-            }
-
-            if (empty($channel)) {
-                return Helper::text($needToReAuth);
-            }
-
-            try {
-                $token = Crypt::decrypt($channel->access_token);
-            } catch (DecryptException $e) {
-                // Something weird happened with the encrypted token
-                // request channel owner to re-auth so it's encrypted properly
-                return Helper::text($needToReAuth);
-            }
-
-            if (empty($token)) {
-                return Helper::text($needToReAuth);
-            } else {
-                $tokenData = $this->twitchApi->base($token, $this->version)['token'];
-                if ($tokenData['valid'] === false) {
-                    return Helper::text($needToReAuth);
-                }
-            }
         }
 
-        if (!in_array('channel_subscriptions', $tokenData['authorization']['scopes'])) {
-            return Helper::text(__('twitch.auth_missing_scopes') . ' channel_subscriptions. ' . $needToReAuth);
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text(__('generic.user_channel_name_required'));
+            }
+            $channel = $nb->channel['providerId'];
+            $id = true;
+        }
+
+        $channel = trim($channel);
+        $reAuth = route('auth.twitch.base') . sprintf('?redirect=randomsub&scopes=%s', $this->subScopes);
+        $needToReAuth = sprintf(__('twitch.sub_needs_authentication'), $id === true ? $nb->channel['displayName'] : $channel, $action, $action, $reAuth);
+
+        try {
+            $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
+        } catch (Exception $e) {
+            return Helper::text('An error occurred when trying to find channel or user.');
+        }
+
+        if (empty($channel)) {
+            return Helper::text($needToReAuth);
+        }
+
+        try {
+            $token = Crypt::decrypt($channel->access_token);
+        } catch (DecryptException $e) {
+            // Something weird happened with the encrypted token
+            // request channel owner to re-auth so it's encrypted properly
+            return Helper::text($needToReAuth);
+        }
+
+        if (empty($token)) {
+            return Helper::text($needToReAuth);
+        }
+
+        $scopes = explode('+', $channel->scopes);
+
+        if (!in_array('channel:read:subscriptions', $scopes)) {
+            return Helper::text(__('twitch.auth_missing_scopes') . ' channel:read:subscriptions. ' . $needToReAuth);
         }
 
         $limit = 100;
-        $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, 0, 'desc', $this->version);
+        $userId = $channel->id;
 
-        if (!empty($data['error'])) {
-            return Helper::text(sprintf('%s - %s (%s)', __('generic.error_loading_data_api'), $data['error'], $data['message']));
+        try {
+            $this->api->setToken($token);
+            $data = $this->api->subscriptions($userId, null, $limit);
+        }
+        catch (TwitchApiException $ex)
+        {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            return Helper::text(__('twitch.error_loading_data_api'));
         }
 
-        $count = $data['_total'];
+        $count = $data['count'];
 
         if ($amount > $count) {
             return Helper::text(sprintf(__('twitch.sub_count_too_high'), $amount, $count));
         }
 
-        $subscriptions = $data['subscriptions'];
+        $subscriptions = $data['subscriptions']->resolve();
 
-        /**
-         * Hotfix for Twitch API (Kraken V5) bug.
-         *
-         * Seems Kraken has an issue with sorting when direction=desc and limit > 1, though I'm not sure about exact params.
-         * The result seems to be completely randomized, which is just silly.
-         * We try to avoid that by sorting by `created_at`, but only for `latest`.
-         * It kinda 'helps' making the "random sub" even more random, ironically.
-         */
-        if ($action === 'latest') {
-            usort($subscriptions, function($a, $b) {
-                $first = strtotime($a['created_at']);
-                $second = strtotime($b['created_at']);
-
-                return $first < $second;
-            });
+        // Request all subscriptions if the first batch didn't include all of them.
+        if ($count > $limit && $count > $limit) {
+            $subscriptions = $this->api->subscriptionsAll($userId);
         }
 
         $output = [];
-
-        if ($action == 'random') {
-            $offset = 0;
-            if ($count > $limit) {
-                while ($offset < $count) {
-                    $offset += 100;
-                    $data = $this->twitchApi->channelSubscriptions($tokenData['user_id'], $token, $limit, $offset, 'desc', $this->version);
-                    $subscriptions = array_merge($subscriptions, $data['subscriptions']);
-                }
+        // Remove the broadcaster from the list
+        $subscriptions = array_filter(
+            $subscriptions,
+            function ($subscription) use ($userId) {
+                return $subscription['user_id'] !== $userId;
             }
-            shuffle($subscriptions);
+        );
 
-            for ($i = 0; $i < $amount; $i++) {
-                $index = mt_rand(0, count($subscriptions) - 1);
+        shuffle($subscriptions);
 
-                if (isset($subscriptions[$index]['user'][$field])) $output[] = $subscriptions[$index]['user'][$field];
-
-                unset($subscriptions[$index]);
-                shuffle($subscriptions); // Reset array keys
-            }
-        }
-        elseif ($action == 'latest') {
-            $subscriptions = array_slice($subscriptions, 0, $amount);
-            foreach ($subscriptions as $subscription) {
-                if (isset($subscription['user'][$field])) $output[] = $subscription['user'][$field];
-            }
-        }
+        $output = array_map(
+            function ($user) use ($field) {
+                return $user[$field];
+            },
+            array_slice($subscriptions, 0, $amount)
+        );
 
         return Helper::text(implode($separator, $output));
     }
@@ -1429,95 +1361,23 @@ class TwitchController extends Controller
     }
 
     /**
-     * Returns the length a user has subscribed to a channel
-     *
-     * @param  Request $request
-     * @param  string  $channel
-     * @param  string  $user
-     * @return Response
+     * Twitch Helix API doesn't include any form of timestamps
+     * Therefore the API has been deprecated.
      */
     public function subAge(Request $request, $channel = null, $user = null)
     {
-        $channel = $channel ?: $request->input('channel', null);
-        $user = $user ?: $request->input('user', null);
-        $id = $request->exists('id');
+        $status = 410;
 
-        $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
-
-        if ($request->exists('logout')) {
-            return redirect()->route('auth.twitch.logout');
+        /**
+         * Return status code 200 for Nightbot requests
+         * Since Nightbot responds with a generic error message on non-2xx.
+         */
+        $nb = new Nightbot($request);
+        if (!empty($nb->channel)) {
+            $status = 200;
         }
 
-        if (empty($channel) && empty($user) && Auth::check()) {
-            $user = Auth::user();
-            $userData = $this->twitchApi->users($user->id, $this->version);
-            $name = $userData['name'];
-
-            $data = [
-                'page' => 'Subscription Age',
-                'route' => route('twitch.subage', ['channel' => $name])
-            ];
-            return view('twitch.subage', $data);
-        }
-
-        if (empty($channel) || empty($user)) {
-            $nb = new Nightbot($request);
-            if (empty($nb->channel) || empty($nb->user)) {
-                return Helper::text(__('generic.user_channel_name_required'));
-            }
-
-            $channel = $channel ?: $nb->channel['providerId'];
-            $user = $user ?: $nb->user['providerId'];
-            $id = true;
-        }
-
-        $channel = trim($channel);
-        $user = trim($user);
-
-        $reAuth = route('auth.twitch.base') . '?redirect=subage&scopes=user_read+channel_check_subscription';
-        $needToReAuth = sprintf(__('twitch.subage_needs_authentication'), $id === true ? $nb->channel['displayName'] : $channel, $reAuth);
-
-        try {
-            $channel = $id === true ? User::where('id', $channel)->first() : $this->userByName($channel)->user;
-            if ($id === false) $user = $this->userByName($user)->id;
-        } catch (Exception $e) {
-            return Helper::text('An error occurred when trying to find channel or user.');
-        }
-
-        if (empty($channel)) {
-            return Helper::text($needToReAuth);
-        }
-
-        $scopes = explode('+', $channel->scopes);
-
-        if (!in_array('channel_check_subscription', $scopes)) {
-            $needToReAuth .= '+' . implode('+', $scopes);
-            return Helper::text($needToReAuth);
-        }
-
-        try {
-            $token = Crypt::decrypt($channel->access_token);
-        } catch (DecryptException $e) {
-            // Something weird happened with the encrypted token
-            // request channel owner to re-auth so it's encrypted properly
-            return Helper::text($needToReAuth);
-        }
-
-        if (empty($token)) {
-            return Helper::text($needToReAuth);
-        } else {
-            $tokenData = $this->twitchApi->base($token, $this->version)['token'];
-            if ($tokenData['valid'] === false) {
-                return Helper::text($needToReAuth);
-            }
-        }
-
-        $getSub = $this->twitchApi->subscriptionRelationship($channel->id, $user, $token, $this->version);
-        if (!empty($getSub['status'])) {
-            return Helper::text($getSub['message']);
-        }
-
-        return Helper::text(Helper::getDateDiff($getSub['created_at'], time(), $precision));
+        return Helper::text('410 Gone - Not supported by the new Twitch API', $status);
     }
 
     /**

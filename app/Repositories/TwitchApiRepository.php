@@ -469,6 +469,49 @@ class TwitchApiRepository
     }
 
     /**
+     * Requests from the Teams API:
+     * https://dev.twitch.tv/docs/api/reference#get-teams
+     *
+     * @param array $fields
+     *
+     * @return array|null
+     * @throws TwitchApiException
+     */
+    public function teams($fields = [])
+    {
+        $request = $this->client->get('/teams', $fields);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $teams = collect($request['data']);
+        return Resource\TeamCollection::make($teams)
+                                      ->resolve();
+    }
+
+    /**
+     * Requests a specific team based on team name/slug.
+     * https://dev.twitch.tv/docs/api/reference/#get-team
+     *
+     * @param string $teamName
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function teamByName($teamName = '')
+    {
+        if (!is_string($teamName)) {
+            $type = gettype($teamName);
+            throw new TwitchFormatException('String expected, got: ' . $type);
+        }
+
+        $teams = $this->teams(['name' => $teamName]);
+        return $teams[0] ?? [];
+    }
+
+    /**
      * Retrieves a list of channels that the specified user is following, as well as the total number of channels.
      *
      * @param string $userId Twitch user ID of the user.

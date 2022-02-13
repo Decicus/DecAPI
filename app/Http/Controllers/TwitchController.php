@@ -1907,25 +1907,22 @@ class TwitchController extends Controller
             return Helper::text($message);
         }
 
-        $checkTeam = $this->twitchApi->team($team, $this->version);
-        if (!empty($checkTeam['status'])) {
-            $message = $checkTeam['message'];
-            $code = $checkTeam['status'];
-
-            if ($wantsJson) {
-                return Helper::json([
-                    'message' => $message,
-                    'status' => $code
-                ], $code);
-            }
-
-            return Helper::text($message, $code);
+        try {
+            $team = $this->api->teamByName($team);
+        }
+        catch (TwitchApiException $ex) {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex->getMessage());
+            return Helper::text('Error occurred retrieving team information for Twitch team: ' . $team);
         }
 
-        $users = $checkTeam['users'];
+        $users = $team['users'];
         $members = [];
         foreach ($users as $user) {
-            $members[] = (in_array('display_names', $settings) ? $user['display_name'] : $user['name']);
+            $members[] = (in_array('display_names', $settings) ? $user['user_name'] : $user['user_login']);
         }
 
         if ($request->exists('sort')) {

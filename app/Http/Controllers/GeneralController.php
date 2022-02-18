@@ -58,6 +58,11 @@ class GeneralController extends Controller
         return Helper::text('404 Page Not Found', 404);
     }
 
+    public function deprecated()
+    {
+        return Helper::text('410 Gone - This API has been deprecated/removed.', 410);
+    }
+
     /**
      * Displays the page for the Privacy Policy.
      *

@@ -101,7 +101,7 @@ class TwitchApiRepository
      *
      * @param array $fields
      *
-     * @return App\Http\Resources\Twitch\EmoteCollection
+     * @return array
      * @throws TwitchApiException
      */
     public function channelEmotes($fields = [])
@@ -122,7 +122,7 @@ class TwitchApiRepository
      * Retrieve channel emote information by the channel's ID.
      *
      * @param string $id
-     * @return App\Http\Resources\Twitch\EmoteCollection
+     * @return array
      * @throws App\Exceptions\TwitchApiException|App\Exceptions\TwitchFormatException
      */
     public function channelEmotesById($id = '')

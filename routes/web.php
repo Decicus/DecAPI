@@ -205,7 +205,7 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
     Route::get('total_views/{channel?}', 'TwitchController@totalViews')
         ->where('channel', $channelRegex);
 
-    Route::get('upload/{channel?}', 'TwitchController@upload')
+    Route::get('upload/{channel?}', 'GeneralController@deprecated')
         ->where('channel', $channelRegex);
 
     Route::get('{uptime}/{channel?}', 'TwitchController@uptime')

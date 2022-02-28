@@ -101,7 +101,7 @@ class TwitchApiRepository
      *
      * @param array $fields
      *
-     * @return App\Http\Resources\Twitch\EmoteCollection
+     * @return array
      * @throws TwitchApiException
      */
     public function channelEmotes($fields = [])
@@ -122,7 +122,7 @@ class TwitchApiRepository
      * Retrieve channel emote information by the channel's ID.
      *
      * @param string $id
-     * @return App\Http\Resources\Twitch\EmoteCollection
+     * @return array
      * @throws App\Exceptions\TwitchApiException|App\Exceptions\TwitchFormatException
      */
     public function channelEmotesById($id = '')
@@ -256,7 +256,16 @@ class TwitchApiRepository
             throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
         }
 
-        return $this->streamsByIds([$id]);
+        $cacheKey = sprintf('TWITCH_API_STREAM_BY_ID_%s', $id);
+        if (Cache::has($cacheKey)) {
+            $cachedStream = Cache::get($cacheKey);
+            return $cachedStream;
+        }
+
+        $streams = $this->streamsByIds([$id]);
+        Cache::put($cacheKey, $streams, config('twitch.cache.stream_by_id'));
+
+        return $streams;
     }
 
     /**
@@ -392,6 +401,12 @@ class TwitchApiRepository
      */
     public function subscriptionsAll($broadcasterId = '')
     {
+        $cacheKey = sprintf('TWITCH_SUBSCRIPTIONS_ALL_%s', $broadcasterId);
+        if (Cache::has($cacheKey)) {
+            $cachedSubscriptions = Cache::get($cacheKey);
+            return $cachedSubscriptions;
+        }
+
         $data = $this->subscriptions($broadcasterId, null, 100);
         $subscriptions = $data['subscriptions'];
 
@@ -408,6 +423,8 @@ class TwitchApiRepository
 
             $subscribers = array_merge($subscribers, $subscriptions->resolve());
         }
+
+        Cache::put($cacheKey, $subscribers, config('twitch.cache.subscriptions_all'));
 
         return $subscribers;
     }
@@ -457,6 +474,49 @@ class TwitchApiRepository
         }
 
         return $subscriptions[0];
+    }
+
+    /**
+     * Requests from the Teams API:
+     * https://dev.twitch.tv/docs/api/reference#get-teams
+     *
+     * @param array $fields
+     *
+     * @return array|null
+     * @throws TwitchApiException
+     */
+    public function teams($fields = [])
+    {
+        $request = $this->client->get('/teams', $fields);
+
+        if (isset($request['error'])) {
+            extract($request);
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+        }
+
+        $teams = collect($request['data']);
+        return Resource\TeamCollection::make($teams)
+                                      ->resolve();
+    }
+
+    /**
+     * Requests a specific team based on team name/slug.
+     * https://dev.twitch.tv/docs/api/reference/#get-team
+     *
+     * @param string $teamName
+     *
+     * @return array
+     * @throws TwitchApiException
+     */
+    public function teamByName($teamName = '')
+    {
+        if (!is_string($teamName)) {
+            $type = gettype($teamName);
+            throw new TwitchFormatException('String expected, got: ' . $type);
+        }
+
+        $teams = $this->teams(['name' => $teamName]);
+        return $teams[0] ?? [];
     }
 
     /**

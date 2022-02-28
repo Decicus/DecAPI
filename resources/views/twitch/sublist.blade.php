@@ -44,7 +44,7 @@
                     </tr>
                     <tr>
                         <th>field</th>
-                        <td>What field from the user object to retrieve. See <a href="https://dev.twitch.tv/docs/v5/reference/channels/#get-channel-subscribers" target="blank">Twitch API docs</a> to see which ones are available. Default: <code>name</code>.</td>
+                        <td>What field from the user object to retrieve. See <a href="https://dev.twitch.tv/docs/api/reference#get-broadcaster-subscriptions" target="blank">Twitch API docs</a> to see which ones are available. Default: <code>user_name</code>.</td>
                         <td><code>string</code></td>
                     </tr>
                     <tr>

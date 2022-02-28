@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Http\Requests;
+use App\Repositories\TwitchApiRepository;
 
 use App\Helpers\Helper;
 use Exception;
@@ -23,15 +23,13 @@ class FfzController extends Controller
     const UNRESOLVED_TWITCH_ID = 'An error occurred translating the Twitch username to a valid user ID.';
 
     /**
-     * Instance of TwitchApiController
-     *
-     * @var App\Http\Controllers\TwitchApiController
+     * @var TwitchApiRepository
      */
     private $twitchApi;
 
-    public function __construct()
+    public function __construct(TwitchApiRepository $apiRepository)
     {
-        $this->twitchApi = new TwitchApiController(env('TWITCH_CLIENT_ID'), env('TWITCH_CLIENT_SECRET'));
+        $this->twitchApi = $apiRepository;
     }
 
     /**

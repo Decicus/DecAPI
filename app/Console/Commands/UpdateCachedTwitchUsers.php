@@ -50,7 +50,7 @@ class UpdateCachedTwitchUsers extends Command
      */
     public function handle()
     {
-        $oneMonthAgo = Carbon::now()->subMonths(1);
+        $oneMonthAgo = Carbon::now()->subWeeks(2);
         $deletedUsers = CachedTwitchUser::where('created_at', '<', $oneMonthAgo)->delete();
 
         // Only log info message when there is a "large" amount of users deleted.
@@ -62,7 +62,7 @@ class UpdateCachedTwitchUsers extends Command
         Log::info(sprintf('Refreshing %d cached users', $users->count()));
 
         $userChunks = $users->chunk(100);
-        
+
         $deleted = 0;
         $updated = 0;
 
@@ -88,7 +88,7 @@ class UpdateCachedTwitchUsers extends Command
                 }
 
                 $apiUser = array_shift($apiUser);
-                
+
                 $cachedUser->username = $apiUser['login'];
                 $cachedUser->updated_at = Carbon::now();
                 $cachedUser->save();

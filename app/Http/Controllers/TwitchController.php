@@ -120,10 +120,10 @@ class TwitchController extends Controller
 
     /**
      * Retrieves the Twitch user object specified by login name.
-     * Throws an exception on errors.
      *
      * @param  string $name The username to look for.
      * @return array
+     * @throws TwitchApiException
      */
     protected function userByName($name)
     {
@@ -1460,6 +1460,14 @@ class TwitchController extends Controller
         }
         catch (TwitchApiException $ex)
         {
+            /**
+             * OAuth token invalid, so we delete it from the table.
+             */
+            if ($ex->getCode() === 401) {
+                $user->delete();
+                return Helper::text($needToReAuth);
+            }
+
             return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
         }
         catch (Exception $ex)
@@ -1552,6 +1560,14 @@ class TwitchController extends Controller
         }
         catch (TwitchApiException $ex)
         {
+            /**
+             * OAuth token invalid, so we delete it from the table.
+             */
+            if ($ex->getCode() === 401) {
+                $user->delete();
+                return Helper::text($needToReAuth);
+            }
+
             return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
         }
         catch (Exception $ex)
@@ -2001,7 +2017,7 @@ class TwitchController extends Controller
         $formattedVideos = [];
         try {
             $videos = $this->api->channelVideos($channel, $broadcastTypes, $limit);
-            
+
             foreach ($videos as $video) {
                 $formattedVideos[] = str_replace(['${title}', '${url}'], [$video['title'], $video['url']], $format);
             }

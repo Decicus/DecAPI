@@ -50,7 +50,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $channels = collect($request['data']);
@@ -110,7 +110,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $channels = collect($request['data']);
@@ -203,7 +203,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $followData = collect($request);
@@ -232,7 +232,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $followData = collect($request['data']);
@@ -347,7 +347,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $streams = collect($request);
@@ -382,7 +382,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $subscriptions = collect($request);
@@ -491,7 +491,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $teams = collect($request['data']);
@@ -541,7 +541,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $followData = collect($request);
@@ -564,7 +564,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s - Users: [%s]', $status, $error, $message, json_encode($users)));
+            throw new TwitchApiException(sprintf('%d: %s - %s - Users: [%s]', $status, $error, $message, json_encode($users)), $status);
         }
 
         $users = collect($request['data']);
@@ -723,7 +723,7 @@ class TwitchApiRepository
 
         if (isset($request['error'])) {
             extract($request);
-            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message));
+            throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);
         }
 
         $videos = collect($request['data']);

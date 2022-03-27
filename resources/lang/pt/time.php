@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Portuguese (Brazil) translation strings for time, for example: /twitch/followage & /twitch/uptime
  *
@@ -12,5 +13,5 @@ return [
     'hour' => ':value hora|:value horas',
     'minute' => ':value minuto|:value minutos',
     'second' => ':value segundo|:value segundos',
-    'invalid_timezone' => 'Invalid timezone specified: :timezone',
+    'invalid_timezone' => 'Fuso horário inválido especificado: :timezone',
 ];

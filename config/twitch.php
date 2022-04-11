@@ -21,15 +21,16 @@
              */
             'created' => 21600,
 
-            'avatar' => 300,
-            'game' => 60,
+            // Cache avatars for up to 30 minutes
+            'avatar' => 1800,
+            'game' => 180,
             // Stream title/status
-            'status' => 60,
+            'status' => 180,
 
             /**
              * Follower count of a channel
              */
-            'followcount' => 60,
+            'followcount' => 120,
 
             /**
              * Subscriptions meta API handler.
@@ -54,13 +55,16 @@
             /**
              * Used by `channelVideos()` in TwitchApiRepository.
              */
-            'channel_videos' => 180,
+            'channel_videos' => 300,
 
             /**
              * Used by `streamByName()`/`streamById()` in TwitchApiRepository.
+             *
+             * This won't affect uptime and such, besides the fact that offline status
+             * and online status may be delayed by a few minutes.
              */
-            'stream_by_name' => 120,
-            'stream_by_id' => 120,
+            'stream_by_name' => 300,
+            'stream_by_id' => 300,
         ],
     ];
 ?>

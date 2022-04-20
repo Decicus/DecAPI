@@ -258,7 +258,7 @@ class DayZController extends Controller
                 return Helper::text(sprintf('No DayZ news articles were found matching the following search: %s', $search));
             }
 
-            $post = $posts[0];
+            $post = reset($posts);
         }
 
         $title = $post['title'];

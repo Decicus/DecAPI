@@ -168,7 +168,18 @@ class TwitterController extends Controller
 
             $text = [];
             if ($onlyUrl === false) {
-                $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->full_text));
+                $tweetText = $tweet->full_text;
+
+                /**
+                 * Even if we access `$tweet->full_text`, it doesn't seem to work for retweets.
+                 * Retweets are still truncated to 140 characters, so we need to extract the `full_text` from the retweet.
+                 */
+                if (isset($tweet->retweeted_status)) {
+                    $retweet = $tweet->retweeted_status;
+                    $tweetText = sprintf('RT @%s: %s', $retweet->user->screen_name, $retweet->full_text);
+                }
+
+                $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweetText));
             }
 
             /**

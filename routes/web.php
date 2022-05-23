@@ -16,6 +16,10 @@ Route::get('/{index?}', ['as' => 'home', 'uses' => 'GeneralController@home'])
 
 Route::get('/privacy-policy', ['as' => 'privacy-policy', 'uses' => 'GeneralController@privacyPolicy']);
 
+Route::group(['prefix' => 'arma'], function() {
+    Route::get('reforger-news', ['as' => 'reforger-news', 'uses' => 'ArmaController@reforgerNews']);
+});
+
 Route::group(['prefix' => 'askfm'], function() {
     Route::get('rss/{user?}', 'AskfmController@rss');
 });
@@ -68,6 +72,8 @@ Route::group(['prefix' => 'misc', 'as' => 'misc.'], function() {
         ->where('currency', '(currency(\.php)?)');
     Route::get('{time}', ['as' => 'time', 'uses' => 'MiscController@time'])
         ->where('time', '(time(\.php)?)');
+
+    Route::get('time-difference', ['as' => 'time-difference', 'uses' => 'MiscController@timeDifference']);
 
     Route::get('timezones', ['as' => 'timezones', 'uses' => 'MiscController@timezones']);
 });

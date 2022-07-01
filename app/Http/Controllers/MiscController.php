@@ -114,6 +114,38 @@ class MiscController extends Controller
     }
 
     /**
+     * Displays the time difference between two specified times.
+     * Similar to the Twitch `followage` endpoint.
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return Response
+     */
+    public function timeDifference(Request $request)
+    {
+        $first = $request->input('first', null);
+        $second = $request->input('second', null);
+        $precision = (int) $request->input('precision', 7);
+
+        if (empty($first)) {
+            return Helper::text('The `first` parameter has to be specified.');
+        }
+
+        $first = strtotime($first);
+
+        if (empty($second)) {
+            $second = time();
+        }
+        else {
+            $second = strtotime($second);
+        }
+
+        $diff = Helper::getDateDiff($first, $second, $precision);
+
+        return Helper::text($diff);
+    }
+
+    /**
      * Lists the supported timezones.
      *
      * @param Request $request

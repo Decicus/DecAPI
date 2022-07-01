@@ -15,7 +15,7 @@ class MathController extends Controller
      *
      * @var string
      */
-    private $mathBaseUrl = 'http://api.mathjs.org/v4?expr=';
+    private $mathBaseUrl = 'https://math.decapi.net/?expr=';
 
     /**
      * Evaluates a math expression.

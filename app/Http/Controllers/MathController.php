@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Helpers\Helper;
 use Exception;
+use GuzzleHttp\Client as HttpClient;
 
 class MathController extends Controller
 {
@@ -16,6 +17,27 @@ class MathController extends Controller
      * @var string
      */
     private $mathBaseUrl = 'https://math.decapi.net/?expr=';
+
+    /**
+     * HTTP client
+     *
+     * @var GuzzleHttp\Client
+     */
+    private $client;
+
+    /**
+     * HTTP client settings
+     *
+     * @var array
+     */
+    private $clientSettings = [
+        'http_errors' => false,
+    ];
+
+    public function __construct(HttpClient $client)
+    {
+        $this->client = $client;
+    }
 
     /**
      * Evaluates a math expression.
@@ -47,16 +69,26 @@ class MathController extends Controller
         }
 
         try {
-            $result = (string) Helper::get($this->mathBaseUrl . urlencode($exp), [], false);
+            $url = sprintf('%s%s', $this->mathBaseUrl, $exp);
+            $response = $this->client->request('GET', $url, $this->clientSettings);
+
+            if ($response->getStatusCode() !== 200) {
+                return Helper::text(sprintf('An error occurred calculating the expression: %s', $exp));
+            }
+
+            $result = (string) $response->getBody();
+            if (strlen($result) === 0) {
+                return Helper::text('No result.');
+            }
 
             if ($request->exists('round') === true) {
                 // Before we can use `round()` we need to convert it to a float.
-                $result = floatval($result);
+                $result = (float) $result;
                 $result = round($result, $round);
             }
 
             return Helper::text($result);
-        } catch (RuntimeException $e) {
+        } catch (Exception $e) {
             return Helper::text('An error occurred evaluating: ' . $exp);
         }
     }

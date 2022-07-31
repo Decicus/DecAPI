@@ -69,7 +69,7 @@ class MathController extends Controller
         }
 
         try {
-            $url = sprintf('%s%s', $this->mathBaseUrl, $exp);
+            $url = sprintf('%s%s', $this->mathBaseUrl, urlencode($exp));
             $response = $this->client->request('GET', $url, $this->clientSettings);
 
             if ($response->getStatusCode() !== 200) {

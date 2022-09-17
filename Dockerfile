@@ -1,5 +1,5 @@
 # Thanks to: https://www.digitalocean.com/community/tutorials/how-to-containerize-a-laravel-application-for-development-with-docker-compose-on-ubuntu-18-04
-FROM php:7.4-fpm
+FROM php:8.1-fpm
 
 ARG user
 ARG uid
@@ -12,8 +12,8 @@ RUN apt-get install -y \
     bzip2 zip unzip
 
 RUN docker-php-ext-install \
-    bz2 bcmath mbstring \
-    json opcache pdo \
+    bz2 bcmath \
+    opcache pdo \
     pdo_mysql sockets xml zip
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer

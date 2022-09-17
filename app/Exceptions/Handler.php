@@ -33,11 +33,11 @@ class Handler extends ExceptionHandler
      */
     public function report(Throwable $e)
     {
-        if (!empty(env('SENTRY_LARAVEL_DSN', null))) {
-            if (app()->bound('sentry') && $this->shouldReport($e)) {
+        $this->reportable(function (Throwable $e) {
+            if (app()->bound('sentry')) {
                 app('sentry')->captureException($e);
             }
-        }
+        });
 
         parent::report($e);
     }

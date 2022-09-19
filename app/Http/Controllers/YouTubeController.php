@@ -9,6 +9,7 @@ use YouTube;
 use App\Helpers\Helper;
 use Exception;
 use Log;
+use Cache;
 
 class YouTubeController extends Controller
 {
@@ -234,6 +235,24 @@ class YouTubeController extends Controller
             return Helper::text('No search parameter specified.');
         }
 
+        $normalizedSearch = strtolower(trim($search));
+        $cacheKey = sprintf('youtube.video_id.%s', hash('sha256', $normalizedSearch));
+        // Loaded from `config/youtube-cache.php` - Defaults to 3 hours
+        $cacheTime = config('config.youtube-cache.search', 10800);
+
+        /**
+         * Check if search string has been cached
+         */
+        if (Cache::has($cacheKey)) {
+            $videoId = Cache::get($cacheKey);
+
+            if ($showUrl) {
+                return Helper::text(sprintf('https://youtu.be/%s', $videoId));
+            }
+
+            return Helper::text($videoId);
+        }
+
         // YouTube URL detected
         $parse = $this->parseURL($search);
         if ($parse !== false) {
@@ -242,8 +261,11 @@ class YouTubeController extends Controller
             if (!empty($video)) {
                 $video = $video->id;
             }
+
+            Cache::put($cacheKey, $video, $cacheTime);
         }
 
+        // YouTube URL not detected, search for video
         if ($parse === false) {
             $parameters = [
                 'q' => $search,
@@ -292,8 +314,10 @@ class YouTubeController extends Controller
             return Helper::text('Invalid video ID or search string.');
         }
 
+        Cache::put($cacheKey, $video, $cacheTime);
+
         if ($showUrl) {
-            $video = 'https://youtu.be/' . $video;
+            $video = sprintf('https://youtu.be/%s', $video);
         }
 
         return Helper::text($video);

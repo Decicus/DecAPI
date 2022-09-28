@@ -50,12 +50,12 @@ class UpdateCachedTwitchUsers extends Command
      */
     public function handle()
     {
-        $oneMonthAgo = Carbon::now()->subWeeks(2);
-        $deletedUsers = CachedTwitchUser::where('created_at', '<', $oneMonthAgo)->delete();
+        $deleteCutoff = Carbon::now()->subDays(3);
+        $deletedUsers = CachedTwitchUser::where('created_at', '<', $deleteCutoff)->delete();
 
         // Only log info message when there is a "large" amount of users deleted.
         if ($deletedUsers > 25) {
-            Log::info(sprintf('Deleted %d cached users older than %s', $deletedUsers, $oneMonthAgo));
+            Log::info(sprintf('Deleted %d cached users older than %s', $deletedUsers, $deleteCutoff));
         }
 
         $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHour(1))->get();

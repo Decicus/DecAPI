@@ -20,10 +20,6 @@ Route::group(['prefix' => 'arma'], function() {
     Route::get('reforger-news', ['as' => 'reforger-news', 'uses' => 'ArmaController@reforgerNews']);
 });
 
-Route::group(['prefix' => 'askfm'], function() {
-    Route::get('rss/{user?}', 'AskfmController@rss');
-});
-
 Route::group(['prefix' => 'auth', 'as' => 'auth.'], function() {
     Route::group(['prefix' => 'twitch', 'as' => 'twitch.'], function() {
         Route::get('/', ['as' => 'base', 'uses' => 'TwitchAuthController@redirect']);

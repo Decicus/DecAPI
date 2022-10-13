@@ -54,13 +54,13 @@ return [
      * Multi
      */
     'multi_invalid_service' => '잘못된 서비스가 지정되었습니다. - 사용 가능한 서비스: :services',
-    'multi_empty_list' => '다중 링크를 만들 스트림을 지정해야합니다. (스페이스(공백)으로 구분)'
+    'multi_empty_list' => '다중 링크를 만들 스트림을 지정해야합니다. (스페이스(공백)으로 구분)',
 
     /**
      * Stream
      */
     'stream_offline' => ':channel 채널은 오프라인입니다.',
-    'stream_get_error' => ':channel에 대한 방송 정보를 가져올 수 없습니다.',
+    'stream_get_error' => ':channel 에 대한 방송 정보를 가져올 수 없습니다.',
 
     /**
      * Subscriber-related stuff

@@ -257,12 +257,10 @@ class YouTubeController extends Controller
         $parse = $this->parseURL($search);
         if ($parse !== false) {
             $video = YouTube::getVideoInfo($parse);
-
             if (!empty($video)) {
                 $video = $video->id;
+                Cache::put($cacheKey, $video, $cacheTime);
             }
-
-            Cache::put($cacheKey, $video, $cacheTime);
         }
 
         // YouTube URL not detected, search for video
@@ -311,7 +309,7 @@ class YouTubeController extends Controller
                 return Helper::text('');
             }
 
-            return Helper::text('Invalid video ID or search string.');
+            return Helper::text('Invalid video URL, video ID or search string.');
         }
 
         Cache::put($cacheKey, $video, $cacheTime);
@@ -325,20 +323,49 @@ class YouTubeController extends Controller
 
     /**
      * Parses a URL and attempts to retrieve the video ID.
+     * This does not validate if the video ID is valid or not, though it is intended to be done in `videoId()`.
      *
-     * @param  string $url The URL to parse
-     * @return mixed       The video ID or false if it's unable to find it.
+     * @param  string $url        The URL to parse
+     * @return string|false       The video ID or false if it's unable to find it.
      */
     private function parseURL($url)
     {
         $url = urldecode($url);
 
-        if (stristr($url, 'youtu.be/')) {
-            preg_match('/(https:|http:|)(\/\/www\.|\/\/|)(.*?)\/(.{11})/i', $url, $id);
-            return $id[4];
-        } else {
-            preg_match('/(https:|http:|):(\/\/www\.|\/\/|)(.*?)\/(embed\/|watch.*?v=|)([a-z_A-Z0-9\-]{11})/i', $url, $id);
-            return (!empty($id) ? $id[5] : false);
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        $parsed = null;
+        try {
+            $parsed = parse_url($url);
+        } catch (Exception $e) {
+            return false;
+        }
+
+        if (empty($parsed)) {
+            return false;
+        }
+
+        $host = strtolower($parsed['host']);
+        if ($host === 'youtu.be') {
+            // Return video ID after `https://youtu.be/`
+            return substr($parsed['path'], 1);
+        }
+
+        if ($host === 'youtube.com' || $host === 'www.youtube.com') {
+            $query = [];
+            parse_str($parsed['query'], $query);
+
+            if (empty($query['v'])) {
+                return false;
+            }
+
+            if (!is_string($query['v'])) {
+                return false;
+            }
+
+            return $query['v'];
         }
 
         return false;

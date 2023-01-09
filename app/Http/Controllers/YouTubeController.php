@@ -258,8 +258,14 @@ class YouTubeController extends Controller
         if ($parse !== false) {
             $video = YouTube::getVideoInfo($parse);
             if (!empty($video)) {
-                $video = $video->id;
-                Cache::put($cacheKey, $video, $cacheTime);
+                $videoId = $video->id;
+                Cache::put($cacheKey, $videoId, $cacheTime);
+
+                if ($showUrl) {
+                    return Helper::text(sprintf('https://youtu.be/%s', $videoId));
+                }
+
+                return Helper::text($videoId);
             }
         }
 
@@ -355,7 +361,8 @@ class YouTubeController extends Controller
 
         if ($host === 'youtube.com' || $host === 'www.youtube.com') {
             $query = [];
-            parse_str($parsed['query'], $query);
+            $queryString = $parsed['query'] ?? '';
+            parse_str($queryString, $query);
 
             if (empty($query['v'])) {
                 return false;

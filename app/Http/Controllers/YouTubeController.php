@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Http\Requests;
 use YouTube;
 use App\Helpers\Helper;
 use Exception;
@@ -50,6 +49,10 @@ class YouTubeController extends Controller
 
         $id = $request->input($type, null);
         $format = $request->input('format', $this->defaultFormat);
+        $exclude = $request->input('exclude', null);
+        if ($exclude !== null) {
+            $exclude = trim($exclude);
+        }
 
         if (empty(trim($format))) {
             $format = $this->defaultFormat;
@@ -119,9 +122,18 @@ class YouTubeController extends Controller
              * Instead we filter the videos, so we only have the public ones left.
              */
             $results = array_filter($results,
-                function($video) {
+                function($video) use ($exclude) {
                     $privacyStatus = $video->status->privacyStatus ?? 'private';
-                    return $privacyStatus === 'public';
+                    $isPublic = $privacyStatus === 'public';
+
+                    if (empty($exclude)) {
+                        return $isPublic;
+                    }
+
+                    $title = $video->snippet->title ?? '';
+                    $isExcluded = stripos($title, $exclude) !== false;
+
+                    return $isPublic && !$isExcluded;
                 }
             );
 

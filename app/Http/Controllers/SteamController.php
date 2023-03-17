@@ -254,6 +254,12 @@ class SteamController extends Controller
         $readable = ($readable === 'readable' ? true : false);
         $round = intval($request->input('round', 2));
 
+        /**
+         * Censors the Steam ID in error responses, to avoid leaking the ID to the public.
+         * Useful for streamers I suppose.
+         */
+        $censorSteamId = $request->has('censor', false);
+
         $hasApiKey = $request->has('key');
         $customApiKey = $request->input('key', null);
         if ($hasApiKey) {
@@ -300,8 +306,16 @@ class SteamController extends Controller
             return Helper::text(sprintf($hoursFormat, $hours));
         }
         catch (Exception $e) {
+            if ($censorSteamId) {
+                $playerId = 'X';
+            }
+
             $errorFormat = 'An error occurred retrieving hours for Steam ID: %s with app ID: %s%s';
-            $errorApiKey = ($hasApiKey ? ' - Using custom Steam API key.' : '');
+
+            $errorApiKey = '';
+            if ($hasApiKey) {
+                $errorApiKey = ' - Using custom Steam API key.';
+            }
 
             /**
              * Handle client exceptions differently.

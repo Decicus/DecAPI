@@ -10,10 +10,24 @@ use Twitter;
 use App\Helpers\Helper;
 use Exception;
 
+use App\Repositories\TwitterApiRepository;
+use App\Exceptions\TwitterApiException;
+
 class TwitterController extends Controller
 {
     /**
+     * @var App\Repositories\TwitterApiRepository
+     */
+    private $api;
+
+    public function __construct(TwitterApiRepository $api) {
+        $this->api = $api;
+    }
+
+    /**
      * Returns the account age of the specified Twitter user.
+     *
+     * TODO: Fix/remove
      *
      * @param  Request $request
      * @param  string  $name
@@ -39,30 +53,6 @@ class TwitterController extends Controller
     }
 
     /**
-     * Retrieves tweets from the specified user.
-     *
-     * @param  string  $name            Twitter username
-     * @param  boolean $no_rts          'true' excludes retweets, 'false' includes them.
-     * @param  boolean $exclude_replies Exclude replies or not, default: true.
-     * @return array
-     */
-    private function getTweets($name = null, $no_rts = true, $exclude_replies = true)
-    {
-        $retweets = $no_rts ? 'false' : 'true';
-        $exclude_replies = $exclude_replies ? 'true' : 'false';
-
-        $tweet = Twitter::getUserTimeline([
-            'screen_name' => $name,
-            'count' => 200,
-            'exclude_replies' => $exclude_replies,
-            'include_rts' => $retweets,
-            'tweet_mode' => 'extended',
-        ]);
-
-        return $tweet;
-    }
-
-    /**
      * Fetches the latest tweet for the specified user
      *
      * @param  Request $request
@@ -73,8 +63,11 @@ class TwitterController extends Controller
     public function latest(Request $request, $latest = null, $name = null)
     {
         $name = $name ?: $request->input('name', null);
+
+        /**
+         * TODO: Re-implement search & skip
+         */
         $search = $request->input('search', null);
-        $onlyMedia = $request->input('only_media', null);
         $skip = intval($request->input('skip', 0));
 
         if (empty($name)) {
@@ -98,173 +91,7 @@ class TwitterController extends Controller
         /**
          * To exclude replies to other users or not.
          *
-         * @var boolean
-         */
-        $excludeReplies = true;
-        if ($request->exists('include_replies') || !empty($request->input('no_exclude_replies', null))) {
-            $excludeReplies = false;
-        }
-
-        try {
-            $tweets = $this->getTweets($name, $request->exists('no_rts'), $excludeReplies);
-
-            if (empty($tweets)) {
-                return Helper::text('No tweets were found for this user.');
-            }
-
-            if (count($tweets) < $skip) {
-                return Helper::text('Skip count is higher than the amount of available tweets.');
-            }
-
-            if (!empty($search)) {
-                $search = urldecode($search);
-                $strict = $request->exists('strict');
-
-                if ($strict === false) {
-                    $search = strtolower($search);
-                }
-
-                $searchSkip = 0;
-                foreach ($tweets as $current) {
-                    $text = htmlspecialchars_decode($current->full_text);
-
-                    if ($strict === false) {
-                        $text = strtolower($text);
-                    }
-
-                    if (strpos($text, $search) !== false) {
-                        if ($searchSkip === $skip) {
-                            /**
-                             * Makes sure that if the `$onlyMedia` parameter is included with
-                             * the request, that the first tweet that matches the search query also
-                             * includes some form of media (e.g. image or video).
-                             */
-                            if (!empty($onlyMedia)) {
-                                if (empty($current->extended_entities)) {
-                                    continue;
-                                }
-
-                                $ext = $current->extended_entities;
-                                if (empty($ext->media)) {
-                                    continue;
-                                }
-                            }
-
-                            $tweet = $current;
-                            break;
-                        } else {
-                            $searchSkip++;
-                            continue;
-                        }
-                    }
-                }
-
-                if (!isset($tweet)) {
-                    throw new Exception('No tweets found based on the search query.');
-                }
-            } else {
-                $tweet = $tweets[$skip];
-            }
-
-            $text = [];
-            if ($onlyUrl === false) {
-                $tweetText = $tweet->full_text;
-
-                /**
-                 * Even if we access `$tweet->full_text`, it doesn't seem to work for retweets.
-                 * Retweets are still truncated to 140 characters, so we need to extract the `full_text` from the retweet.
-                 */
-                if (isset($tweet->retweeted_status)) {
-                    $retweet = $tweet->retweeted_status;
-                    $tweetText = sprintf('RT @%s: %s', $retweet->user->screen_name, $retweet->full_text);
-                }
-
-                $text[] = str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweetText));
-            }
-
-            /**
-             * Appends the amount of retweets the tweet has received.
-             */
-            if ($request->exists('retweets')) {
-                $text[] = 'Retweets: ' . $tweet->retweet_count;
-            }
-
-            /**
-             * Appends the amount of users that has favorited the tweet.
-             */
-            if ($request->exists('favorites')) {
-                $text[] = 'Favorites: ' . $tweet->favorite_count;
-            }
-
-            /**
-             * Appends the tweet URL to the tweet,
-             * or displays only the URL, depending on
-             * the query string parameters
-             */
-            if ($request->exists('url') || $onlyUrl) {
-                $link = Twitter::linkTweet($tweet);
-
-                /**
-                 * Shortens the URL using TinyURL
-                 */
-                if ($request->exists('shorten')) {
-                    $link = Helper::get('http://tinyurl.com/api-create.php?url=' . $link, [
-                        'User-Agent' => env('SITE_TITLE') . '/Twitter'
-                    ], false);
-                }
-
-                $text[] = $link;
-            }
-
-            /**
-             * Appends length of time since tweet was posted.
-             */
-            if ($request->exists('howlong')) {
-                $precision = 4;
-                if ($request->has('precision')) {
-                    $precision = intval($request->input('precision'));
-                }
-
-                $text[] = Helper::getDateDiff($tweet->created_at, time(), $precision) . " ago";
-            }
-
-            /**
-             * Returns just the tweet ID.
-             */
-            if ($onlyId === true) {
-                $text = [$tweet->id];
-            }
-
-            return Helper::text(implode(' - ', $text));
-        } catch (Exception $e) {
-            if ($e->getCode() === 401) {
-                return Helper::text('Not authorized (Normally this means locked/private account)');
-            }
-
-            return Helper::text('[Error] - ' . trim($e->getMessage()));
-        }
-    }
-
-    /**
-     * Legacy support for /twitter/tweet. Similar to /twitter/tweet with "skip".
-     *
-     * @param  Request $request
-     * @param  string  $tweet
-     * @param  string  $name
-     * @return Response
-     */
-    public function tweet(Request $request, $tweet = null, $name = null)
-    {
-        $count = $request->input('count', 1);
-        $name = $name ?: $request->input('name', null);
-        $withUrl = $request->exists('tweet_url');
-
-        if ($count < 1) {
-            return Helper::text('The "count" parameter has to be more than 0.');
-        }
-
-        /**
-         * To exclude replies to other users or not.
+         * TODO: Re-implement this
          *
          * @var boolean
          */
@@ -273,37 +100,87 @@ class TwitterController extends Controller
             $excludeReplies = false;
         }
 
-        if (empty($name)) {
-            return Helper::text('A Twitter username has to be specified');
-        }
-
+        $tweets = [];
         try {
-            $tweets = $this->getTweets($name, $request->exists('no_rts'), $excludeReplies);
-
-            if (empty($tweets)) {
-                return Helper::text('No tweets were found for this user.');
-            }
-
-            if (count($tweets) < $count) {
-                return Helper::text('The "count" parameter is more than the amount of available tweets the user has.');
-            }
-
-            $tweet = $tweets[$count - 1];
-            $text = [
-                str_replace(PHP_EOL, ' ', htmlspecialchars_decode($tweet->full_text))
-            ];
-
-            if ($withUrl) {
-                $text[] = Twitter::linkTweet($tweet);
-            }
-
-            return Helper::text(implode(' - ', $text));
-        } catch (Exception $e) {
-            if ($e->getCode() === 401) {
-                return Helper::text('Not authorized (Normally this means locked/private account)');
-            }
-
-            return Helper::text('[Error] - ' . trim($e->getMessage()));
+            $tweets = $this->api->getTweets($name);
         }
+        catch (TwitterApiException $ex) {
+            return Helper::text(sprintf('An error occurred while fetching tweets for %s: %s', $name, $ex->getMessage()));
+        }
+
+        if (empty($tweets)) {
+            return Helper::text('No tweets were found for this user.');
+        }
+
+        // Remove pinned
+        $tweets = array_filter($tweets, function($tweet) {
+            return $tweet['pinned'] === false;
+        });
+
+        $noRetweets = $request->exists('no_rts');
+        if ($noRetweets) {
+            $tweets = array_filter($tweets, function($tweet) {
+                return $tweet['retweet'] === false;
+            });
+        }
+
+        if (empty($tweets)) {
+            return Helper::text('No tweets (matching the filters) were found for this user');
+        }
+
+        $tweet = current($tweets);
+
+        $text = [];
+        if ($onlyUrl === false) {
+            $tweetText = $tweet['textInline'];
+
+            /**
+             * Even if we access `$tweet->full_text`, it doesn't seem to work for retweets.
+             * Retweets are still truncated to 140 characters, so we need to extract the `full_text` from the retweet.
+             */
+            if ($tweet['retweet'] === true) {
+                $tweetText = sprintf('RT @%s: %s', $tweet['author']['username'], $tweetText);
+            }
+
+            $text[] = str_replace(PHP_EOL, ' ', $tweetText);
+        }
+
+        /**
+         * Appends the tweet URL to the tweet,
+         * or displays only the URL, depending on
+         * the query string parameters
+         */
+        if ($request->exists('url') || $onlyUrl) {
+            $link = $tweet['url'];
+
+            /**
+             * Shortens the URL using TinyURL
+             */
+            if ($request->exists('shorten')) {
+                $link = Helper::get('http://tinyurl.com/api-create.php?url=' . $link, [
+                    'User-Agent' => env('SITE_TITLE') . '/Twitter'
+                ], false);
+            }
+
+            $text[] = $link;
+        }
+
+        /**
+         * Appends length of time since tweet was posted.
+         */
+        if ($request->exists('howlong')) {
+            $precision = 4;
+            if ($request->has('precision')) {
+                $precision = intval($request->input('precision'));
+            }
+
+            $text[] = Helper::getDateDiff($tweet['created_at'], time(), $precision) . " ago";
+        }
+
+        if ($onlyId) {
+            return Helper::text($tweet['id']);
+        }
+
+        return Helper::text(implode(' - ', $text));
     }
 }

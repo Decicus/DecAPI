@@ -230,10 +230,6 @@ Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {
     Route::get('{latest}/{name?}', ['as' => 'latest', 'uses' => 'TwitterController@latest'])
         ->where('latest', '(latest(\.php)?|latest_url(\.php)?|latest_id(\.php)?)')
         ->where('name', '([A-z0-9]+)');
-
-    Route::get('{tweet}/{name?}', ['as' => 'tweet', 'uses' => 'TwitterController@tweet'])
-        ->where('tweet', '(tweet(\.php)?)')
-        ->where('name', '([A-z0-9]+)');
 });
 
 Route::group(['prefix' => 'youtube', 'as' => 'youtube'], function() {

@@ -170,6 +170,11 @@ return [
          * BetterTTV
          */
         App\Providers\BttvApiProvider::class,
+
+        /**
+         * Twitter
+         */
+        App\Providers\TwitterApiProvider::class,
     ],
 
     /*

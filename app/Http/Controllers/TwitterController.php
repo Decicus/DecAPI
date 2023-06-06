@@ -22,8 +22,6 @@ class TwitterController extends Controller
     /**
      * Returns the account age of the specified Twitter user.
      *
-     * TODO: Fix/remove
-     *
      * @param  Request $request
      * @param  string  $name
      * @return Response
@@ -34,7 +32,16 @@ class TwitterController extends Controller
             return Helper::text('You have to specify a (user)name.');
         }
 
-        return Helper::text('This API is currently unavailable due to Twitter API changes.');
+        $precision = intval($request->input('precision', 3));
+        try {
+            // A bit misleading method name, but it does return the user object.
+            $user = $this->api->getUser($name);
+
+            $timeDiff = Helper::getDateDiff($user['dateCreated'], time(), $precision);
+            return Helper::text($timeDiff);
+        } catch (TwitterApiException $ex) {
+            return Helper::text(sprintf('An error occurred getting accountage for user %s: %s', $name, $ex->getMessage()));
+        }
     }
 
     /**

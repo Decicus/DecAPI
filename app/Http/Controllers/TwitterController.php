@@ -3,12 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
-use App\Http\Requests;
-
-use Twitter;
 use App\Helpers\Helper;
-use Exception;
 
 use App\Repositories\TwitterApiRepository;
 use App\Exceptions\TwitterApiException;
@@ -39,17 +34,7 @@ class TwitterController extends Controller
             return Helper::text('You have to specify a (user)name.');
         }
 
-        $precision = intval($request->input('precision', 3));
-        try {
-            $user = Twitter::getUsers([
-                'screen_name' => $name,
-            ]);
-
-            $timeDiff = Helper::getDateDiff($user->created_at, time(), $precision);
-            return Helper::text($timeDiff);
-        } catch (Exception $ex) {
-            return Helper::text($ex->getMessage());
-        }
+        return Helper::text('This API is currently unavailable due to Twitter API changes.');
     }
 
     /**

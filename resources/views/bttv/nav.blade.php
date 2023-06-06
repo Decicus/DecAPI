@@ -7,6 +7,6 @@
     </ul>
 
     <span class="navbar-text justify-content-end">
-        Powered by the <a href="https://betterttv.com/" class="navbar-link">BetterTTV</a> API.
+        Powered by the <a href="https://betterttv.com/developers/api" class="navbar-link">BetterTTV API</a>.
     </span>
 </nav>

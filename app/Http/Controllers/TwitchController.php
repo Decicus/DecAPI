@@ -981,43 +981,6 @@ class TwitchController extends Controller
     }
 
     /**
-     * Return list of hosts for a channel
-     *
-     * @param  Request $request
-     * @param  string  $hosts
-     * @param  string  $channel Channel name
-     * @return Response
-     */
-    public function hosts(Request $request, $hosts = null, $channel = null)
-    {
-        $translation = sprintf('410 Gone - %s', __('twitch.api_removed_by_twitch'));
-        $status = 410;
-
-        /**
-         * Return status code 200 for Nightbot requests
-         * Since Nightbot responds with a generic error message on non-2xx.
-         */
-        $nb = new Nightbot($request);
-        if (!empty($nb->channel)) {
-            $status = 200;
-        }
-
-        return Helper::text($translation, $status);
-    }
-
-    /**
-     * Returns the amount of channels that is currently hosting a channel (or an error message).
-     *
-     * @param  Request $request
-     * @param  string  $channel
-     * @return Response
-     */
-    public function hostscount(Request $request, $channel = null)
-    {
-        return $this->hosts($request);
-    }
-
-    /**
      * Returns the user's unique ID.
      *
      * @param  Request $request

@@ -156,8 +156,6 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        Laravelium\Feed\FeedServiceProvider::class,
-        Thujohn\Twitter\TwitterServiceProvider::class,
         Alaouy\Youtube\YoutubeServiceProvider::class,
         Syntax\SteamApi\SteamApiServiceProvider::class,
 
@@ -224,7 +222,6 @@ return [
         'View'      => Illuminate\Support\Facades\View::class,
 
         'Helper'    => App\Helpers\Helper::class,
-        'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
         'YouTube'   => Alaouy\Youtube\Facades\Youtube::class,
     ],
 

@@ -25,25 +25,26 @@ class TwitterApiRepository
      * Retrieves a list of tweets for a user.
      *
      * @param string $username
+     * @param bool   $withReplies
      *
      * @return array
      */
-    public function getTweets($username = '')
+    public function getTweets($username = '', $withReplies = false)
     {
         $username = strtolower(trim($username));
-        $cacheKey = 'twitter.tweets.' . $username;
+        $cacheKey = sprintf('twitter.tweets.%s.%s', md5($username), $withReplies ? 'with_replies' : 'without_replies');
 
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
 
-        $request = $this->client->getUserTweets($username);
+        $request = $this->client->getUserTweets($username, $withReplies);
         if (isset($request['error'])) {
             throw new TwitterApiException($request['error']);
         }
 
         $tweets = $request['result'];
-        Cache::put($cacheKey, $tweets, 120);
+        Cache::put($cacheKey, $tweets, config('twitter.cache.tweets', 120));
 
         return $tweets;
     }

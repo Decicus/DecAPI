@@ -63,12 +63,8 @@ class TwitterController extends Controller
     public function latest(Request $request, $latest = null, $name = null)
     {
         $name = $name ?: $request->input('name', null);
-
-        /**
-         * TODO: Re-implement search & skip
-         */
         $search = $request->input('search', null);
-        $skip = intval($request->input('skip', 0));
+        $strict = $request->exists('strict');
 
         if (empty($name)) {
             return Helper::text('You have to specify a (user)name.');
@@ -79,30 +75,27 @@ class TwitterController extends Controller
          *
          * @var boolean
          */
-        $onlyUrl = (strpos($latest, 'latest_url') === false ? false : true);
+        $onlyUrl = strpos($latest, 'latest_url') !== false;
 
         /**
          * Route: /twitter/latest_id
          *
          * @var boolean
          */
-        $onlyId = (strpos($latest, 'latest_id') === false ? false : true);
+        $onlyId = strpos($latest, 'latest_id') !== false;
 
         /**
          * To exclude replies to other users or not.
-         *
-         * TODO: Re-implement this
-         *
          * @var boolean
          */
-        $excludeReplies = true;
+        $includeReplies = false;
         if ($request->exists('include_replies') || !empty($request->input('no_exclude_replies', null))) {
-            $excludeReplies = false;
+            $includeReplies = true;
         }
 
         $tweets = [];
         try {
-            $tweets = $this->api->getTweets($name);
+            $tweets = $this->api->getTweets($name, $includeReplies);
         }
         catch (TwitterApiException $ex) {
             return Helper::text(sprintf('An error occurred while fetching tweets for %s: %s', $name, $ex->getMessage()));
@@ -112,11 +105,6 @@ class TwitterController extends Controller
             return Helper::text('No tweets were found for this user.');
         }
 
-        // Remove pinned
-        $tweets = array_filter($tweets, function($tweet) {
-            return $tweet['pinned'] === false;
-        });
-
         $noRetweets = $request->exists('no_rts');
         if ($noRetweets) {
             $tweets = array_filter($tweets, function($tweet) {
@@ -124,12 +112,29 @@ class TwitterController extends Controller
             });
         }
 
+        /**
+         * Allow searching for tweets
+         */
+        if (!empty($search)) {
+            $tweets = array_filter($tweets, function($tweet) use ($search, $strict) {
+                $text = $tweet['text'];
+                // Strict = case sensitive
+                if ($strict === true) {
+                    return strpos($text, $search) !== false;
+                }
+
+                return strpos(strtolower($text), strtolower($search)) !== false;
+            });
+        }
+
+        // Reset indexes
+        reset($tweets);
+
         if (empty($tweets)) {
             return Helper::text('No tweets (matching the filters) were found for this user');
         }
 
         $tweet = current($tweets);
-
         $text = [];
         if ($onlyUrl === false) {
             $tweetText = $tweet['textInline'];

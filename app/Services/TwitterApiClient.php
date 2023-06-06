@@ -49,12 +49,16 @@ class TwitterApiClient
         return json_decode($response->getBody(), true);
     }
 
-    public function getUserTweets($user = '')
+    public function getUserTweets($user = '', $withReplies = false)
     {
         $url = '/user';
         $parameters = [
             'username' => $user,
         ];
+
+        if ($withReplies) {
+            $parameters['withReplies'] = '1';
+        }
 
         $response = $this->get($url, $parameters);
 

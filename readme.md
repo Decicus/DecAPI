@@ -31,8 +31,8 @@ To keep it backwards compatible, routes also support `/main-route/sub-route?chan
 
 The following things are required for setting this up:
 
-- [Laravel 8.x's requirements](https://laravel.com/docs/8.x/deployment#server-requirements)
-- [A database system that Laravel supports](https://laravel.com/docs/8.x/database#introduction)
+- [Laravel 9.x's requirements](https://laravel.com/docs/9.x/deployment#server-requirements)
+- [A database system that Laravel supports](https://laravel.com/docs/9.x/database#introduction)
     - The live version of DecAPI uses MariaDB/MySQL, but for development reasons PostgreSQL/SQLite should work fine too.
 - [Composer](https://getcomposer.org/)
 

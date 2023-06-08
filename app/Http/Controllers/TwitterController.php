@@ -3,12 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
-use App\Http\Requests;
-
-use Twitter;
 use App\Helpers\Helper;
-use Exception;
 
 use App\Repositories\TwitterApiRepository;
 use App\Exceptions\TwitterApiException;
@@ -27,8 +22,6 @@ class TwitterController extends Controller
     /**
      * Returns the account age of the specified Twitter user.
      *
-     * TODO: Fix/remove
-     *
      * @param  Request $request
      * @param  string  $name
      * @return Response
@@ -41,14 +34,13 @@ class TwitterController extends Controller
 
         $precision = intval($request->input('precision', 3));
         try {
-            $user = Twitter::getUsers([
-                'screen_name' => $name,
-            ]);
+            // A bit misleading method name, but it does return the user object.
+            $user = $this->api->getUser($name);
 
-            $timeDiff = Helper::getDateDiff($user->created_at, time(), $precision);
+            $timeDiff = Helper::getDateDiff($user['dateCreated'], time(), $precision);
             return Helper::text($timeDiff);
-        } catch (Exception $ex) {
-            return Helper::text($ex->getMessage());
+        } catch (TwitterApiException $ex) {
+            return Helper::text(sprintf('An error occurred getting accountage for user %s: %s', $name, $ex->getMessage()));
         }
     }
 

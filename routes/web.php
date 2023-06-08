@@ -28,14 +28,6 @@ Route::group(['prefix' => 'auth', 'as' => 'auth.'], function() {
     });
 });
 
-Route::group(['prefix' => 'br', 'as' => 'br.'], function() {
-    Route::group(['prefix' => 'player', 'as' => 'player.'], function() {
-        Route::get('{id}/{type?}', ['as' => 'summary', 'uses' => 'BattleRoyaleController@player'])
-            ->where('id', '([A-z0-9]+)')
-            ->where('type', '(.*+)');
-    });
-});
-
 Route::group(['prefix' => 'bttv', 'as' => 'bttv.'], function() {
     Route::get('/', ['as' => 'home', 'uses' => 'BttvController@home']);
     Route::get('{emotes}/{channel?}', ['as' => 'emotes', 'uses' => 'BttvController@emotes'])
@@ -161,13 +153,6 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
         ->where('highlight_random', '(highlight_random(\.php)?)')
         ->where('channel', $channelRegex);
 
-    Route::get('{hosts}/{channel?}', 'TwitchController@hosts')
-        ->where('hosts', '(hosts(\.php)?)')
-        ->where('channel', $channelRegex);
-
-    Route::get('hostscount/{channel?}', 'TwitchController@hostscount')
-        ->where('channel', $channelRegex);
-
     Route::get('id/{user?}', ['as' => 'id', 'uses' => 'TwitchController@id'])
         ->where('user', $channelRegex);
 
@@ -205,9 +190,6 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
         ->where('team', '([A-z0-9]{1,40})');
 
     Route::get('total_views/{channel?}', 'TwitchController@totalViews')
-        ->where('channel', $channelRegex);
-
-    Route::get('upload/{channel?}', 'GeneralController@deprecated')
         ->where('channel', $channelRegex);
 
     Route::get('{uptime}/{channel?}', 'TwitchController@uptime')

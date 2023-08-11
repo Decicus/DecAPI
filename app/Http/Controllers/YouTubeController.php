@@ -21,6 +21,7 @@ class YouTubeController extends Controller
 
     /**
      * Valid 'variables' for the output format in latest video API.
+     * Make sure to update the replacemtnts in both `latestVideo()` and `latestPlVideo()` if this array changes.
      *
      * @var array
      */
@@ -202,6 +203,10 @@ class YouTubeController extends Controller
         $skip = intval($request->input('skip', 0));
         $separator = $request->input('separator', '-');
 
+        // Use default format, but make sure it's backwards compatible with the `separator` parameter.
+        $defaultFormat = str_replace('-', $separator, $this->defaultFormat);
+        $format = $request->input('format', $defaultFormat);
+
         if (empty($id) || trim($id) === '') {
             return Helper::text('A playlist ID has to be specified.');
         }
@@ -215,8 +220,23 @@ class YouTubeController extends Controller
             }
 
             $video = $results[$skip];
-            $format = sprintf('%s %s https://youtu.be/%s', $video->snippet->title, $separator, $video->contentDetails->videoId);
-            return Helper::text($format);
+            // Title can sometimes includes HTML entities (such as '&amp;' instead of '&')
+            $title = htmlspecialchars_decode($video->snippet->title, ENT_QUOTES);
+            $videoId = $video->contentDetails->videoId;
+
+            /**
+             * See $this->formatSearch for a list of available variables.
+             */
+            $replacements = [
+                // {id}
+                $videoId,
+                // {url}
+                sprintf('https://youtu.be/%s', $videoId),
+                // {title}
+                $title,
+            ];
+
+            return Helper::text(str_replace($this->formatSearch, $replacements, $format));
         } catch (Exception $e) {
             return Helper::text('An error occurred retrieving playlist items with the playlist ID: ' . $id);
         }

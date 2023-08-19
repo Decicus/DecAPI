@@ -471,7 +471,7 @@ class TwitchController extends Controller
         }
 
         try {
-            $getFollowers = $this->api->followsChannel($channel);
+            $getFollowers = $this->api->channelFollowers($channel);
         }
         catch (TwitchApiException $ex)
         {

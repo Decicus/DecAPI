@@ -153,6 +153,58 @@ class TwitchApiRepository
     }
 
     /**
+     * Retrieve channel follower information.
+     *
+     * If a user ID is specified, a valid user access token with `moderator:read:followers`,
+     * either the broadcaster or a moderator for the relevant channel (broadcaster ID) must be specified via `setToken()`.
+     *
+     * @param string|int $broadcasterId
+     * @param string|int|null $userId
+     *
+     * @return array
+     * @throws App\Exceptions\TwitchApiException|App\Exceptions\TwitchFormatException
+     */
+    public function channelFollowers($broadcasterId, $userId = null)
+    {
+        if (!is_string($broadcasterId) && !is_int($broadcasterId)) {
+            throw new TwitchFormatException('Broadcaster ID - String or int expected, got: ' . gettype($broadcasterId));
+        }
+
+        if (!empty($userId) && !is_string($userId) && !is_int($userId)) {
+            throw new TwitchFormatException('User ID - String or int expected, got: ' . gettype($userId));
+        }
+
+        $cacheKey = sprintf('TWITCH_API_CHANNEL_FOLLOWERS_%s', $broadcasterId);
+        if (!empty($userId)) {
+            $cacheKey = sprintf('TWITCH_API_CHANNEL_FOLLOWERS_%s_%s', $broadcasterId, $userId);
+        }
+
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $params = [
+            'broadcaster_id' => $broadcasterId,
+            'first' => 100,
+        ];
+
+        if (!empty($userId)) {
+            $params['user_id'] = $userId;
+        }
+
+        $request = $this->client->get('/channels/followers', $params);
+        $result = Resource\ChannelFollowers::make($request)
+                                        ->resolve();
+
+        /**
+         * TODO: Use a separate cache time config.
+         * Should be increased if support for streamer/mod token access is added.
+         */
+        Cache::put($cacheKey, $result, config('twitch.cache.followcount'));
+        return $result;
+    }
+
+    /**
      * Get videos (VODs, highlights etc.) of the specified channel.
      *
      * @param string $userId

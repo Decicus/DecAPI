@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\AddBlacklistedIp::class,
+        Commands\CurrencyConversionCache::class,
         Commands\DecryptString::class,
         Commands\GenerateNewRateLimitApiKey::class,
         Commands\ImportSubcountTokens::class,
@@ -41,5 +42,9 @@ class Kernel extends ConsoleKernel
         // Authenticated channels for subcount/subpoints/subage etc.
         $schedule->command('twitch:authuserupdate')
                  ->hourly();
+
+        // Currency conversion rates
+        $schedule->command('currency:cache')
+                 ->everySixHours();
     }
 }

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 
 use App\Helpers\Helper;
+use Artisan;
+use Cache;
 use Carbon\Carbon;
 use DateTimeZone;
 use Log;
@@ -61,40 +63,23 @@ class MiscController extends Controller
             return Helper::text(sprintf('Invalid "to" currency specified (%s) - Available currencies can be found here: %s', $to, $listUrl));
         }
 
-        // $apiUrl = sprintf('https://api.exchangerate.host/latest?base=%s&symbols=%s', $from, $to);
+        $cacheKey = config('currency.cacheKey');
+        $currencies = Cache::get($cacheKey, []);
+        if (empty($currencies)) {
+            Artisan::call('currency:cache');
+            $currencies = Cache::get($cacheKey, []);
+        }
+
         $fromLower = strtolower($from);
-        $apiUrl = sprintf('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/%s.json', $fromLower);
-        try {
-            $convert = Helper::get($apiUrl);
-        }
-        catch (Exception $ex) {
-            Log::error('/misc/currency request error: ' . $ex->getMessage());
-            return Helper::text('An error has occurred retrieving exchange rates');
-        }
+        $toLower = strtolower($to);
+        $rates = $currencies[$fromLower]['rates'] ?? [];
 
-        if (empty($convert)) {
-            return Helper::text('An error has occurred retrieving exchange rates');
-        }
-
-        // if ($convert['success'] === false) {
-        //     if (!empty($convert['error'])) {
-        //         return Helper::text('An error occurred retrieving exchange rates: ' . $convert['error']['type']);
-        //     }
-
-        //     return Helper::text('An error has occurred retrieving exchange rates.');
-        // }
-
-        $convert = $convert[$fromLower] ?? [];
+        $convert = $rates[$toLower] ?? null;
         if (empty($convert)) {
             return Helper::text('An error has occurred retrieving exchange rates.');
         }
 
-        $toLower = strtolower($to);
-        if (!isset($convert[$toLower])) {
-            return Helper::text(sprintf('Invalid "to" currency specified (%s) - Available currencies can be found here: %s', $to, $listUrl));
-        }
-
-        $calculate = round($value * $convert[$toLower], $round);
+        $calculate = round($value * $convert, $round);
         return Helper::text(sprintf('%s %s = %s %s', $value, $from, $calculate, $to));
     }
 

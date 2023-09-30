@@ -207,9 +207,9 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
 });
 
 Route::group(['prefix' => 'twitter', 'as' => 'twitter.'], function() {
-    Route::get('accountage/{name?}', ['as' => 'accountage', 'uses' => 'TwitterController@accountage']);
+    Route::get('accountage/{name?}', ['as' => 'accountage', 'uses' => 'GeneralController@deprecated']);
 
-    Route::get('{latest}/{name?}', ['as' => 'latest', 'uses' => 'TwitterController@latest'])
+    Route::get('{latest}/{name?}', ['as' => 'latest', 'uses' => 'GeneralController@deprecated'])
         ->where('latest', '(latest(\.php)?|latest_url(\.php)?|latest_id(\.php)?)')
         ->where('name', '([A-z0-9]+)');
 });

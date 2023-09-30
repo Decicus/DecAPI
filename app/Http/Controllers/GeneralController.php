@@ -58,9 +58,13 @@ class GeneralController extends Controller
         return Helper::text('404 Page Not Found', 404);
     }
 
-    public function deprecated()
+    public function deprecated(Request $request)
     {
-        return Helper::text('410 Gone - This API has been deprecated/removed.', 410);
+        $requestUrl = $request->url();
+        $requestPath = parse_url($requestUrl, PHP_URL_PATH);
+
+        $appName = config('app.name');
+        return Helper::text(sprintf('[%s - %s] 410 Gone - This API has been deprecated/removed', $appName, $requestPath), 410);
     }
 
     /**

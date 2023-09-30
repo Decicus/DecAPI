@@ -61,7 +61,9 @@ class MiscController extends Controller
             return Helper::text(sprintf('Invalid "to" currency specified (%s) - Available currencies can be found here: %s', $to, $listUrl));
         }
 
-        $apiUrl = sprintf('https://api.exchangerate.host/latest?base=%s&symbols=%s', $from, $to);
+        // $apiUrl = sprintf('https://api.exchangerate.host/latest?base=%s&symbols=%s', $from, $to);
+        $fromLower = strtolower($from);
+        $apiUrl = sprintf('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/%s.json', $fromLower);
         try {
             $convert = Helper::get($apiUrl);
         }
@@ -74,15 +76,25 @@ class MiscController extends Controller
             return Helper::text('An error has occurred retrieving exchange rates');
         }
 
-        if ($convert['success'] === false) {
-            if (!empty($convert['error'])) {
-                return Helper::text('An error occurred retrieving exchange rates: ' . $convert['error']['type']);
-            }
+        // if ($convert['success'] === false) {
+        //     if (!empty($convert['error'])) {
+        //         return Helper::text('An error occurred retrieving exchange rates: ' . $convert['error']['type']);
+        //     }
 
+        //     return Helper::text('An error has occurred retrieving exchange rates.');
+        // }
+
+        $convert = $convert[$fromLower] ?? [];
+        if (empty($convert)) {
             return Helper::text('An error has occurred retrieving exchange rates.');
         }
 
-        $calculate = round($value * $convert['rates'][$to], $round);
+        $toLower = strtolower($to);
+        if (!isset($convert[$toLower])) {
+            return Helper::text(sprintf('Invalid "to" currency specified (%s) - Available currencies can be found here: %s', $to, $listUrl));
+        }
+
+        $calculate = round($value * $convert[$toLower], $round);
         return Helper::text(sprintf('%s %s = %s %s', $value, $from, $calculate, $to));
     }
 
@@ -97,7 +109,6 @@ class MiscController extends Controller
         $format = $request->input('format', 'h:i:s A T');
         $tz = $request->input('timezone', null);
         $timezones = DateTimeZone::listIdentifiers();
-        $tzlist = implode(PHP_EOL, $timezones);
         if (empty($tz)) {
             return Helper::text(sprintf('-- Parameter `timezone` needs to be specified - Available timezones can be found here: %s', route('misc.timezones')));
         }

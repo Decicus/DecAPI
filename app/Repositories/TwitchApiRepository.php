@@ -175,10 +175,13 @@ class TwitchApiRepository
         }
 
         $cacheKey = sprintf('TWITCH_API_CHANNEL_FOLLOWERS_%s', $broadcasterId);
-        $cacheTime = config('twitch.cache.followcount');
-        if (!empty($userId)) {
+        $cacheTime = config('twitch.cache.followcount', 120);
+
+        $hasUserId = !empty($userId);
+
+        if ($hasUserId) {
             $cacheKey = sprintf('TWITCH_API_CHANNEL_FOLLOWERS_%s_%s', $broadcasterId, $userId);
-            $cacheTime = config('twitch.cache.follow_date');
+            $cacheTime = config('twitch.cache.follow_date', 1800);
         }
 
         if (Cache::has($cacheKey)) {
@@ -190,13 +193,21 @@ class TwitchApiRepository
             'first' => 100,
         ];
 
-        if (!empty($userId)) {
+        if ($hasUserId) {
             $params['user_id'] = $userId;
         }
 
         $request = $this->client->get('/channels/followers', $params);
         $result = Resource\ChannelFollowers::make($request)
                                         ->resolve();
+
+        /**
+         * We're requesting a specific user's follow date, and they're not following the channel.
+         * Avoid caching this for too long
+         */
+        if ($hasUserId && empty($result['followers'])) {
+            $cacheTime = config('twitch.cache.follow_date_empty', 120);
+        }
 
         Cache::put($cacheKey, $result, $cacheTime);
         return $result;

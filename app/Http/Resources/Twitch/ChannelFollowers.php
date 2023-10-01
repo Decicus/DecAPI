@@ -10,7 +10,7 @@ class ChannelFollowers extends JsonResource
         $res = $this->resource;
 
         return [
-            'followers' => $res['data'],
+            'followers' => $res['data'] ?? [],
             'total' => $res['total'],
         ];
     }

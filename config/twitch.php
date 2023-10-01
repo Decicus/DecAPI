@@ -39,6 +39,8 @@
              * 30 minutes
              */
             'follow_date' => 1800,
+            // For any follow relationship that doesn't exist, we cache for shorter.
+            'follow_date_empty' => 120,
 
             /**
              * Subscriptions meta API handler.

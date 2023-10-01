@@ -4,8 +4,8 @@
     <div class="container" style="margin-top: 20px;">
         <div class="jumbotron">
             <p class="text text-info">You have successfully authenticated and can now use this to display {{ $action }} subscriber(s) in your channel using chatbots.</p>
- 
-            <h3>Streamlabs Chatbot (formerly Ankhbot):</h3>
+
+            <h3>Streamlabs Chatbot:</h3>
             <p class="text text-muted">Add a command that includes the part below and it will be replaced with {{ $action }} subscriber(s):</p>
             <pre>$readapi({{ $route }}/$mychannel)</pre>
             <p class="text text-muted">For example, if you want to show @if ($action == 'latest')your last @elseif ($action == 'random')a random @endif subscriber of your stream:</p>
@@ -19,7 +19,7 @@
             <p class="text text-muted">For example, if you want to show @if ($action == 'latest')your last @elseif ($action == 'random')a random @endif subscriber of your stream:</p>
             <pre>{{ ucfirst($action) }} subscriber is: {{ $channel }}</pre>
             <p class="text text-muted">You would put this in the command response:</p>
-            <pre>{{ ucfirst($action) }} subscriber is: $(urlfetch {{ $route }})</pre>   
+            <pre>{{ ucfirst($action) }} subscriber is: $(urlfetch {{ $route }})</pre>
 
             <p class="text text-info">If you wish to log out, you can do so below. This will not prevent any of the above commands from working.</p>
             <a class="btn btn-danger" href="{{ route('auth.twitch.logout') }}">Log out</a>

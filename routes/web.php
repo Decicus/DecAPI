@@ -119,23 +119,23 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
         ->where('creation', '(creation(\.php)?)')
         ->where('channel', $channelRegex);
 
-    Route::get('followage/{channel?}/{user?}', 'TwitchController@followAge')
+    Route::get('followage/{channel?}/{user?}', ['as' => 'followage', 'uses' => 'TwitchController@followAge'])
         ->where('channel', $channelRegex)
         ->where('user', $channelRegex);
 
     Route::get('followcount/{channel?}', 'TwitchController@followCount')
         ->where('channel', $channelRegex);
 
-    Route::get('{followed}/{channel?}/{user?}', 'TwitchController@followed')
+    Route::get('{followed}/{channel?}/{user?}', ['as' => 'followed', 'uses' => 'TwitchController@followed'])
         ->where('followed', '(followed(\.php)?)')
         ->where('channel', $channelRegex)
         ->where('user', $channelRegex);
 
-    Route::get('{followers}/{channel?}', 'TwitchController@followers')
+    Route::get('{followers}/{channel?}', 'GeneralController@deprecated')
         ->where('followers', '(followers(\.php)?)')
         ->where('channel', $channelRegex);
 
-    Route::get('following/{user?}', 'TwitchController@following')
+    Route::get('following/{user?}', 'GeneralController@deprecated')
         ->where('user', $channelRegex);
 
     Route::get('{gameOrStatus}/{channel?}', 'TwitchController@gameOrStatus')

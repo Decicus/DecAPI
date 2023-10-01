@@ -31,6 +31,8 @@ class TwitchAuthController extends Controller
      * @var array
      */
     private $redirects = [
+        'followage' => '/twitch/followage',
+        'followed' => '/twitch/followed',
         'home' => '/',
         'subage' => '/twitch/subage',
         'subcount' => '/twitch/subcount',
@@ -40,41 +42,74 @@ class TwitchAuthController extends Controller
     ];
 
     /**
+     * Minimum scope required for authentication.
+     *
+     * @var string
+     */
+    private $minimumScope = 'user:read:email';
+
+    /**
      * Array of available Twitch authentication scopes.
      *
      * @var array
      */
     private $scopes = [
-        // Kraken scopes
-        'user_read',
-        'user_blocks_edit',
-        'user_blocks_read',
-        'user_follows_edit',
-        'channel_read',
-        'channel_editor',
-        'channel_commercial',
-        'channel_stream',
-        'channel_subscriptions',
-        'user_subscriptions',
-        'channel_check_subscription',
-        'chat_login',
-        'channel_feed_read',
-        'channel_feed_edit',
-        'collections_edit',
-        'communities_edit',
-        'communities_moderate',
-        'viewing_activity_read',
-
-        // Helix scopes
         'analytics:read:extensions',
         'analytics:read:games',
         'bits:read',
+        'channel:edit:commercial',
+        'channel:manage:broadcast',
+        'channel:manage:extensions',
+        'channel:manage:guest_star',
+        'channel:manage:moderators',
+        'channel:manage:polls',
+        'channel:manage:predictions',
+        'channel:manage:raids',
+        'channel:manage:redemptions',
+        'channel:manage:schedule',
+        'channel:manage:videos',
+        'channel:manage:vips',
+        'channel:read:charity',
+        'channel:read:editors',
+        'channel:read:goals',
+        'channel:read:guest_star',
+        'channel:read:hype_train',
+        'channel:read:polls',
+        'channel:read:predictions',
+        'channel:read:redemptions',
+        'channel:read:stream_key',
         'channel:read:subscriptions',
+        'channel:read:vips',
         'clips:edit',
+        'moderation:read',
+        'moderator:manage:announcements',
+        'moderator:manage:automod',
+        'moderator:manage:automod_settings',
+        'moderator:manage:banned_users',
+        'moderator:manage:blocked_terms',
+        'moderator:manage:chat_messages',
+        'moderator:manage:chat_settings',
+        'moderator:manage:guest_star',
+        'moderator:manage:shield_mode',
+        'moderator:manage:shoutouts',
+        'moderator:read:automod_settings',
+        'moderator:read:blocked_terms',
+        'moderator:read:chat_settings',
+        'moderator:read:chatters',
+        'moderator:read:followers',
+        'moderator:read:guest_star',
+        'moderator:read:shield_mode',
+        'moderator:read:shoutouts',
         'user:edit',
-        'user:edit:broadcast',
+        'user:edit:follows',
+        'user:manage:blocked_users',
+        'user:manage:chat_color',
+        'user:manage:whispers',
+        'user:read:blocked_users',
         'user:read:broadcast',
         'user:read:email',
+        'user:read:follows',
+        'user:read:subscriptions',
     ];
 
     /**
@@ -113,6 +148,24 @@ class TwitchAuthController extends Controller
     }
 
     /**
+     * Generates a unique API token, utilizing `str_random` and checking if it already exists before returning it.
+     * In other words, a paranoia check.
+     *
+     * @return string
+     */
+    private function generateUniqueApiToken()
+    {
+        $token = str_random(40);
+        $exists = User::where('api_token', $token)->first();
+
+        if (!empty($exists)) {
+            return $this->generateUniqueApiToken();
+        }
+
+        return $token;
+    }
+
+    /**
      * Redirect the user to the Twitch authentication page.
      *
      * @param  Request $request
@@ -120,32 +173,35 @@ class TwitchAuthController extends Controller
      */
     public function redirect(Request $request)
     {
-        $scopes = $request->input('scopes', null);
+        $scopes = trim($request->input('scopes', ''));
         $redirect = $request->input('redirect', 'home');
 
         if (empty($scopes)) {
             return Helper::message('missing_scopes');
         }
 
-        if (!empty(trim($scopes))) {
-            $scopes = explode(' ', trim($scopes));
-            foreach ($scopes as $scope) {
-                if (!in_array($scope, $this->scopes)) {
-                    return Helper::message('invalid_scope');
-                }
-
-                /**
-                 * Make sure the Helix scope is included (for a smoother transition).
-                 */
-                if (!array_key_exists($scope, $this->krakenToHelixScopes)) {
-                    continue;
-                }
-
-                $helixScope = $this->krakenToHelixScopes[$scope];
-                if (!in_array($helixScope, $scopes)) {
-                    $scopes[] = $helixScope;
-                }
+        $scopes = explode(' ', $scopes);
+        foreach ($scopes as $scope) {
+            if (!in_array($scope, $this->scopes)) {
+                return Helper::message('invalid_scope');
             }
+
+            /**
+             * Make sure the Helix scope is included (for a smoother transition).
+             */
+            if (!array_key_exists($scope, $this->krakenToHelixScopes)) {
+                continue;
+            }
+
+            $helixScope = $this->krakenToHelixScopes[$scope];
+            if (!in_array($helixScope, $scopes)) {
+                $scopes[] = $helixScope;
+            }
+        }
+
+        // Always include the "minimum scope".
+        if (!in_array($this->minimumScope, $scopes)) {
+            $scopes[] = $this->minimumScope;
         }
 
         if (!isset($this->redirects[$redirect])) {
@@ -220,6 +276,11 @@ class TwitchAuthController extends Controller
         $auth = User::firstOrCreate([
             'id' => $user['id'],
         ]);
+
+        if (empty($auth->api_token)) {
+            $auth->api_token = $this->generateUniqueApiToken();
+        }
+
         $auth->access_token = Crypt::encrypt($token['access_token']);
         $auth->refresh_token = Crypt::encrypt($token['refresh_token']);
         $auth->scopes = implode('+', $token['scope']);

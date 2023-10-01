@@ -23,6 +23,8 @@ return [
     'invalid_api_data' => 'Twitch API returned invalid data.',
     'unable_get_following' => 'Unable to get follow data for the specified user.',
     'end_following_list' => 'End of following list.',
+    'followage_needs_authentication' => 'A moderator or a broadcaster needs to authenticate to use followage: %s',
+    'followage_needs_reauthentication' => '%s needs to re-authenticate to use followage with the specified token - Re-authenticate here: %s',
 
     /**
      * Help articles

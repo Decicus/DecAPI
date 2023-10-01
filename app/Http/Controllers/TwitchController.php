@@ -399,7 +399,7 @@ class TwitchController extends Controller
 
         $apiToken = $request->input('token', null);
         if (empty($apiToken)) {
-            return Helper::text(sprintf('Missing `token` parameter required for /twitch/followage as of September 2023 - %s', $needToAuth));
+            return Helper::text(sprintf('%s - %s', __('twitch.follow_token_parameter'), $needToAuth));
         }
 
         $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
@@ -443,7 +443,16 @@ class TwitchController extends Controller
 
         $combinedScopes = sprintf('%s+%s', $tokenUser->scopes, $this->followScope);
         $authUrl = sprintf('%s?redirect=followage&scopes=%s', route('auth.twitch.base'), $combinedScopes);
-        $needToReAuth = sprintf(__('twitch.followage_needs_reauthentication'), $tokenUser->username, $authUrl);
+
+        $cachedUser = null;
+        try {
+            $cachedUser = $this->api->cachedUserById($tokenUser->id);
+        }
+        catch (TwitchApiException $ex) {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+
+        $needToReAuth = sprintf(__('twitch.followage_needs_reauthentication'), $cachedUser->username, $authUrl);
 
         $scopes = explode('+', $tokenUser->scopes);
         if (!in_array($this->followScope, $scopes)) {
@@ -614,7 +623,16 @@ class TwitchController extends Controller
 
         $combinedScopes = sprintf('%s+%s', $tokenUser->scopes, $this->followScope);
         $authUrl = sprintf('%s?redirect=followage&scopes=%s', route('auth.twitch.base'), $combinedScopes);
-        $needToReAuth = sprintf(__('twitch.followage_needs_reauthentication'), $tokenUser->username, $authUrl);
+
+        $cachedUser = null;
+        try {
+            $cachedUser = $this->api->cachedUserById($tokenUser->id);
+        }
+        catch (TwitchApiException $ex) {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+
+        $needToReAuth = sprintf(__('twitch.followage_needs_reauthentication'), $cachedUser->username, $authUrl);
 
         $scopes = explode('+', $tokenUser->scopes);
         if (!in_array($this->followScope, $scopes)) {

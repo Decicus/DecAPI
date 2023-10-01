@@ -33,6 +33,14 @@
             'followcount' => 120,
 
             /**
+             * For `followed` / `followage` endpoints.
+             * Cache time for a "follow relationship" between one channel and one user.
+             *
+             * 30 minutes
+             */
+            'follow_date' => 1800,
+
+            /**
              * Subscriptions meta API handler.
              * Currently being used for subpoints/subcount and it's *shared*.
              *

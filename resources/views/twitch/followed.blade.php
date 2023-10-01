@@ -5,7 +5,11 @@
         <div class="jumbotron">
             <p class="text text-info">You have successfully authenticated and can now use this to get the follow date of viewers in your channel using bots. Below is an example using the two common ones: Streamlabs Chatbot and Nightbot.</p>
 
-            <p>Here is your token for the followed &amp; followage APIs: <code>{{ $apiToken }}</code></p>
+            <p class="text">
+                Here is your token for the followed &amp; followage APIs: <code>{{ $apiToken }}</code>
+                <br />
+                The same token can be used for any channel you are a moderator in.
+            </p>
 
             <h3>Streamlabs Chatbot:</h3>
             <p class="text text-muted">Add a command that includes the part below and it will be replaced with the follow date in the command:</p>

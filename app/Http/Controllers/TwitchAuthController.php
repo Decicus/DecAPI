@@ -166,6 +166,33 @@ class TwitchAuthController extends Controller
     }
 
     /**
+     * Generate the authentication URL based on the requested scopes.
+     *
+     * @param array $scopes
+     * @param bool $forceVerify Whether or not to force the user to re-authorize on Twitch's end.
+     *
+     * @return string
+     */
+    private function generateAuthUrl($scopes = [], $forceVerify = true)
+    {
+        // Always include the "minimum scope".
+        if (!in_array($this->minimumScope, $scopes)) {
+            $scopes[] = $this->minimumScope;
+        }
+
+        $query = http_build_query([
+            'client_id' => env('TWITCH_CLIENT_ID', null),
+            'redirect_uri' => env('TWITCH_REDIRECT_URI', null),
+            'response_type' => 'code',
+            'scope' => trim(implode(' ', $scopes)),
+            'force_verify' => $forceVerify ? 'true' : 'false',
+        ]);
+
+        $url = sprintf('%s?%s', $this->authUrl, $query);
+        return $url;
+    }
+
+    /**
      * Redirect the user to the Twitch authentication page.
      *
      * @param  Request $request
@@ -199,11 +226,6 @@ class TwitchAuthController extends Controller
             }
         }
 
-        // Always include the "minimum scope".
-        if (!in_array($this->minimumScope, $scopes)) {
-            $scopes[] = $this->minimumScope;
-        }
-
         if (!isset($this->redirects[$redirect])) {
             $redirect = 'home';
         }
@@ -212,15 +234,7 @@ class TwitchAuthController extends Controller
         session()->put('redirect', $redirect);
         session()->put('scopes', implode('+', $scopes));
 
-        $query = http_build_query([
-            'client_id' => env('TWITCH_CLIENT_ID', null),
-            'redirect_uri' => env('TWITCH_REDIRECT_URI', null),
-            'response_type' => 'code',
-            'scope' => implode(' ', $scopes),
-            'force_verify' => 'true',
-        ]);
-
-        $url = sprintf('%s?%s', $this->authUrl, $query);
+        $url = $this->generateAuthUrl($scopes);
         return redirect()->away($url);
     }
 
@@ -276,6 +290,31 @@ class TwitchAuthController extends Controller
         $auth = User::firstOrCreate([
             'id' => $user['id'],
         ]);
+
+        /**
+         * Since we don't know the authenticated user before we do the initial authentication
+         * We'll do a check after the user has been authenticated and compare any existing scopes from the database.
+         * If the user has requested a new scope, we'll redirect them back to Twitch to re-authorize to combine both sets of scopes.
+         *
+         * This will happen for any channel that has previously authenticated with for example subcount/subpoints,
+         * but they're now authenticating for followage/followed access.
+         *
+         * Though, maybe it would simply be better to re-authorize with all scopes every time?
+         */
+        $existingScopes = trim($auth->scopes ?? '');
+        if (!empty($existingScopes)) {
+            $existingScopes = explode('+', $existingScopes);
+            foreach ($existingScopes as $scope)
+            {
+                if (!in_array($scope, $token['scope'])) {
+                    $merged = array_merge($existingScopes, $token['scope']);
+                    $newScopes = array_unique($merged);
+
+                    $authUrl = $this->generateAuthUrl($newScopes, false);
+                    return redirect()->away($authUrl);
+                }
+            }
+        }
 
         if (empty($auth->api_token)) {
             $auth->api_token = $this->generateUniqueApiToken();

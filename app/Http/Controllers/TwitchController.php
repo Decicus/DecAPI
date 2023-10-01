@@ -399,7 +399,8 @@ class TwitchController extends Controller
 
         $apiToken = $request->input('token', null);
         if (empty($apiToken)) {
-            return Helper::text(sprintf('%s - %s', __('twitch.follow_token_parameter'), $needToAuth));
+            $tokenMessage = __('twitch.follow_token_parameter', ['endpoint' => '/twitch/followage']);
+            return Helper::text(sprintf('%s - %s', $tokenMessage, $needToAuth));
         }
 
         $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
@@ -580,7 +581,8 @@ class TwitchController extends Controller
 
         $apiToken = $request->input('token', null);
         if (empty($apiToken)) {
-            return Helper::text(sprintf('Missing `token` parameter required for /twitch/followed as of September 2023 - %s', $needToAuth));
+            $tokenMessage = __('twitch.follow_token_parameter', ['endpoint' => '/twitch/followed']);
+            return Helper::text(sprintf('%s - %s', $tokenMessage, $needToAuth));
         }
 
         if (empty($user) || empty($channel)) {

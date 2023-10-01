@@ -44,6 +44,13 @@ class TwitchController extends Controller
     private $subScopes = 'channel:read:subscriptions+user:read:email';
 
     /**
+     * Scopes required for routes like 'followage' and 'followed'
+     *
+     * @var string
+     */
+    private $followScope = 'moderator:read:followers';
+
+    /**
      * @var array
      */
     private $headers = [
@@ -60,13 +67,6 @@ class TwitchController extends Controller
      * @var TwitchApiRepository
      */
     private $api;
-
-    /**
-     * The 'Accept' header to receive Twitch API V5 responses.
-     *
-     * @var array
-     */
-    private $version = ['Accept' => 'application/vnd.twitchtv.v5+json'];
 
     /**
      * Initializes the controller with a reference to TwitchApiController.
@@ -122,7 +122,7 @@ class TwitchController extends Controller
      * Retrieves the Twitch user object specified by login name.
      *
      * @param  string $name The username to look for.
-     * @return array
+     * @return object
      * @throws TwitchApiException
      */
     protected function userByName($name)
@@ -378,8 +378,31 @@ class TwitchController extends Controller
         $user = $user ?: $request->input('user', null);
         $id = $request->input('id', 'false');
 
-        $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
+        $authUrl = sprintf('%s?redirect=followage&scopes=%s', route('auth.twitch.base'), $this->followScope);
+        $needToAuth = sprintf(__('twitch.followage_needs_authentication'), $authUrl);
 
+        if (empty($channel) && Auth::check()) {
+            $user = Auth::user();
+            $apiToken = $user->api_token;
+
+            $slcbRoute = sprintf('%s?token=%s', route('twitch.followage', ['channel' => '$mychannel', 'user' => '$touserid']), $apiToken);
+            $nightbotRoute = sprintf('%s?token=%s', route('twitch.followage', ['channel' => '$(channel)', 'user' => '$(touser)']), $apiToken);
+            $data = [
+                'page' => 'Followage',
+                'slcbRoute' => urldecode($slcbRoute),
+                'nightbotRoute' => urldecode($nightbotRoute),
+                'apiToken' => $apiToken,
+            ];
+
+            return view('twitch.followage', $data);
+        }
+
+        $apiToken = $request->input('token', null);
+        if (empty($apiToken)) {
+            return Helper::text(sprintf('%s - %s', __('twitch.follow_token_parameter'), $needToAuth));
+        }
+
+        $precision = intval($request->input('precision')) ? intval($request->input('precision')) : 2;
         if (empty($channel) || empty($user)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel) || empty($nb->user)) {
@@ -413,8 +436,34 @@ class TwitchController extends Controller
             }
         }
 
+        $tokenUser = User::where('api_token', $apiToken)->first();
+        if (empty($tokenUser)) {
+            return Helper::text('Invalid `token` parameter provided. No user found with this token.');
+        }
+
+        $combinedScopes = sprintf('%s+%s', $tokenUser->scopes, $this->followScope);
+        $authUrl = sprintf('%s?redirect=followage&scopes=%s', route('auth.twitch.base'), $combinedScopes);
+
+        $cachedUser = null;
         try {
-            $follow = $this->api->followRelationship($channel, $user);
+            $cachedUser = $this->api->cachedUserById($tokenUser->id);
+        }
+        catch (TwitchApiException $ex) {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+
+        $needToReAuth = sprintf(__('twitch.followage_needs_reauthentication'), $cachedUser->username, $authUrl);
+
+        $scopes = explode('+', $tokenUser->scopes);
+        if (!in_array($this->followScope, $scopes)) {
+            return Helper::text($needToReAuth);
+        }
+
+        $twitchToken = Crypt::decrypt($tokenUser->access_token);
+        $this->api->setToken($twitchToken);
+
+        try {
+            $follow = $this->api->channelFollowers($channel, $user);
         }
         catch (TwitchApiException $ex)
         {
@@ -424,15 +473,14 @@ class TwitchController extends Controller
             return Helper::text(sprintf('An error has occurred requesting followage between %s (channel) and %s (user)', $channelName, $username));
         }
 
-        if (empty($follow)) {
+        if (empty($follow['followers'])) {
             return Helper::text(__('twitch.follow_not_found', [
                 'user' => $username,
                 'channel' => $channelName,
             ]));
         }
 
-        $follow = $follow[0];
-
+        $follow = $follow['followers'][0];
         return Helper::text(Helper::getDateDiff($follow['followed_at'], time(), $precision));
     }
 
@@ -511,6 +559,30 @@ class TwitchController extends Controller
         // https://secure.php.net/manual/en/timezones.php
         $allTimezones = DateTimeZone::listIdentifiers();
 
+        $authUrl = sprintf('%s?redirect=followed&scopes=%s', route('auth.twitch.base'), $this->followScope);
+        $needToAuth = sprintf(__('twitch.followed_needs_authentication'), $authUrl);
+
+        if (empty($channel) && Auth::check()) {
+            $user = Auth::user();
+            $apiToken = $user->api_token;
+
+            $slcbRoute = sprintf('%s?token=%s', route('twitch.followed', ['followed' => 'followed', 'channel' => '$mychannel', 'user' => '$touserid']), $apiToken);
+            $nightbotRoute = sprintf('%s?token=%s', route('twitch.followed', ['followed' => 'followed', 'channel' => '$(channel)', 'user' => '$(touser)']), $apiToken);
+            $data = [
+                'page' => 'Followed',
+                'slcbRoute' => urldecode($slcbRoute),
+                'nightbotRoute' => urldecode($nightbotRoute),
+                'apiToken' => $apiToken,
+            ];
+
+            return view('twitch.followed', $data);
+        }
+
+        $apiToken = $request->input('token', null);
+        if (empty($apiToken)) {
+            return Helper::text(sprintf('Missing `token` parameter required for /twitch/followed as of September 2023 - %s', $needToAuth));
+        }
+
         if (empty($user) || empty($channel)) {
             $nb = new Nightbot($request);
             if (empty($nb->channel) || empty($nb->user)) {
@@ -530,14 +602,13 @@ class TwitchController extends Controller
             return Helper::text(__('twitch.cannot_follow_self'));
         }
 
+        /**
+         * Set different variables for error messages (usernames instead of IDs).
+         */
+        $channelName = $channel;
+        $username = $user;
         if ($id !== 'true') {
             try {
-                /**
-                 * Set different variables for error messages (usernames instead of IDs).
-                 */
-                $channelName = $channel;
-                $userName = $user;
-
                 $channel = $this->userByName($channel)->id;
                 $user = $this->userByName($user)->id;
             } catch (Exception $e) {
@@ -545,181 +616,56 @@ class TwitchController extends Controller
             }
         }
 
+        $tokenUser = User::where('api_token', $apiToken)->first();
+        if (empty($tokenUser)) {
+            return Helper::text('Invalid `token` parameter provided. No user found with this token.');
+        }
+
+        $combinedScopes = sprintf('%s+%s', $tokenUser->scopes, $this->followScope);
+        $authUrl = sprintf('%s?redirect=followage&scopes=%s', route('auth.twitch.base'), $combinedScopes);
+
+        $cachedUser = null;
         try {
-            $getFollow = $this->api->followRelationship($channel, $user);
+            $cachedUser = $this->api->cachedUserById($tokenUser->id);
+        }
+        catch (TwitchApiException $ex) {
+            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
+        }
+
+        $needToReAuth = sprintf(__('twitch.followage_needs_reauthentication'), $cachedUser->username, $authUrl);
+
+        $scopes = explode('+', $tokenUser->scopes);
+        if (!in_array($this->followScope, $scopes)) {
+            return Helper::text($needToReAuth);
+        }
+
+        $twitchToken = Crypt::decrypt($tokenUser->access_token);
+        $this->api->setToken($twitchToken);
+
+        try {
+            $follow = $this->api->channelFollowers($channel, $user);
         }
         catch (TwitchApiException $ex)
         {
             return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
         }
-        catch (Exception $ex)
-        {
-            return Helper::text(__('twitch.unable_get_following'));
+        catch (Exception $ex) {
+            return Helper::text(sprintf('An error has occurred requesting followage between %s (channel) and %s (user)', $channelName, $username));
         }
 
-        /**
-         * Information from API was valid, but empty.
-         */
-        if (empty($getFollow)) {
+        if (empty($follow['followers'])) {
             return Helper::text(__('twitch.follow_not_found', [
-                'user' => $userName ?? $user,
-                'channel' => $channelName ?? $channel,
+                'user' => $username,
+                'channel' => $channelName,
             ]));
         }
 
-        $follow = $getFollow[0];
+        $follow = $follow['followers'][0];
+
         $time = Carbon::parse($follow['followed_at']);
         $time->setTimezone($tz);
 
         return Helper::text($time->format($format));
-    }
-
-    /**
-     * Retrieves and lists the latest followers for a channel.
-     *
-     * @param  Request $request
-     * @param  string  $route
-     * @param  string  $channel
-     * @return Response
-     */
-    public function followers(Request $request, $route, $channel = null)
-    {
-        $channel = $channel ?: $request->input('channel', null);
-        $count = intval($request->input('count', 1));
-        $showNumbers = ($request->exists('num') || $request->exists('show_num')) ? true : false;
-        $separator = $request->input('separator', ', ');
-
-        $id = $request->input('id', 'false');
-
-        /**
-         * If no channel is specified, we check if it's a Nightbot request.
-         */
-        if (empty($channel)) {
-            $nb = new Nightbot($request);
-            if (empty($nb->channel)) {
-                return Helper::text(__('generic.channel_name_required'));
-            }
-
-            $channel = $nb->channel['providerId'];
-            $id = 'true';
-        }
-
-        /**
-         * ID isn't specified, so we convert from Twitch username to ID.
-         */
-        $channelName = $channel;
-        if ($id !== 'true') {
-            try {
-                $channel = $this->userByName($channel)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
-        }
-
-        if ($count > 100) {
-            return Helper::text(__('generic.max_count', ['value' => 100]));
-        }
-
-        try {
-            $followers = $this->api->followsChannel($channel, $count);
-        }
-        catch (TwitchApiException $ex)
-        {
-            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
-        }
-        catch (Exception $ex) {
-            return Helper::text(sprintf('An error has occurred retrieving followers for %s', $channelName));
-        }
-
-        if (empty($followers) || !isset($followers['follows'])) {
-            $message = __('twitch.error_followers', [
-                'channel' => $channelName,
-            ]);
-
-            return Helper::text($message);
-        }
-
-        $follows = $followers['follows'];
-
-        if (empty($follows)) {
-            return Helper::text(__('twitch.no_followers'));
-        }
-
-        $users = [];
-        $currentNumber = 0;
-        foreach ($follows as $user) {
-            $name = $user['from_name'];
-            $currentNumber++;
-
-            if ($showNumbers) {
-                $users[] = sprintf('%d. %s', $currentNumber, $name);
-                continue;
-            }
-
-            $users[] = $name;
-        }
-
-        return Helper::text(implode($separator, $users));
-    }
-
-    /**
-     * Returns a list of the channels a user is following.
-     *
-     * @param Request $request
-     * @param string $user
-     * @return void
-     */
-    public function following(Request $request, $user = null)
-    {
-        $id = $request->input('id', 'false');
-        if ($id !== 'true') {
-            try {
-                // Store channel name separately for potential messages and override $channel
-                $username = $user;
-                $user = $this->userByName($user)->id;
-            } catch (Exception $e) {
-                return Helper::text($e->getMessage());
-            }
-        }
-
-        $limit = intval($request->input('limit', 25));
-        $separator = $request->input('separator', ', ');
-
-        if ($limit < 1 || $limit > 100) {
-            $errorText = __('generic.invalid_limit', ['limit' => $limit]);
-            return Helper::text($errorText);
-        }
-
-        try {
-            $channels = $this->api->userFollows($user, $limit);
-        }
-        catch (TwitchApiException $ex)
-        {
-            return Helper::text('[Error from Twitch API] ' . $ex->getMessage());
-        }
-        catch (Exception $ex) {
-            return Helper::text(sprintf('An error has occurred retrieving followed channels for user %s', $user));
-        }
-
-        $follows = $channels['follows'];
-
-        if (!is_array($follows)) {
-            Log:error(sprintf('/twitch/following: `Follows` key for user %s invalid. Array expected, got: %s', $user, gettype($follows)));
-            return Helper::text(__('twitch.unable_get_following'));
-        }
-
-        if (count($follows) === 0) {
-            return Helper::text(__('twitch.end_following_list'));
-        }
-
-        $list = array_map(
-            function ($follow) {
-                return $follow['to_name'];
-            },
-            $follows
-        );
-
-        return Helper::text(implode($separator, $list));
     }
 
     /**

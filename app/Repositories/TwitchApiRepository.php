@@ -175,8 +175,10 @@ class TwitchApiRepository
         }
 
         $cacheKey = sprintf('TWITCH_API_CHANNEL_FOLLOWERS_%s', $broadcasterId);
+        $cacheTime = config('twitch.cache.followcount');
         if (!empty($userId)) {
             $cacheKey = sprintf('TWITCH_API_CHANNEL_FOLLOWERS_%s_%s', $broadcasterId, $userId);
+            $cacheTime = config('twitch.cache.follow_date');
         }
 
         if (Cache::has($cacheKey)) {
@@ -196,11 +198,7 @@ class TwitchApiRepository
         $result = Resource\ChannelFollowers::make($request)
                                         ->resolve();
 
-        /**
-         * TODO: Use a separate cache time config.
-         * Should be increased if support for streamer/mod token access is added.
-         */
-        Cache::put($cacheKey, $result, config('twitch.cache.followcount'));
+        Cache::put($cacheKey, $result, $cacheTime);
         return $result;
     }
 
@@ -751,6 +749,54 @@ class TwitchApiRepository
             $checkId->save();
 
             return $checkId;
+        }
+
+        $cachedUser = new CachedTwitchUser;
+        $cachedUser->id = $userId;
+        $cachedUser->username = $username;
+        $cachedUser->save();
+
+        return $cachedUser;
+    }
+
+    /**
+     * Similar to `userById()`, but returns a `CachedTwitchUser` model.
+     * Will check the cache before querying the Twitch API.
+     *
+     * @param string|int $userId
+     *
+     * @return App\CachedTwitchUser
+     * @throws TwitchApiException
+     */
+    public function cachedUserById($id = '')
+    {
+        if (!is_string($id) && !is_int($id))
+        {
+            throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
+        }
+
+        $cachedUser = CachedTwitchUser::where(['id' => $id])->first();
+        if (!empty($cachedUser)) {
+            return $cachedUser;
+        }
+
+        $user = $this->userById($id);
+        if (empty($user)) {
+            throw new TwitchApiException('User not found: ' . $id);
+        }
+
+        $userId = $user['id'];
+        $username = $user['login'];
+
+        /**
+         * This is probably not realistic, but may occur when two users have "swapped" usernames.
+         *
+         * The only instance where I can see this happening is if Twitch staff changes swaps names
+         * e.g. by a request from a Twitch partner.
+         */
+        $checkUsername = CachedTwitchUser::where(['username' => $username])->first();
+        if (!empty($checkUsername)) {
+            $checkUsername->delete();
         }
 
         $cachedUser = new CachedTwitchUser;

@@ -5,7 +5,7 @@
         <div class="jumbotron">
             <p class="text text-info">You have successfully authenticated and can now use this to display your subscriber points using chatbots. Below is an example using the two common ones: Streamlabs Chatbot and Nightbot.</p>
 
-            <h3>Streamlabs Chatbot (formerly Ankhbot):</h3>
+            <h3>Streamlabs Chatbot:</h3>
             <p class="text text-muted">Add a command that includes the part below and it will be replaced with the amount of subscriber points in the command:</p>
             <pre>$readapi({{ $route }})</pre>
             <p class="text text-muted">For example, if you wanted to display this message:</p>

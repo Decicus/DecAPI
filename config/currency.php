@@ -5,7 +5,14 @@
  * https://github.com/fawazahmed0/currency-api
  */
 return [
-    'cacheKey' => 'currency_rates',
+    // Cache key for the currency *list*
+    'cacheKeyList' => 'currencies',
+    // Cache key prefix for the currency *rates*
+    'cacheKeyPrefix' => 'currency_rates_',
+
+    // Cache expiry in hours. We keep this at 48 hours by default.
     'cacheHours' => 48,
-    'currencies' => ['AED', 'ALL', 'ARS', 'ATS', 'AUD', 'AWG', 'BRL', 'BTC', 'CAD', 'CHF', 'CLP', 'CNY', 'COP', 'CZK', 'DKK', 'DOP', 'EGP', 'EUR', 'GBP', 'HKD', 'HUF', 'IDR', 'ILS', 'INR', 'IRR', 'ISK', 'JOD', 'JPY', 'KES', 'KRW', 'KWD', 'LAK', 'LBP', 'LKR', 'MOP', 'MUR', 'MXN', 'MYR', 'NOK', 'NZD', 'PEN', 'PHP', 'PLN', 'PYG', 'QAR', 'RON', 'RUB', 'RWF', 'SAR', 'SEK', 'SGD', 'SKK', 'THB', 'TRY', 'TWD', 'UGX', 'USD', 'UYU', 'VEF', 'VES', 'VND', 'ZAR', 'ZWL'],
+
+    // How many hours to wait before fetching the currency rates again.
+    'cacheFetchHours' => 12,
 ];

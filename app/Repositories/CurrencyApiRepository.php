@@ -105,8 +105,12 @@ class CurrencyApiRepository
     public function isValidCurrency($currency)
     {
         $currency = $this->normalize($currency);
-        $currencies = $this->getCurrencies();
+        $currencies = $this->getCurrencies() ?? [];
+        if (empty($currencies)) {
+            return false;
+        }
 
+        $currencies = $currencies['currencies'] ?? [];
         return isset($currencies[$currency]);
     }
 

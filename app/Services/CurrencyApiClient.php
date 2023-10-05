@@ -27,10 +27,10 @@ class CurrencyApiClient
     }
 
     /**
-     * Sends a GET request to a BetterTTV API endpoint
+     * Sends a GET request to the currency API.
      * Returns the decoded JSON response.
      *
-     * @param string $url API endpoint (e.g. /users/{id})
+     * @param string $url API endpoint (e.g. /currencies.min.json)
      * @param array $parameters Query (HTTP GET) parameters to pass along with the request.
      * @param array $headers Extra HTTP headers to send with the request.
      *

@@ -168,6 +168,11 @@ return [
          * BetterTTV
          */
         App\Providers\BttvApiProvider::class,
+
+        /**
+         * Currency data
+         */
+        App\Providers\CurrencyApiProvider::class,
     ],
 
     /*

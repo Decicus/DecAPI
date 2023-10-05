@@ -4,15 +4,25 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Http\Requests;
-
+use App\Exceptions\CurrencyApiException;
 use App\Helpers\Helper;
+use App\Repositories\CurrencyApiRepository;
 use Carbon\Carbon;
 use DateTimeZone;
-use Log;
+
 
 class MiscController extends Controller
 {
+    /**
+     * @var App\Repositories\CurrencyApiRepository
+     */
+    private $currencyApi;
+
+    public function __construct(CurrencyApiRepository $currencyApi)
+    {
+        $this->currencyApi = $currencyApi;
+    }
+
     /**
      * Converts currency based on parameters passed.
      *
@@ -25,11 +35,17 @@ class MiscController extends Controller
         $from = $request->input('from', null);
         $to = $request->input('to', null);
         $round = intval($request->input('round', 2));
-        $currencies = config('currency.currencies');
 
         $listUrl = route('misc.currency', 'currency') . '?list';
-
         if ($request->exists('list')) {
+            $currencies = $this->currencyApi->getCurrencies();
+            $currencies = array_map(
+                function($code) {
+                    return strtoupper($code);
+                },
+                array_keys($currencies['currencies'])
+            );
+
             return Helper::text('Available currencies: ' . implode(', ', $currencies));
         }
 
@@ -46,56 +62,26 @@ class MiscController extends Controller
         }
 
         $value = floatval(str_replace(',', '', $value));
-        $from = strtoupper(trim($from));
-        $to = strtoupper(trim($to));
-
         if ((int) $value === 0) {
             $value = 1;
         }
 
-        if (!in_array($from, $currencies)) {
+        $fromValid = $this->currencyApi->isValidCurrency($from);
+        if (!$fromValid) {
             return Helper::text(sprintf('Invalid "from" currency specified (%s) - Available currencies can be found here: %s', $from, $listUrl));
         }
 
-        if (!in_array($to, $currencies)) {
+        $toValid = $this->currencyApi->isValidCurrency($to);
+        if (!$toValid) {
             return Helper::text(sprintf('Invalid "to" currency specified (%s) - Available currencies can be found here: %s', $to, $listUrl));
         }
 
-        // $apiUrl = sprintf('https://api.exchangerate.host/latest?base=%s&symbols=%s', $from, $to);
-        $fromLower = strtolower($from);
-        $apiUrl = sprintf('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/%s.json', $fromLower);
         try {
-            $convert = Helper::get($apiUrl);
+            $convert = $this->currencyApi->convert($from, $to, $value, $round);
+            return Helper::text($convert);
+        } catch (CurrencyApiException $e) {
+            return Helper::text(sprintf('An error occurred while converting the currency: %s', $e->getMessage()));
         }
-        catch (Exception $ex) {
-            Log::error('/misc/currency request error: ' . $ex->getMessage());
-            return Helper::text('An error has occurred retrieving exchange rates');
-        }
-
-        if (empty($convert)) {
-            return Helper::text('An error has occurred retrieving exchange rates');
-        }
-
-        // if ($convert['success'] === false) {
-        //     if (!empty($convert['error'])) {
-        //         return Helper::text('An error occurred retrieving exchange rates: ' . $convert['error']['type']);
-        //     }
-
-        //     return Helper::text('An error has occurred retrieving exchange rates.');
-        // }
-
-        $convert = $convert[$fromLower] ?? [];
-        if (empty($convert)) {
-            return Helper::text('An error has occurred retrieving exchange rates.');
-        }
-
-        $toLower = strtolower($to);
-        if (!isset($convert[$toLower])) {
-            return Helper::text(sprintf('Invalid "to" currency specified (%s) - Available currencies can be found here: %s', $to, $listUrl));
-        }
-
-        $calculate = round($value * $convert[$toLower], $round);
-        return Helper::text(sprintf('%s %s = %s %s', $value, $from, $calculate, $to));
     }
 
     /**

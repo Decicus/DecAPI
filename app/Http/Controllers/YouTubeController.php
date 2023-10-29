@@ -10,6 +10,8 @@ use Exception;
 use Log;
 use Cache;
 
+use App\Repositories\YouTubeApiRepository;
+
 class YouTubeController extends Controller
 {
     /**
@@ -26,6 +28,18 @@ class YouTubeController extends Controller
      * @var array
      */
     protected $formatSearch = ['{id}', '{url}', '{title}'];
+
+    /**
+     * YouTube API repository, for handling logic around caching.
+     *
+     * @var YouTubeApiRepository
+     */
+    protected $api;
+
+    public function __construct(YouTubeApiRepository $api)
+    {
+        $this->api = $api;
+    }
 
     /**
      * Retrieves the latest public YouTube upload from the specified identifier.
@@ -51,6 +65,14 @@ class YouTubeController extends Controller
         $id = $request->input($type, null);
         $format = $request->input('format', $this->defaultFormat);
         $exclude = $request->input('exclude', null);
+        $noShorts = $request->input('no_shorts', '0');
+        $excludeShorts = $noShorts !== '0' && $noShorts !== 'false';
+
+        $noLivestream = $request->input('no_livestream', '0');
+        $excludeLivestream = $noLivestream !== '0' && $noLivestream !== 'false';
+
+        $fetchExtendedDetails = $excludeShorts || $excludeLivestream;
+
         if ($exclude !== null) {
             $exclude = trim($exclude);
         }
@@ -113,6 +135,30 @@ class YouTubeController extends Controller
                 return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
             }
 
+            $videoIds = array_map(function($video) {
+                return $video->contentDetails->videoId;
+            }, $results);
+
+            $videoDetails = [];
+            if ($fetchExtendedDetails) {
+                $videoDetails = $this->api->getVideoDetails($videoIds);
+            }
+
+            if ($excludeShorts) {
+                $filteredVideos = $this->api->filterShorts($videoDetails);
+
+                $results = array_filter($results, function($video) use ($filteredVideos) {
+                    $videoId = $video->contentDetails->videoId;
+                    return isset($filteredVideos[$videoId]);
+                });
+            }
+
+            if ($excludeLivestream) {
+                $results = array_filter($results, function($video) {
+                    return $video->snippet->liveBroadcastContent !== 'live';
+                });
+            }
+
             /**
              * The YouTube API seems to return basic information about private videos as well,
              * even though we can't see any "real" information about them.
@@ -139,7 +185,7 @@ class YouTubeController extends Controller
             );
 
             if (empty($results)) {
-                return Helper::text('This channel has no public videos.');
+                return Helper::text('This channel has no public videos matching the specified criteria.');
             }
 
             /**

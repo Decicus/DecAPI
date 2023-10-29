@@ -173,6 +173,11 @@ return [
          * Currency data
          */
         App\Providers\CurrencyApiProvider::class,
+
+        /**
+         * YouTube
+         */
+        App\Providers\YouTubeApiProvider::class,
     ],
 
     /*

@@ -65,6 +65,7 @@ class YouTubeController extends Controller
         $id = $request->input($type, null);
         $format = $request->input('format', $this->defaultFormat);
         $exclude = $request->input('exclude', null);
+        $include = $request->input('include', null);
         $noShorts = $request->input('no_shorts', '0');
         $excludeShorts = $noShorts !== '0' && $noShorts !== 'false';
 
@@ -75,6 +76,10 @@ class YouTubeController extends Controller
 
         if ($exclude !== null) {
             $exclude = trim($exclude);
+        }
+
+        if ($include !== null) {
+            $include = trim($include);
         }
 
         if (empty(trim($format))) {
@@ -153,6 +158,7 @@ class YouTubeController extends Controller
                 });
             }
 
+            // Note: This flag only excludes a currently active livestream. Stream VODs are considered regular videos by the API.
             if ($excludeLivestream) {
                 $results = array_filter($results, function($video) {
                     return $video->snippet->liveBroadcastContent !== 'live';
@@ -183,6 +189,15 @@ class YouTubeController extends Controller
                     return $isPublic && !$isExcluded;
                 }
             );
+
+            if (!empty($include)) {
+                $results = array_filter($results,
+                    function($video) use ($include) {
+                        $title = $video->snippet->title ?? '';
+                        return stripos($title, $include) !== false;
+                    }
+                );
+            }
 
             if (empty($results)) {
                 return Helper::text('This channel has no public videos matching the specified criteria.');

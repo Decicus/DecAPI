@@ -160,8 +160,11 @@ class YouTubeController extends Controller
 
             // Note: This flag only excludes a currently active livestream. Stream VODs are considered regular videos by the API.
             if ($excludeLivestream) {
-                $results = array_filter($results, function($video) {
-                    return $video->snippet->liveBroadcastContent !== 'live';
+                $filteredVideos = $this->api->filterLivestreams($videoDetails);
+
+                $results = array_filter($results, function($video) use ($filteredVideos) {
+                    $videoId = $video->contentDetails->videoId;
+                    return isset($filteredVideos[$videoId]);
                 });
             }
 
@@ -248,6 +251,9 @@ class YouTubeController extends Controller
 
             return Helper::text(str_replace($this->formatSearch, $replacements, $format));
         } catch (Exception $ex) {
+            $exceptionMessage = sprintf('%s%s%s', $ex->getMessage(), PHP_EOL, $ex->getTraceAsString());
+            $logResult = sprintf('An error occurred in /youtube/latest_video (channel: "%s", skip: %d): %s', $request->input($type), $skip, $exceptionMessage);
+            Log::error($logResult);
             return Helper::text('An error occurred retrieving videos for channel: ' . $request->input($type));
         }
     }

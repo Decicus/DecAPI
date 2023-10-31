@@ -21,7 +21,7 @@ class YouTubeApiRepository
     }
 
     /**
-     * Filters away any "shorts" videos (videos less than 1 minute long).
+     * Filters away (removes) any "shorts" videos (videos less than 1 minute long).
      * Input is expected to be an array of videos, as returned by `getVideoDetails()`.
      *
      * @param array $videos
@@ -33,8 +33,45 @@ class YouTubeApiRepository
         $filteredVideos = [];
 
         foreach ($videos as $id => $video) {
-            $duration = new CarbonInterval($video->contentDetails->duration);
+            $rawDuration = $video->contentDetails->duration;
+
+            /**
+             * Livestreams will not have a valid `duration` field until the VOD is ready.
+             * Since `filterShorts()` is not supposed to affect livestreams, we implicitly include them.
+             *
+             * An alternative way of checking just livestreams would be: `$video->snippet->liveBroadcastContent === 'live'`
+             */
+            if ($rawDuration === 'P0D') {
+                $filteredVideos[$id] = $video;
+                continue;
+            }
+
+            $duration = new CarbonInterval($rawDuration);
             if ($this->shortsCutoff->greaterThan($duration)) {
+                continue;
+            }
+
+            $filteredVideos[$id] = $video;
+        }
+
+        return $filteredVideos;
+    }
+
+    /**
+     * Filter away (removes) any currently *active* livestreams.
+     * Does not affect stream VODs of completed livestreams.
+     * Input is expected to be an array of videos, as returned by `getVideoDetails()`.
+     *
+     * @param array $videos
+     *
+     * @return array
+     */
+    public function filterLivestreams($videos = [])
+    {
+        $filteredVideos = [];
+
+        foreach ($videos as $id => $video) {
+            if ($video->snippet->liveBroadcastContent === 'live') {
                 continue;
             }
 

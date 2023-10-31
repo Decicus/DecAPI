@@ -12,4 +12,10 @@
          * e.g. via latest_video
          */
         'video_details' => 2592000,
+
+        /**
+         * Cache YouTube livestream details for 3 hours (60 * 60 * 3)
+         * Primarily used so that stream VODs will eventually be updated with the more permanent details, in which case the `video_details` cache will be used.
+         */
+        'livestream_details' => 10800,
     ];

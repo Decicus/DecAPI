@@ -113,6 +113,13 @@ class YouTubeApiRepository
             foreach ($videoDetails as $videoDetail) {
                 $videoId = $videoDetail->id;
                 $cacheKey = sprintf($cacheFormat, $videoId);
+
+                // Cache livestreams for a shorter time
+                if ($videoDetail->snippet->liveBroadcastContent === 'live') {
+                    Cache::put($cacheKey, $videoDetail, config('youtube-cache.livestream_details', 10800));
+                    continue;
+                }
+
                 Cache::put($cacheKey, $videoDetail, config('youtube-cache.video_details', 2592000));
             }
         }

@@ -169,7 +169,14 @@ class TwitchApiClient
             $rateLimit = $headers['Ratelimit-Remaining'] ?? null;
             if ($rateLimit !== null) {
                 $rateLimit = (int) $rateLimit[0];
-                Datadog::gauge('twitch.helix_rate_limit_remaining', $rateLimit);
+                try {
+                    Datadog::distribution('twitch.helix_rate_limit_remaining', $rateLimit);
+                }
+                catch (\Exception $ex)
+                {
+                    Log::error('Unable to submit Datadog metrics.');
+                    Log::error($ex);
+                }
             }
         }
 

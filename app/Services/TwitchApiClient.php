@@ -20,7 +20,7 @@ class TwitchApiClient
     /**
      * An instance of GuzzleHttp\Client
      *
-     * @var GuzzleHttp\Client
+     * @var \GuzzleHttp\Client
      */
     private $client;
 
@@ -164,6 +164,15 @@ class TwitchApiClient
         }
 
         $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
+        if ($this->datadogEnabled === true) {
+            $headers = $response->getHeaders();
+            $rateLimit = $headers['Ratelimit-Remaining'] ?? null;
+            if ($rateLimit !== null) {
+                $rateLimit = (int) $rateLimit[0];
+                Datadog::gauge('twitch.helix_rate_limit_remaining', $rateLimit);
+            }
+        }
+
         return json_decode($response->getBody(), true);
     }
 }

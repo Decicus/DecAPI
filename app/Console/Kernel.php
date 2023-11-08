@@ -40,6 +40,6 @@ class Kernel extends ConsoleKernel
 
         // Authenticated channels for subcount/subpoints/subage etc.
         $schedule->command('twitch:authuserupdate')
-                 ->hourly();
+                 ->everyFiveMinutes();
     }
 }

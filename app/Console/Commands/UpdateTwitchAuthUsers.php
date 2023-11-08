@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Crypt;
 use GuzzleHttp\Client;
 use Exception;
+use Log;
 
 use App\Http\Resources\Twitch\AuthToken as TwitchAuthToken;
 
@@ -57,7 +58,7 @@ class UpdateTwitchAuthUsers extends Command
                      ->get();
 
         if ($users->isEmpty()) {
-            $this->info('No authenticated Twitch users to check.');
+            Log::info('No authenticated Twitch users to check.');
             return 0;
         }
 
@@ -82,7 +83,7 @@ class UpdateTwitchAuthUsers extends Command
 
             if (isset($body['status']) && $body['status'] === 400) {
                 $user->delete();
-                $this->info('Deleting user because of invalid refresh token: ' . $user->id);
+                Log::info('Deleting user because of invalid refresh token: ' . $user->id);
                 continue;
             }
 
@@ -94,11 +95,13 @@ class UpdateTwitchAuthUsers extends Command
                 $user->refresh_token = Crypt::encrypt($newToken['refresh_token']);
                 $user->expires = $newToken['expires'];
                 $user->save();
-                $this->info('Refreshed token for ID: ' . $user->id);
+                Log::info('Refreshed token for ID: ' . $user->id);
             }
             catch (Exception $ex)
             {
-                $this->error('Error occurred refreshing token for ID: ' . $user->id);
+                Log::error('Error occurred refreshing token for ID: ' . $user->id);
+                Log::error($ex->getMessage());
+                Log::error($ex->getTraceAsString());
             }
         }
     }

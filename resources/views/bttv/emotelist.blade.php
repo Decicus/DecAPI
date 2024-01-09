@@ -5,7 +5,7 @@
         $cdnUrl = sprintf('https://cdn.betterttv.net/emote/%s', $emote['id']);
     @endphp
 
-    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 text-center mt-4 mb-4">
+    <div class="col text-center mt-4 mb-4">
         <div class="card bg-secondary text-white">
             <div class="card-header bg-primary">
                 Emote code:
@@ -15,10 +15,10 @@
             </div>
             <div class="card-body">
                 <p class="card-text">
-                    <img src="{{ $cdnUrl }}/1x" alt="{{ $emote['code'] }} - 28x28" />
-                    <img src="{{ $cdnUrl }}/2x" alt="{{ $emote['code'] }} - 56x56" />
-                    <img src="{{ $cdnUrl }}/3x" alt="{{ $emote['code'] }} - 112x112" />
+                    <img src="{{ $cdnUrl }}/3x" alt="{{ $emote['code'] }} - 3x" />
                 </p>
+
+                <p class="card-text">All sizes: <a href="{{ $cdnUrl }}/1x">1x</a> | <a href="{{ $cdnUrl }}/2x">2x</a> | <a href="{{ $cdnUrl }}/3x">3x</a></p>
             </div>
             @if (!empty($emote['user']))
                 @php

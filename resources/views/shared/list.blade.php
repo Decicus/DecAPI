@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('main')
-    <div class="container">
+    <div class="container mt-4 mw-90">
         <div class="page-header">
             <h1>{{ env('SITE_TITLE', 'DecAPI') }} - {{ $page }}</h1>
         </div>

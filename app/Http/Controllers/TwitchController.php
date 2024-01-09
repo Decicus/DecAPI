@@ -164,11 +164,9 @@ class TwitchController extends Controller
             'multi' => 'multi/{STREAMS}',
             'random_sub' => 'random_sub/{CHANNEL}',
             'random_user' => 'random_user/{CHANNEL}',
-            'subage' => 'subage/{CHANNEL}/{USER}',
             'subcount' => 'subcount/{CHANNEL}',
             'subpoints' => 'subpoints/{CHANNEL}',
             'subscriber_emotes' => 'subscriber_emotes/{CHANNEL}',
-            'subage' => 'subage/{CHANNEL}/{USER}',
             'status' => 'status/{CHANNEL}',
             'title' => 'title/{CHANNEL}',
             'team_members' => 'team_members/{TEAM_ID}',
@@ -1119,7 +1117,7 @@ class TwitchController extends Controller
                 'channel' => $userData['login'],
             ];
 
-            return view('twitch.sublist', $data);
+            return view('twitch.random-sub', $data);
         }
 
         if (empty($channel)) {
@@ -1181,9 +1179,10 @@ class TwitchController extends Controller
 
         $count = $data['count'];
 
-        if ($amount > $count) {
-            return Helper::text(sprintf(__('twitch.sub_count_too_high'), $amount, $count));
-        }
+        // I don't remember exactly why I did this, because a `count` can be considered a "max count".
+        // if ($amount > $count) {
+        //     return Helper::text(sprintf(__('twitch.sub_count_too_high'), $amount, $count));
+        // }
 
         $subscriptions = $data['subscriptions']->resolve();
 
@@ -1311,11 +1310,14 @@ class TwitchController extends Controller
             $user = Auth::user();
             $userData = $this->api->userById($user->id);
             $name = $userData['login'];
+            $displayName = $userData['display_name'] ?: $name;
 
             $data = [
                 'page' => 'Subcount',
-                'route' => route('twitch.subcount', ['subcount' => 'subcount', 'channel' => $name])
+                'route' => route('twitch.subcount', ['subcount' => 'subcount']),
+                'name' => $displayName,
             ];
+
             return view('twitch.subcount', $data);
         }
 
@@ -1415,12 +1417,14 @@ class TwitchController extends Controller
             $user = Auth::user();
             $userData = $this->api->userById($user->id);
             $name = $userData['login'];
+            $displayName = $userData['display_name'] ?: $name;
 
             return view('twitch.subpoints', [
                 'page' => 'Subpoints',
                 'route' => route('twitch.subpoints', [
                     'channel' => $name,
                 ]),
+                'name' => $displayName,
             ]);
         }
 

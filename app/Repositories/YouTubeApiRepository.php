@@ -17,7 +17,7 @@ class YouTubeApiRepository
 
     public function __construct()
     {
-        $this->shortsCutoff = new CarbonInterval('PT1M');
+        $this->shortsCutoff = new CarbonInterval('PT1M1S');
     }
 
     /**
@@ -47,7 +47,7 @@ class YouTubeApiRepository
             }
 
             $duration = new CarbonInterval($rawDuration);
-            if ($this->shortsCutoff->greaterThan($duration)) {
+            if ($this->shortsCutoff->greaterThanOrEqualTo($duration)) {
                 continue;
             }
 

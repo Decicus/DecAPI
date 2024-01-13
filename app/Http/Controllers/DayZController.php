@@ -135,21 +135,31 @@ class DayZController extends Controller
     {
         $ip = $request->input('ip', null);
         $port = $request->input('port', null);
-        $query_port = $request->input('query', null);
+        $queryPort = $request->input('query', null);
 
         if (empty($ip) || empty($port)) {
             return Helper::text('[Error: Please specify "ip" AND "port".]');
         }
 
-        $query_port = (empty($query_port) ? intval($port) : intval($query_port));
-        $address = $ip . ':' . $port;
+        $port = (int) $port;
+        if (empty($queryPort)) {
+            // 24714 is the default "offset" of the query port from the game port
+            // e.g. 2302 => 27016
+            // Thanks to CrimsonZamboni for this piece of code: https://github.com/tjensen/DayZServerMonitor/blob/a3958888512f1af10bbba0b1749c6889d5f96b98/DayZServerMonitorCore/Server.cs#L30
+            $queryPort = $port + 24714;
+        }
+        else {
+            $queryPort = (int) $queryPort;
+        }
+
+        $address = sprintf('%s:%s', $ip, $port);
 
         $query = new GameQ();
         $query->addServer([
             'type' => 'dayz',
             'host' => $address,
             'options' => [
-                'query_port' => $query_port,
+                'query_port' => $queryPort,
             ],
         ]);
         $query->setOption('timeout', 30);

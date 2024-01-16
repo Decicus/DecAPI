@@ -158,14 +158,14 @@ class CurrencyApiRepository
         $hasCache = !empty($cacheData);
 
         if ($hasCache && !$this->isCacheExpired($cacheData)) {
-            // return $cacheData;
+            return $cacheData;
         }
 
         try {
             $response = $this->client->getRates($currency);
         } catch (Exception $e) {
             if ($hasCache) {
-                // return $cacheData;
+                return $cacheData;
             }
 
             throw new CurrencyApiException('Failed to fetch currency rates.', $e->getCode(), $e);

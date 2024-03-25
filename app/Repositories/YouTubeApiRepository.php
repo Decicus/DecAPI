@@ -71,7 +71,8 @@ class YouTubeApiRepository
         $filteredVideos = [];
 
         foreach ($videos as $id => $video) {
-            if ($video->snippet->liveBroadcastContent === 'live') {
+            $liveContent = $video->snippet->liveBroadcastContent ?? 'none';
+            if ($liveContent === 'live' || $liveContent === 'upcoming') {
                 continue;
             }
 

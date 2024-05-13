@@ -209,14 +209,15 @@ class TwitchAuthController extends Controller
 
         $scopes = explode(' ', $scopes);
         foreach ($scopes as $scope) {
-            if (!in_array($scope, $this->scopes)) {
-                return Helper::message('invalid_scope');
+            $isKrakenScope = array_key_exists($scope, $this->krakenToHelixScopes);
+            $isHelixScope = in_array($scope, $this->scopes);
+
+            if (!$isKrakenScope && !$isHelixScope) {
+                continue;
             }
 
-            /**
-             * Make sure the Helix scope is included (for a smoother transition).
-             */
-            if (!array_key_exists($scope, $this->krakenToHelixScopes)) {
+            // If the scope is already a Helix scope, we don't need to do anything.
+            if ($isHelixScope) {
                 continue;
             }
 
@@ -225,6 +226,13 @@ class TwitchAuthController extends Controller
                 $scopes[] = $helixScope;
             }
         }
+
+        // Remove duplicate scopes
+        $scopes = array_unique($scopes);
+
+        // Remove any Kraken scopes, they are practically useless and just clutter Twitch's authorization page
+        $krakenScopes = array_keys($this->krakenToHelixScopes);
+        $scopes = array_diff($scopes, $krakenScopes);
 
         if (!isset($this->redirects[$redirect])) {
             $redirect = 'home';

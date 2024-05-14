@@ -2,9 +2,14 @@
 
 namespace App\Services;
 
+use App\Exceptions\TwitchApiException;
 use GuzzleHttp\Client as HttpClient;
 use App\Http\Resources\Twitch\AppToken as TwitchAppToken;
+use App\Http\Resources\Twitch\AuthToken as TwitchAuthToken;
+
+use App\User;
 use Cache;
+use Crypt;
 use Datadog;
 use Log;
 
@@ -16,6 +21,13 @@ class TwitchApiClient
      * @var string
      */
     protected $baseUrl = 'https://api.twitch.tv/helix';
+
+    /**
+     * URL for the Twitch OAuth token endpoint.
+     *
+     * @var string
+     */
+    protected $tokenUrl = 'https://id.twitch.tv/oauth2/token';
 
     /**
      * An instance of GuzzleHttp\Client
@@ -77,27 +89,73 @@ class TwitchApiClient
     }
 
     /**
+     * Refreshes the token using the refresh token.
+     *
+     * @param string $type
+     * @param string|null $token
+     *
+     * @return App\Http\Resources\Twitch\AppToken|App\Http\Resources\Twitch\AuthToken
+     */
+    private function refreshToken($type = 'client_credentials', $token = null)
+    {
+        $params = [
+            'client_id' => $this->twitchClientId,
+            'client_secret' => $this->twitchClientSecret,
+            'grant_type' => $type,
+        ];
+
+        if ($type === 'refresh_token') {
+            $params['refresh_token'] = $token;
+        }
+
+        $response = $this->client->request('POST', $this->tokenUrl, [
+            'http_errors' => false,
+            'form_params' => $params,
+        ]);
+
+        $statusCode = $response->getStatusCode();
+        if ($statusCode !== 200) {
+            $body = (string) $response->getBody();
+
+            Log::error(sprintf('Failed to refresh token: %s | %s', $statusCode, $body));
+            throw new TwitchApiException('Failed to refresh token.', $statusCode);
+        }
+
+        $data = json_decode($response->getBody(), true);
+
+        $token = TwitchAuthToken::make($data)
+                                ->resolve();
+
+        if ($type === 'client_credentials') {
+            $token = TwitchAppToken::make($data)
+                                   ->resolve();
+        }
+
+        return $token;
+    }
+
+    /**
      * Requests a new app token for Helix requests and puts it in cache.
      *
      * @return void
      */
     public function refreshAppToken()
     {
-        $url = 'https://id.twitch.tv/oauth2/token';
-        $response = $this->client->request('POST', $url, [
-            'query' => [
-                'client_id' => $this->twitchClientId,
-                'client_secret' => $this->twitchClientSecret,
-                'grant_type' => 'client_credentials',
-                'scope' => null,
-            ],
-        ]);
-
-        $data = json_decode($response->getBody(), true);
-        $token = TwitchAppToken::make($data)
-                               ->resolve();
-
+        $token = $this->refreshToken('client_credentials');
         Cache::put('TWITCH_APP_TOKEN', $token['access_token'], $token['expires']);
+    }
+
+    /**
+     * Refreshes the user token using the refresh token.
+     *
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshUserToken(string $refreshToken)
+    {
+        $token = $this->refreshToken('refresh_token', $refreshToken);
+        return $token;
     }
 
     /**

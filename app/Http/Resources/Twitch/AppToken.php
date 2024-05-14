@@ -14,7 +14,8 @@ class AppToken extends JsonResource
      */
     public function toArray($request)
     {
-        $expires = now()->addSeconds($this->resource['expires_in']);
+        $expiresIn = $this->resource['expires_in'] ?? 604800;
+        $expires = now()->addSeconds($expiresIn);
 
         return [
             'access_token' => $this->resource['access_token'],

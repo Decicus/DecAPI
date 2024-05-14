@@ -460,8 +460,7 @@ class TwitchController extends Controller
             return Helper::text($needToReAuth);
         }
 
-        $twitchToken = Crypt::decrypt($tokenUser->access_token);
-        $this->api->setToken($twitchToken);
+        $this->api->setToken($tokenUser);
 
         try {
             $follow = $this->api->channelFollowers($channel, $user);
@@ -641,8 +640,7 @@ class TwitchController extends Controller
             return Helper::text($needToReAuth);
         }
 
-        $twitchToken = Crypt::decrypt($tokenUser->access_token);
-        $this->api->setToken($twitchToken);
+        $this->api->setToken($tokenUser);
 
         try {
             $follow = $this->api->channelFollowers($channel, $user);
@@ -1145,18 +1143,6 @@ class TwitchController extends Controller
             return Helper::text($needToReAuth);
         }
 
-        try {
-            $token = Crypt::decrypt($channel->access_token);
-        } catch (DecryptException $e) {
-            // Something weird happened with the encrypted token
-            // request channel owner to re-auth so it's encrypted properly
-            return Helper::text($needToReAuth);
-        }
-
-        if (empty($token)) {
-            return Helper::text($needToReAuth);
-        }
-
         $scopes = explode('+', $channel->scopes);
 
         if (!in_array('channel:read:subscriptions', $scopes)) {
@@ -1167,7 +1153,7 @@ class TwitchController extends Controller
         $userId = $channel->id;
 
         try {
-            $this->api->setToken($token);
+            $this->api->setToken($channel);
             $data = $this->api->subscriptions($userId, null, $limit);
         }
         catch (TwitchApiException $ex)
@@ -1346,18 +1332,6 @@ class TwitchController extends Controller
             return Helper::text($needToReAuth);
         }
 
-        try {
-            $token = Crypt::decrypt($user->access_token);
-        } catch (DecryptException $e) {
-            // Something weird happened with the encrypted token
-            // request channel owner to re-auth so it's encrypted properly
-            return Helper::text($needToReAuth);
-        }
-
-        if (empty($token)) {
-            return Helper::text($needToReAuth);
-        }
-
         /**
          * Retrieve subscriber data from Helix API,
          * including subscriber count.
@@ -1366,7 +1340,7 @@ class TwitchController extends Controller
          */
         $userId = $user->id;
         try {
-            $this->api->setToken($token);
+            $this->api->setToken($user);
             $subs = $this->api->subscriptionsMeta($userId);
         }
         catch (TwitchApiException $ex)
@@ -1452,21 +1426,11 @@ class TwitchController extends Controller
         }
 
         /**
-         * Retrieve encrypted OAuth token from DB and attempt to decrypt.
-         */
-        try {
-            $token = Crypt::decrypt($user->access_token);
-        } catch (DecryptException $e) {
-            Log::error($e->getMessage());
-            return Helper::text($reAuth);
-        }
-
-        /**
          * Use OAuth token in Helix API requests and retrieve
          * all subscribers for the specified channel
          */
         try {
-            $this->api->setToken($token);
+            $this->api->setToken($user);
             $subs = $this->api->subscriptionsMeta($user->id);
         }
         catch (TwitchApiException $ex)

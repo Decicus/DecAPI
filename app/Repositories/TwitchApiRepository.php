@@ -10,7 +10,10 @@ use App\Exceptions\TwitchFormatException;
 use App\Http\Resources\Twitch as Resource;
 
 use App\CachedTwitchUser;
+use App\User;
 use Cache;
+use Carbon\Carbon;
+use Crypt;
 
 class TwitchApiRepository
 {
@@ -26,13 +29,33 @@ class TwitchApiRepository
 
     /**
      * Set the OAuth token that should be used for requests.
+     * If the token is expired, it will be refreshed.
      *
-     * @param string $token
+     * @param App\User|string $token
      *
      * @return void
      */
-    public function setToken($token = '')
+    public function setToken(User|string $token = '')
     {
+        if ($token instanceof User) {
+            $expires = new Carbon($token->expires);
+
+            if ($expires->isPast()) {
+                // Re-fetch the user with a lock
+                $user = User::lockForUpdate()->find($token->id);
+                $token = $this->client->refreshUserToken(Crypt::decrypt($user->refresh_token));
+
+                $user->access_token = Crypt::encrypt($token['access_token']);
+                $user->refresh_token = Crypt::encrypt($token['refresh_token']);
+                $user->expires = $token['expires'];
+                $user->save();
+
+                $token = $user;
+            }
+
+            $token = Crypt::decrypt($token->access_token);
+        }
+
         $this->client->setAuthToken($token);
     }
 

@@ -23,7 +23,7 @@ class Kernel extends ConsoleKernel
         Commands\RefreshIzurviveLocations::class,
         Commands\SetRateLimitApiKeyStatus::class,
         Commands\UpdateCachedTwitchUsers::class,
-        Commands\UpdateTwitchAuthUsers::class,
+        Commands\ValidateTwitchAuthUsers::class,
     ];
 
     /**
@@ -36,10 +36,12 @@ class Kernel extends ConsoleKernel
     {
         // Cached Twitch username => ID mappings
         $schedule->command('twitch:userupdate')
-                 ->everyFifteenMinutes();
+                 ->everyFifteenMinutes()
+                 ->withoutOverlapping(60);
 
         // Authenticated channels for subcount/subpoints/subage etc.
-        $schedule->command('twitch:authuserupdate')
-                 ->everyFiveMinutes();
+        $schedule->command('twitch:authuservalidate')
+                 ->twiceDaily()
+                 ->withoutOverlapping();
     }
 }

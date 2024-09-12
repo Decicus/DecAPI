@@ -51,7 +51,11 @@ class YouTubeApiRepository
                 continue;
             }
 
-            $rawDuration = $video->contentDetails->duration;
+            /**
+             * Fallback duration of 2 minutes for videos without a duration
+             * This may give some false positives, but we can fix those when they occur.
+             */
+            $rawDuration = $video->contentDetails->duration ?? 'PT2M0S';
 
             /**
              * Livestreams will not have a valid `duration` field until the VOD is ready.

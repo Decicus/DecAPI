@@ -21,6 +21,18 @@ class YouTubeApiRepository
     }
 
     /**
+     * Check if a video status is a (future) premiere.
+     *
+     * @param string $status
+     *
+     * @return boolean
+     */
+    private function isPremiere($status = 'none')
+    {
+        return $status === 'upcoming';
+    }
+
+    /**
      * Filters away (removes) any "shorts" videos (videos less than 1 minute long).
      * Input is expected to be an array of videos, as returned by `getVideoDetails()`.
      *
@@ -33,6 +45,12 @@ class YouTubeApiRepository
         $filteredVideos = [];
 
         foreach ($videos as $id => $video) {
+            $liveContent = $video->snippet->liveBroadcastContent ?? 'none';
+            if ($this->isPremiere($liveContent)) {
+                $filteredVideos[$id] = $video;
+                continue;
+            }
+
             $rawDuration = $video->contentDetails->duration;
 
             /**

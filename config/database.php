@@ -127,6 +127,9 @@ return [
                     'database' => 0,
                 ],
             ],
+            'options' => [
+                'parameters' => ['password' => env('REDIS_PASSWORD', null)]
+            ],
         ],
     ],
 

@@ -1,5 +1,5 @@
 # Thanks to: https://www.digitalocean.com/community/tutorials/how-to-containerize-a-laravel-application-for-development-with-docker-compose-on-ubuntu-18-04
-FROM php:8.1-fpm
+FROM php:8.4-fpm
 
 ARG user
 ARG uid

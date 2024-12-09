@@ -13,7 +13,10 @@ class ModifyUsersTableToStringIds extends Migration
     public function up()
     {
         Schema::table('users', function($table) {
-            $table->string('id')->change();
+            $table
+                ->string('id')
+                ->unique()
+                ->change();
         });
     }
 

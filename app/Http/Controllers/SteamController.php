@@ -8,7 +8,7 @@ use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 
 use App\Helpers\Helper;
-use Steam;
+use Syntax\SteamApi\Facades\SteamApi;
 
 use GuzzleHttp\Exception\ClientException;
 
@@ -275,8 +275,8 @@ class SteamController extends Controller
         }
 
         try {
-            $user = Steam::user($playerId);
-            $player = Steam::Player($playerId);
+            $user = SteamApi::user($playerId);
+            $player = SteamApi::Player($playerId);
 
             $visibility = $user->GetPlayerSummaries()[0]->communityVisibilityState;
             if ($visibility !== 3) {

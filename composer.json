@@ -13,7 +13,7 @@
         "symfony/dom-crawler": "~4.0",
         "symfony/css-selector": "~4.0",
         "austinb/gameq": "3.*@dev",
-        "alaouy/youtube": "^1.2",
+        "alaouy/youtube": "dev-master#07dffec7f79048a3d16d87282fb4a6f617cff9b2",
         "syntax/steam-api": "^3.0.0",
         "sentry/sentry-laravel": "^4.3.0",
         "ramsey/uuid": "^4.0",

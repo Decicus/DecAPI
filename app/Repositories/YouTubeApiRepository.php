@@ -15,6 +15,13 @@ class YouTubeApiRepository
      */
     protected $shortsCutoff;
 
+    /**
+     * The fallback duration for videos where we can't determine the duration
+     *
+     * @var string
+     */
+    private $fallbackDuration = 'PT2M0S';
+
     public function __construct()
     {
         $this->shortsCutoff = new CarbonInterval('PT1M1S');
@@ -55,7 +62,7 @@ class YouTubeApiRepository
              * Fallback duration of 2 minutes for videos without a duration
              * This may give some false positives, but we can fix those when they occur.
              */
-            $rawDuration = $video->contentDetails->duration ?? 'PT2M0S';
+            $rawDuration = $video->contentDetails->duration ?? $this->fallbackDuration;
 
             /**
              * Livestreams will not have a valid `duration` field until the VOD is ready.
@@ -68,8 +75,7 @@ class YouTubeApiRepository
                 continue;
             }
 
-            $duration = new CarbonInterval($rawDuration);
-            if ($this->shortsCutoff->greaterThanOrEqualTo($duration)) {
+            if ($this->isShort($video)) {
                 continue;
             }
 
@@ -158,5 +164,39 @@ class YouTubeApiRepository
         }
 
         return $videoDetails;
+    }
+
+    /**
+     * Check if a video is considered a "Short".
+     *
+     * @param string|array $video Video ID or video details
+     *
+     * @return boolean
+     */
+    public function isShort($video = '')
+    {
+        if (empty($video)) {
+            return false;
+        }
+
+        if (is_string($video)) {
+            $videoDetails = $this->getVideoDetails([$video]);
+            $video = reset($videoDetails);
+        }
+
+        $liveContent = $video->snippet->liveBroadcastContent ?? 'none';
+        if ($this->isPremiere($liveContent)) {
+            return false;
+        }
+
+
+        // TODO: Refactor into a single method instead of repeated logic (see: filterShorts())
+        $rawDuration = $video->contentDetails->duration ?? $this->fallbackDuration;
+        if ($rawDuration === 'P0D') {
+            return false;
+        }
+
+        $duration = new CarbonInterval($rawDuration);
+        return $this->shortsCutoff->greaterThanOrEqualTo($duration);
     }
 }

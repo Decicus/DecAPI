@@ -54,12 +54,16 @@ class YouTubeController extends Controller
             $type = 'user';
         }
 
+        if ($request->has('handle')) {
+            $type = 'handle';
+        }
+
         if ($request->has('id')) {
             $type = 'id';
         }
 
         if (empty($type)) {
-            return Helper::text('You need to specify a "user" (/user/ URLs) or an "id" (/channel/ URLs).');
+            return Helper::text('You need to specify a "user" (/user/ URLs), an "id" (/channel/ URLs) or the YouTube channel handle (@).');
         }
 
         $id = $request->input($type, null);
@@ -67,12 +71,20 @@ class YouTubeController extends Controller
         $exclude = $request->input('exclude', null);
         $include = $request->input('include', null);
         $noShorts = $request->input('no_shorts', '0');
+        $shortsUrl = $request->has('shorts_url');
+
         $excludeShorts = $noShorts !== '0' && $noShorts !== 'false';
 
         $noLivestream = $request->input('no_livestream', '0');
         $excludeLivestream = $noLivestream !== '0' && $noLivestream !== 'false';
 
         $fetchExtendedDetails = $excludeShorts || $excludeLivestream;
+
+        /**
+         * URL format used for the `{url}` replacement in the format string.
+         * Can be overridden by `shortsUrl` parameter before we do the actual replacements of `format`.
+         */
+        $urlFormat = 'https://youtu.be/%s';
 
         if ($exclude !== null) {
             $exclude = trim($exclude);
@@ -91,6 +103,14 @@ class YouTubeController extends Controller
 
         if ($skip >= $max) {
             $skip = 0;
+        }
+
+        /**
+         * Occasionally someone will try to pass the channel handle as the `user` parameter.
+         * So let's help them out here :)
+         */
+        if (strpos($id, '@') === 0) {
+            $type = 'handle';
         }
 
         /**
@@ -113,16 +133,20 @@ class YouTubeController extends Controller
             $parts = ['id', 'snippet', 'contentDetails'];
             switch ($type) {
                 case 'user':
-                    $channel = YouTube::getChannelByName($id, false, $parts);
+                    $channel = YouTube::getChannelByName($id, [], $parts);
+                    break;
+
+                case 'handle':
+                    $channel = YouTube::getChannelByHandle($id, [], $parts);
                     break;
 
                 default:
-                    $channel = YouTube::getChannelById($id, false, $parts);
+                    $channel = YouTube::getChannelById($id, [], $parts);
                     break;
             }
 
             if ($channel === false) {
-                return Helper::text('The specified identifier is invalid.');
+                return Helper::text(sprintf('The specified identifier "%s" as type "%s" is invalid.', $id, $type));
             }
 
             $uploadsPlaylist = $channel
@@ -130,6 +154,7 @@ class YouTubeController extends Controller
                 ->relatedPlaylists
                 ->uploads;
 
+            // TODO: Implement some caching
             $apiResults = YouTube::getPlaylistItemsByPlaylistId($uploadsPlaylist);
             $results = $apiResults['results'];
 
@@ -237,6 +262,13 @@ class YouTubeController extends Controller
             $title = htmlspecialchars_decode($video->snippet->title, ENT_QUOTES);
             $videoId = $video->contentDetails->videoId;
 
+            if ($shortsUrl) {
+                $isShort = $this->api->isShort($videoId);
+                if ($isShort) {
+                    $urlFormat = 'https://youtube.com/shorts/%s';
+                }
+            }
+
             /**
              * See $this->formatSearch for a list of available variables.
              */
@@ -244,7 +276,7 @@ class YouTubeController extends Controller
                 // {id}
                 $videoId,
                 // {url}
-                sprintf('https://youtu.be/%s', $videoId),
+                sprintf($urlFormat, $videoId),
                 // {title}
                 $title,
             ];

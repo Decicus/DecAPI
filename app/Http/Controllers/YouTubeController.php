@@ -244,8 +244,8 @@ class YouTubeController extends Controller
              * So it might be an unnecessary precaution.
              */
             usort($results, function($a, $b) {
-                $publishOne = $a->contentDetails->videoPublishedAt ?? date('c', 0);
-                $publishTwo = $b->contentDetails->videoPublishedAt ?? date('c', 0);
+                $publishOne = $a->snippet->publishedAt ?? $a->contentDetails->videoPublishedAt ?? date('c', 0);
+                $publishTwo = $b->snippet->publishedAt ?? $b->contentDetails->videoPublishedAt ?? date('c', 0);
 
                 return strtotime($publishTwo) - strtotime($publishOne);
             });

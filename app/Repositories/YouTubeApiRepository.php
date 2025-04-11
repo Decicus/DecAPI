@@ -110,6 +110,43 @@ class YouTubeApiRepository
         return $filteredVideos;
     }
 
+
+    /**
+     * Filter videos by duration.
+     *
+     * @param array $details Array of video details
+     * @param integer $minDuration Minimum duration in seconds
+     * @param integer $maxDuration Maximum duration in seconds
+     *
+     * @return array Filtered array of video details
+     */
+    public function filterByDuration($details = [], $minDuration = 0, $maxDuration = 0)
+    {
+        if ($minDuration > 0) {
+            $minimum = new CarbonInterval(seconds: $minDuration);
+
+            $details = array_filter($details, function ($video) use ($minimum) {
+                $rawDuration = $video->contentDetails->duration ?? $this->fallbackDuration;
+                $duration = new CarbonInterval($rawDuration);
+
+                return $duration->greaterThanOrEqualTo($minimum);
+            });
+        }
+
+        if ($maxDuration > 0) {
+            $maximum = new CarbonInterval(seconds: $maxDuration);
+
+            $details = array_filter($details, function ($video) use ($maximum) {
+                $rawDuration = $video->contentDetails->duration ?? $this->fallbackDuration;
+                $duration = new CarbonInterval($rawDuration);
+
+                return $duration->lessThanOrEqualTo($maximum);
+            });
+        }
+
+        return $details;
+    }
+
     /**
      * Gets *extended* video details for the given video IDs.
      * This may serve video details from cache, but we're talking about things like the title, description, duration etc.

@@ -73,12 +73,40 @@ class YouTubeController extends Controller
         $noShorts = $request->input('no_shorts', '0');
         $shortsUrl = $request->has('shorts_url');
 
+        $hasMinDuration = $request->has('min_duration');
+        $hasMaxDuration = $request->has('max_duration');
+        $minDuration = $request->input('min_duration', null);
+        $maxDuration = $request->input('max_duration', null);
+
+        /**
+         * We intentionally add an additional second to durations, to give more leeway for the API to return the correct results.
+         * As YouTube can for example consider "2:00" as "2m00s595ms" or something similar.
+         */
+        if ($hasMinDuration) {
+            $minDuration = (int) $minDuration;
+            $minDuration++;
+        }
+
+        if ($hasMaxDuration) {
+            $maxDuration = (int) $maxDuration;
+            $maxDuration++;
+        }
+
+        // Checking for minimum 2 here, as we're adding an additional second to the duration when specified.
+        if ($hasMinDuration && $minDuration < 2) {
+            return Helper::text('The "min_duration" parameter has to be a number, minimum 1.');
+        }
+
+        if ($hasMaxDuration && $maxDuration < 2) {
+            return Helper::text('The "max_duration" parameter has to be a number, minimum 1.');
+        }
+
         $excludeShorts = $noShorts !== '0' && $noShorts !== 'false';
 
         $noLivestream = $request->input('no_livestream', '0');
         $excludeLivestream = $noLivestream !== '0' && $noLivestream !== 'false';
 
-        $fetchExtendedDetails = $excludeShorts || $excludeLivestream;
+        $fetchExtendedDetails = $excludeShorts || $excludeLivestream || $hasMinDuration || $hasMaxDuration;
 
         /**
          * URL format used for the `{url}` replacement in the format string.
@@ -193,6 +221,19 @@ class YouTubeController extends Controller
                 });
             }
 
+            // Filter by durations
+            if ($hasMinDuration || $hasMaxDuration) {
+                $minDuration = $minDuration ?? 0;
+                $maxDuration = $maxDuration ?? 0;
+
+                $filteredVideos = $this->api->filterByDuration($videoDetails, $minDuration, $maxDuration);
+
+                $results = array_filter($results, function($video) use ($filteredVideos) {
+                    $videoId = $video->contentDetails->videoId;
+                    return isset($filteredVideos[$videoId]);
+                });
+            }
+
             /**
              * The YouTube API seems to return basic information about private videos as well,
              * even though we can't see any "real" information about them.
@@ -242,6 +283,9 @@ class YouTubeController extends Controller
              * The fallback for `date('c', 0)` is used when `videoPublishedAt` isn't an available field.
              * All public videos (since we filter out any non-public videos earlier), _should_ have this field.
              * So it might be an unnecessary precaution.
+             *
+             * Turns out that `snippet` seems to contain a more accurate publishedAt date,
+             * while `contentDetails` can _sometimes_ have... so we try to use `snippet` first.
              */
             usort($results, function($a, $b) {
                 $publishOne = $a->snippet->publishedAt ?? $a->contentDetails->videoPublishedAt ?? date('c', 0);

@@ -187,7 +187,7 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
 
     Route::get('{team_members}/{team?}', 'TwitchController@teamMembers')
         ->where('team_members', '(team_members(\.php)?)')
-        ->where('team', '([A-z0-9]{1,40})');
+        ->where('team', '([A-z0-9-_]{1,40})');
 
     Route::get('total_views/{channel?}', 'TwitchController@totalViews')
         ->where('channel', $channelRegex);

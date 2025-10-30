@@ -753,6 +753,10 @@ class TwitchController extends Controller
             return Helper::text(__('generic.error_loading_data_api'));
         }
 
+        if (empty($emotes)) {
+            return Helper::text(__('twitch.channel_missing_emotes'));
+        }
+
         $emoteCodes = array_map(function ($emote) {
             return $emote['code'];
         }, $emotes);

@@ -12,6 +12,7 @@ return [
     'error_retrieving_chat_users' => 'There was an error retrieving users for channel: ',
     'empty_chat_user_list' => 'The list of users is empty.',
     'channel_missing_subemotes' => 'This channel does not have any subscriber emotes.',
+    'channel_missing_emotes' => 'This channel does not have any emotes matching the specified criteria.',
 
     /**
      * Related to followers

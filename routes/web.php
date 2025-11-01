@@ -119,6 +119,9 @@ Route::group(['prefix' => 'twitch', 'as' => 'twitch.', 'middleware' => ['ratelim
         ->where('creation', '(creation(\.php)?)')
         ->where('channel', $channelRegex);
 
+    Route::get('emotes/{channel?}', 'TwitchController@emotes')
+        ->where('channel', $channelRegex);
+
     Route::get('followage/{channel?}/{user?}', ['as' => 'followage', 'uses' => 'TwitchController@followAge'])
         ->where('channel', $channelRegex)
         ->where('user', $channelRegex);

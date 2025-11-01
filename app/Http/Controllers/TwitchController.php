@@ -669,6 +669,102 @@ class TwitchController extends Controller
     }
 
     /**
+     * Retrieve all emotes available for the specified channel.
+     * Filtering by types is supported via the `types` query parameter, comma-separated for multiple:
+     * - subscriptions
+     * - follower
+     * - bitstier
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param string $channel
+     *
+     * @return Response
+     */
+    public function emotes(Request $request, $channel = null)
+    {
+        $id = $request->input('id', 'false');
+        $channel = $channel ?: $request->input('channel', null);
+
+        $types = $request->input('types', null);
+
+        // Make sure types match Twitch's naming conventions
+        $normalizeTypes = [
+            'sub' => 'subscriptions',
+            'subs' => 'subscriptions',
+            'subscriber' => 'subscriptions',
+            'subscribers' => 'subscriptions',
+            'subscription' => 'subscriptions',
+
+            'follow' => 'follower',
+            'followers' => 'follower',
+            'bits' => 'bitstier',
+        ];
+
+        $emoteTypes = [];
+        if (!empty($types)) {
+            $types = explode(',', strtolower($types));
+
+            $types = array_map(function ($type) {
+                return trim($type);
+            }, $types);
+
+            // Normalize types
+            $emoteTypes = array_map(function ($type) use ($normalizeTypes) {
+                return $normalizeTypes[$type] ?? $type;
+            }, $types);
+        }
+
+        if (empty($channel)) {
+            $nb = new Nightbot($request);
+            if (empty($nb->channel)) {
+                return Helper::text(__('generic.channel_name_required'));
+            }
+
+            $channel = $nb->channel['providerId'];
+            $id = 'true';
+        }
+
+        if ($id !== 'true') {
+            try {
+                $channel = $this->api->userByName($channel)->id;
+            } catch (TwitchFormatException $e) {
+                return Helper::text($e->getMessage());
+            } catch (TwitchApiException $e) {
+                return Helper::text(__('twitch.user_not_found', [
+                    'user' => $channel,
+                ]));
+            } catch (Exception $e) {
+                return Helper::text(__('generic.error_loading_data_api'));
+            }
+        }
+
+        $emotes = [];
+        try {
+            $emotes = $this->api->channelEmotesById($channel);
+
+            if (!empty($emoteTypes)) {
+                $emotes = array_filter($emotes, function ($emote) use ($emoteTypes) {
+                    return in_array(strtolower($emote['type']), $emoteTypes);
+                });
+            }
+        } catch (TwitchApiException $e) {
+            return Helper::text('[Twitch API Error] ' . $ex->getMessage());
+        } catch (Exception $e) {
+            return Helper::text(__('generic.error_loading_data_api'));
+        }
+
+        if (empty($emotes)) {
+            return Helper::text(__('twitch.channel_missing_emotes'));
+        }
+
+        $emoteCodes = array_map(function ($emote) {
+            return $emote['code'];
+        }, $emotes);
+
+        return Helper::text(implode(' ', $emoteCodes));
+    }
+
+    /**
      * Gets the game of the specified channel
      *
      * @param  Request $request

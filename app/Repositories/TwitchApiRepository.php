@@ -429,6 +429,20 @@ class TwitchApiRepository
     {
         $request = $this->client->get('/streams', $fields);
 
+        /**
+         * In some cases a channel has been disabled/banned/etc. and - unlike other cases - Twitch returns a 400 error instead of an empty array.
+         * This seems to be a very long-existing bug, but causes major issues with the cache logic: https://github.com/twitchdev/issues/issues/700
+         * Cache logic should be improved overall, but a short-term fix for this specific issue, is to return an empty array for the stream data if a 400 error is returned, since this is the typical result for channels that are "not live".
+         */
+        if (isset($request['status']) && $request['status'] === 400) {
+            $request = [
+                'data' => [],
+                'pagination' => [
+                    'cursor' => null,
+                ],
+            ];
+        }
+
         if (isset($request['error'])) {
             extract($request);
             throw new TwitchApiException(sprintf('%d: %s - %s', $status, $error, $message), $status);

@@ -200,7 +200,11 @@ class TwitchApiClient
         ];
 
         // Override with token, regardless of what was previously input.
-        $token = $this->getAuthToken() ?? $this->getAppToken();
+        $token = $this->getAuthToken();
+        if (empty($token)) {
+            $token = $this->getAppToken();
+        }
+
         $clientParams['headers']['Authorization'] = 'Bearer ' . $token;
         $clientParams['headers']['Client-ID'] = $this->twitchClientId;
 

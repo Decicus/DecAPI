@@ -67,8 +67,10 @@ class TwitchApiRepository
      */
     public function setTokenByUsername($username = '')
     {
+        $username = trim(strtolower($username));
         $cachedUser = CachedTwitchUser::where('username', $username)->first();
         if (empty($cachedUser)) {
+            $this->client->setAuthToken(null);
             return;
         }
 
@@ -85,6 +87,7 @@ class TwitchApiRepository
     {
         $user = User::where('id', $id)->first();
         if (empty($user)) {
+            $this->client->setAuthToken(null);
             return;
         }
 

@@ -60,6 +60,38 @@ class TwitchApiRepository
     }
 
     /**
+     * Will attempt to set an OAuth token for the specified username, if they exist in the database.
+     * This is to help avoid rate limits on the app token by utilizing the separate rate limit buckets for user tokens.
+     *
+     * @param string $username
+     */
+    public function setTokenByUsername($username = '')
+    {
+        $cachedUser = CachedTwitchUser::where('username', $username)->first();
+        if (empty($cachedUser)) {
+            return;
+        }
+
+        $this->setTokenById($cachedUser->id);
+    }
+
+    /**
+     * Sets the OAuth token for a user by their unique ID.
+     * This is to help avoid rate limits on the app token by utilizing the separate rate limit buckets for user tokens.
+     *
+     * @param string $id
+     */
+    public function setTokenById($id = '')
+    {
+        $user = User::where('id', $id)->first();
+        if (empty($user)) {
+            return;
+        }
+
+        $this->setToken($user);
+    }
+
+    /**
      * Sends a request to the `channels` endpoint: https://dev.twitch.tv/docs/api/reference#get-channel-information
      *
      * @param array $fields
@@ -115,6 +147,8 @@ class TwitchApiRepository
             throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
         }
 
+        $this->setTokenById($id);
+
         $channels = $this->channelsByIds([$id]);
         return $channels[0];
     }
@@ -164,6 +198,7 @@ class TwitchApiRepository
             return $cachedEmotes;
         }
 
+        $this->setTokenById($id);
         $emotes = $this->channelEmotes(['broadcaster_id' => $id]);
 
         /**
@@ -259,6 +294,7 @@ class TwitchApiRepository
             'first' => $first,
         ];
 
+        $this->setTokenById($userId);
         $videos = $this->videos($params);
         Cache::put($cacheKey, $videos, config('twitch.cache.channel_videos'));
 
@@ -392,6 +428,8 @@ class TwitchApiRepository
             $cachedStream = Cache::get($cacheKey);
             return $cachedStream;
         }
+
+        $this->setTokenByUsername($username);
 
         $streams = $this->streamsByNames([$username]);
         Cache::put($cacheKey, $streams, config('twitch.cache.stream_by_name'));
@@ -687,6 +725,8 @@ class TwitchApiRepository
             throw new TwitchFormatException('String or int expected, got: ' . gettype($id));
         }
 
+        $this->setTokenById($id);
+
         $ids = [$id];
         $user = $this->usersByIds($ids);
 
@@ -729,6 +769,7 @@ class TwitchApiRepository
             throw new TwitchFormatException('String expected, got: ' . $type);
         }
 
+        $this->setTokenByUsername($username);
         $users = $this->usersByUsernames([$username]);
         return $users[0] ?? [];
     }
@@ -782,6 +823,7 @@ class TwitchApiRepository
             return $cachedUser;
         }
 
+        $this->setTokenByUsername($username);
         $user = $this->userByUsername($username);
 
         if (empty($user)) {

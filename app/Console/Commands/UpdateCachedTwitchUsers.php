@@ -76,7 +76,9 @@ class UpdateCachedTwitchUsers extends Command
              * Authenticated user tokens have a separate rate limit bucket from the app access token.
              */
             $tokenUser = User::whereIn('id', $ids)->first();
-            $this->api->setToken($tokenUser);
+            if (!empty($tokenUser)) {
+                $this->api->setToken($tokenUser);
+            }
 
             $apiUsers = $this->api->usersByIds($ids);
 

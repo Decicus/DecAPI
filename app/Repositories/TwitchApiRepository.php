@@ -877,7 +877,7 @@ class TwitchApiRepository
      *
      * @param string|int $id
      *
-     * @return App\CachedTwitchUser
+     * @return CachedTwitchUser
      * @throws TwitchApiException
      */
     public function cachedUserById($id = '')

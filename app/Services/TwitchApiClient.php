@@ -58,6 +58,13 @@ class TwitchApiClient
     private $authToken = null;
 
     /**
+     * Indicates whether the current token is an app token.
+     *
+     * @var boolean
+     */
+    private $isAppToken = false;
+
+    /**
      * If Datadog metrics should be considered enabled.
      * See `DATADOG_ENABLED` in .env
      *
@@ -226,7 +233,7 @@ class TwitchApiClient
         }
 
         $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
-        if ($this->datadogEnabled === true) {
+        if ($this->datadogEnabled === true && $this->isAppToken) {
             $headers = $response->getHeaders();
             $rateLimit = $headers['Ratelimit-Remaining'] ?? null;
             if ($rateLimit !== null) {

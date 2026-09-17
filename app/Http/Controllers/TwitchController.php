@@ -1038,7 +1038,7 @@ class TwitchController extends Controller
         }
 
         try {
-            $data = $this->api->userByUsername($user);
+            $data = $this->api->userByName($user);
         }
         catch (TwitchApiException $ex)
         {
@@ -1051,7 +1051,7 @@ class TwitchController extends Controller
             ]));
         }
 
-        return Helper::text($data['id']);
+        return Helper::text($data->id);
     }
 
     /**
@@ -1839,7 +1839,6 @@ class TwitchController extends Controller
     public function uptime(Request $request, $uptime = null, $channel = null)
     {
         $channel = $channel ?: $request->input('channel', null);
-        $channelName = null;
         $id = $request->input('id', 'false');
         $precision = intval($request->input('precision', 4));
 

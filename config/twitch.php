@@ -75,6 +75,14 @@
              */
             'stream_by_name' => 300,
             'stream_by_id' => 300,
+
+            /**
+             * Used by `userByUsername()` in TwitchApiRepository.
+             *
+             * We do a low cache time here, which should help ensure that we have relatively fresh user data without putting too much load on the Twitch API.
+             * It should also be lower than the cache time for all other calls that might be using `userByUsername()` under the hood, otherwise we're at a higher risk of serving stale data.
+             */
+            'user_by_username' => 60,
         ],
     ];
 ?>

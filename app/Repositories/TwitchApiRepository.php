@@ -759,6 +759,8 @@ class TwitchApiRepository
      * Requests user information based on their login/username.
      * Primarily a wrapper for `usersByUsernames()`.
      *
+     * This is cached by up to 60 seconds, which is intended to balance freshness of data with reducing load on the Twitch API.
+     *
      * @param string $username
      *
      * @return array
@@ -772,9 +774,19 @@ class TwitchApiRepository
             throw new TwitchFormatException('String expected, got: ' . $type);
         }
 
+        $username = trim(strtolower($username));
+        $cacheKey = sprintf('TWITCH_API_USER_BY_USERNAME_%s', hash('sha256', $username));
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $cacheTime = config('twitch.cache.user_by_username', 60);
+
         $this->setTokenByUsername($username);
         $users = $this->usersByUsernames([$username]);
-        return $users[0] ?? [];
+        $user = $users[0] ?? [];
+        Cache::put($cacheKey, $user, $cacheTime);
+        return $user;
     }
 
     /**

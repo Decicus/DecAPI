@@ -208,6 +208,8 @@ class TwitchApiClient
 
         // Override with token, regardless of what was previously input.
         $token = $this->getAuthToken();
+        $this->isAppToken = false;
+
         if (empty($token)) {
             $token = $this->getAppToken();
             $this->isAppToken = true;

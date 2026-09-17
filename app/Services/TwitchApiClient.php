@@ -210,6 +210,7 @@ class TwitchApiClient
         $token = $this->getAuthToken();
         if (empty($token)) {
             $token = $this->getAppToken();
+            $this->isAppToken = true;
         }
 
         $clientParams['headers']['Authorization'] = 'Bearer ' . $token;

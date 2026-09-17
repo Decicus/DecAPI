@@ -14,6 +14,7 @@ use App\User;
 use Cache;
 use Carbon\Carbon;
 use Crypt;
+use Log;
 
 class TwitchApiRepository
 {
@@ -31,7 +32,7 @@ class TwitchApiRepository
      * Set the OAuth token that should be used for requests.
      * If the token is expired, it will be refreshed.
      *
-     * @param App\User|string $token
+     * @param \App\User|string $token
      *
      * @return void
      */
@@ -91,7 +92,13 @@ class TwitchApiRepository
             return;
         }
 
-        $this->setToken($user);
+        try {
+            $this->setToken($user);
+        } catch (\Exception $ex) {
+            // We intentionally fail silently, since this should fall back to the app access token.
+            Log::error('Failed to set token by ID, falling back to app token.');
+            Log::error($ex);
+        }
     }
 
     /**
@@ -183,7 +190,7 @@ class TwitchApiRepository
      *
      * @param string $id
      * @return array
-     * @throws App\Exceptions\TwitchApiException|App\Exceptions\TwitchFormatException
+     * @throws TwitchApiException|TwitchFormatException
      */
     public function channelEmotesById($id = '')
     {
@@ -223,7 +230,7 @@ class TwitchApiRepository
      * @param string|int|null $userId
      *
      * @return array
-     * @throws App\Exceptions\TwitchApiException|App\Exceptions\TwitchFormatException
+     * @throws TwitchApiException|TwitchFormatException
      */
     public function channelFollowers($broadcasterId, $userId = null)
     {
@@ -817,7 +824,7 @@ class TwitchApiRepository
      *
      * @param string $username
      *
-     * @return App\CachedTwitchUser
+     * @return \App\CachedTwitchUser
      * @throws TwitchApiException
      */
     public function userByName($username = '')
@@ -868,7 +875,7 @@ class TwitchApiRepository
      * Similar to `userById()`, but returns a `CachedTwitchUser` model.
      * Will check the cache before querying the Twitch API.
      *
-     * @param string|int $userId
+     * @param string|int $id
      *
      * @return App\CachedTwitchUser
      * @throws TwitchApiException

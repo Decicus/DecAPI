@@ -60,7 +60,7 @@ class ValidateTwitchAuthUsers extends Command
      * Refreshes all tokens that need to be refreshed.
      * Any users that are refreshed will be returned in an array, as they are implicitly validated due to the refreshing process.
      *
-     * @return void
+     * @return array
      */
     private function refreshTokens()
     {

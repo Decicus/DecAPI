@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
 use App\CachedTwitchUser;
+use App\User;
 use App\Providers\TwitchApiProvider;
 use GuzzleHttp\Client;
 
@@ -69,6 +70,14 @@ class UpdateCachedTwitchUsers extends Command
         foreach ($userChunks as $chunk)
         {
             $ids = $chunk->pluck('id')->toArray();
+
+            /**
+             * To help alleviate the app access token rate limit, we use a user token for the API request instead of the app token.
+             * Authenticated user tokens have a separate rate limit bucket from the app access token.
+             */
+            $tokenUser = User::whereIn('id', $ids)->first();
+            $this->api->setToken($tokenUser);
+
             $apiUsers = $this->api->usersByIds($ids);
 
             foreach ($chunk as $cachedUser)

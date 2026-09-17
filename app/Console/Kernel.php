@@ -36,7 +36,7 @@ class Kernel extends ConsoleKernel
     {
         // Cached Twitch username => ID mappings
         $schedule->command('twitch:userupdate')
-                 ->everyFifteenMinutes()
+                 ->everyFiveMinutes()
                  ->withoutOverlapping(60);
 
         // Authenticated channels for subcount/subpoints/subage etc.

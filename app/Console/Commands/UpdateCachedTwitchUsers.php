@@ -59,7 +59,7 @@ class UpdateCachedTwitchUsers extends Command
             Log::info(sprintf('Deleted %d cached users older than %s', $deletedUsers, $deleteCutoff));
         }
 
-        $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHour(1))->get();
+        $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHour())->limit(5000)->get();
         Log::info(sprintf('Refreshing %d cached users', $users->count()));
 
         $userChunks = $users->chunk(100);
@@ -77,6 +77,7 @@ class UpdateCachedTwitchUsers extends Command
              */
             $tokenUser = User::whereIn('id', $ids)->first();
             if (!empty($tokenUser)) {
+                Log::info(sprintf('Using token from user ID %d for API request', $tokenUser->id));
                 $this->api->setToken($tokenUser);
             }
 

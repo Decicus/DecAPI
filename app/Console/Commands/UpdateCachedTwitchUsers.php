@@ -51,7 +51,7 @@ class UpdateCachedTwitchUsers extends Command
      */
     public function handle()
     {
-        $deleteCutoff = Carbon::now()->subDays(3);
+        $deleteCutoff = Carbon::now()->subDays(7);
         $deletedUsers = CachedTwitchUser::where('created_at', '<', $deleteCutoff)->delete();
 
         // Only log info message when there is a "large" amount of users deleted.

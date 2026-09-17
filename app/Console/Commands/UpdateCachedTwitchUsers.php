@@ -78,7 +78,11 @@ class UpdateCachedTwitchUsers extends Command
             $tokenUser = User::whereIn('id', $ids)->first();
             if (!empty($tokenUser)) {
                 Log::info(sprintf('Using token from user ID %d for API request', $tokenUser->id));
-                $this->api->setToken($tokenUser);
+                try {
+                    $this->api->setToken($tokenUser);
+                } catch (\Exception $e) {
+                    Log::error(sprintf('Failed to set API token from user ID %d: %s', $tokenUser->id, $e->getMessage()));
+                }
             }
 
             $apiUsers = $this->api->usersByIds($ids);

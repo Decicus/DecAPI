@@ -59,6 +59,40 @@ class UpdateCachedTwitchUsers extends Command
             Log::info(sprintf('Deleted %d cached users older than %s', $deletedUsers, $deleteCutoff));
         }
 
+        // Grab a list of `User` models that don't have a CachedTwitchUser entry.
+        $missingIds = User::whereNotIn('id', CachedTwitchUser::select('id'))->pluck('id');
+
+        if ($missingIds->isNotEmpty()) {
+            Log::info(sprintf('Creating %d missing cached user entries', $missingIds->count()));
+
+            foreach ($missingIds->chunk(100) as $idChunk) {
+                $ids = $idChunk->toArray();
+
+                /**
+                 * To help alleviate the app access token rate limit, we use a user token for the API request instead of the app token.
+                 * Authenticated user tokens have a separate rate limit bucket from the app access token.
+                 */
+                $tokenUser = User::whereIn('id', $ids)->first();
+                if (!empty($tokenUser)) {
+                    Log::info(sprintf('Using token from user ID %d for API request', $tokenUser->id));
+                    try {
+                        $this->api->setToken($tokenUser);
+                    } catch (\Exception $e) {
+                        Log::error(sprintf('Failed to set API token from user ID %d: %s', $tokenUser->id, $e->getMessage()));
+                    }
+                }
+
+                $apiUsers = $this->api->usersByIds($ids);
+
+                foreach ($apiUsers as $apiUser) {
+                    CachedTwitchUser::create([
+                        'id' => $apiUser['id'],
+                        'username' => $apiUser['login'],
+                    ]);
+                }
+            }
+        }
+
         $users = CachedTwitchUser::where('updated_at', '<', Carbon::now()->subHour())->limit(5000)->get();
         Log::info(sprintf('Refreshing %d cached users', $users->count()));
 

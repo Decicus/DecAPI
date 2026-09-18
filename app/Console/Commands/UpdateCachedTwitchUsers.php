@@ -85,10 +85,14 @@ class UpdateCachedTwitchUsers extends Command
                 $apiUsers = $this->api->usersByIds($ids);
 
                 foreach ($apiUsers as $apiUser) {
-                    CachedTwitchUser::create([
-                        'id' => $apiUser['id'],
-                        'username' => $apiUser['login'],
-                    ]);
+                    try {
+                        CachedTwitchUser::create([
+                            'id' => $apiUser['id'],
+                            'username' => $apiUser['login'],
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error(sprintf('Failed to create cached user for ID %d: %s', $apiUser['id'], $e->getMessage()));
+                    }
                 }
             }
         }

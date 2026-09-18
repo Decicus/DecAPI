@@ -201,7 +201,12 @@ class TwitchApiClient
     {
         $clientParams = [
             'headers' => $headers,
-            'query' => $parameters,
+            /**
+             * Guzzle's array-valued `query` option encodes array parameters as `id[0]=x&id[1]=y`,
+             * which Twitch's API does not understand. Building the query string ourselves produces
+             * the repeated `id=x&id=y` format Twitch expects.
+             */
+            'query' => \GuzzleHttp\Psr7\Query::build($parameters),
             // Forward HTTP responses on API errors.
             'http_errors' => false,
         ];

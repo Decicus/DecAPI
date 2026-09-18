@@ -41,7 +41,7 @@ class TwitchApiRepository
         if ($token instanceof User) {
             $expires = new Carbon($token->expires);
 
-            if ($expires->isPast()) {
+            if ($expires->isPast() && !empty($token->refresh_token)) {
                 // Re-fetch the user with a lock
                 $user = User::lockForUpdate()->find($token->id);
                 $token = $this->client->refreshUserToken(Crypt::decrypt($user->refresh_token));

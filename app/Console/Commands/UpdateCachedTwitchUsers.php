@@ -61,18 +61,21 @@ class UpdateCachedTwitchUsers extends Command
 
         // Grab a list of `User` models that don't have a CachedTwitchUser entry.
         $missingIds = User::whereNotIn('id', CachedTwitchUser::select('id'))->pluck('id');
+        $missingIds = $missingIds->unique()->values();
+
+        Log::info(sprintf('Found %d missing cached user entries', $missingIds->count()));
 
         if ($missingIds->isNotEmpty()) {
             Log::info(sprintf('Creating %d missing cached user entries', $missingIds->count()));
 
             foreach ($missingIds->chunk(100) as $idChunk) {
-                $ids = $idChunk->toArray();
+                $ids = $idChunk->values()->toArray();
 
                 /**
                  * To help alleviate the app access token rate limit, we use a user token for the API request instead of the app token.
                  * Authenticated user tokens have a separate rate limit bucket from the app access token.
                  */
-                $tokenUser = User::whereIn('id', $ids)->first();
+                $tokenUser = User::whereIn('id', $ids)->inRandomOrder()->first();
                 if (!empty($tokenUser)) {
                     Log::info(sprintf('Using token from user ID %d for API request', $tokenUser->id));
                     try {
@@ -82,7 +85,14 @@ class UpdateCachedTwitchUsers extends Command
                     }
                 }
 
-                $apiUsers = $this->api->usersByIds($ids);
+                try {
+                    $apiUsers = $this->api->usersByIds($ids);
+                } catch (\Exception $e) {
+                    Log::error(sprintf('Failed to fetch %d missing users from API: %s', count($ids), $e->getMessage()));
+                    continue;
+                }
+
+                Log::info(sprintf('Fetched %d users from API', count($apiUsers)));
 
                 foreach ($apiUsers as $apiUser) {
                     try {
@@ -107,13 +117,13 @@ class UpdateCachedTwitchUsers extends Command
 
         foreach ($userChunks as $chunk)
         {
-            $ids = $chunk->pluck('id')->toArray();
+            $ids = $chunk->pluck('id')->values()->toArray();
 
             /**
              * To help alleviate the app access token rate limit, we use a user token for the API request instead of the app token.
              * Authenticated user tokens have a separate rate limit bucket from the app access token.
              */
-            $tokenUser = User::whereIn('id', $ids)->first();
+            $tokenUser = User::whereIn('id', $ids)->inRandomOrder()->first();
             if (!empty($tokenUser)) {
                 Log::info(sprintf('Using token from user ID %d for API request', $tokenUser->id));
                 try {
@@ -123,7 +133,12 @@ class UpdateCachedTwitchUsers extends Command
                 }
             }
 
-            $apiUsers = $this->api->usersByIds($ids);
+            try {
+                $apiUsers = $this->api->usersByIds($ids);
+            } catch (\Exception $e) {
+                Log::error(sprintf('Failed to fetch %d users from API for refresh: %s', count($ids), $e->getMessage()));
+                continue;
+            }
 
             foreach ($chunk as $cachedUser)
             {

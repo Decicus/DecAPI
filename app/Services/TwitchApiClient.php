@@ -205,8 +205,11 @@ class TwitchApiClient
              * Guzzle's array-valued `query` option encodes array parameters as `id[0]=x&id[1]=y`,
              * which Twitch's API does not understand. Building the query string ourselves produces
              * the repeated `id=x&id=y` format Twitch expects.
+             *
+             * Null values are stripped first since Query::build(), unlike Guzzle's own array `query`
+             * handling, would otherwise render them as bare params (e.g. `user_id`) instead of omitting them.
              */
-            'query' => \GuzzleHttp\Psr7\Query::build($parameters),
+            'query' => \GuzzleHttp\Psr7\Query::build(array_filter($parameters, fn ($value) => $value !== null)),
             // Forward HTTP responses on API errors.
             'http_errors' => false,
         ];

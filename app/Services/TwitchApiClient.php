@@ -235,6 +235,10 @@ class TwitchApiClient
                 $endpoint = str_replace('/', '_', $endpoint);
 
                 Datadog::increment('twitch.helix_' . $endpoint, ['parameters' => $parameters]);
+                Datadog::increment('twitch.helix_requests', [
+                    'token_type' => $this->isAppToken ? 'app' : 'user',
+                    'endpoint' => $endpoint,
+                ]);
             }
             catch (\Exception $ex)
             {

@@ -26,6 +26,57 @@ class TwitchApiRepository
     public function __construct(TwitchApiClient $client)
     {
         $this->client = $client;
+        $this->client->setTokenPoolResolver([$this, 'randomPooledToken']);
+    }
+
+    /**
+     * Query for users that have a token that is valid for at least another minute.
+     * Expired tokens are intentionally excluded, since refreshing them while handling a request is slow and rotates the refresh token.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function tokenPoolQuery()
+    {
+        return User::whereNotNull('access_token')
+                   ->where('expires', '>', Carbon::now()->addMinute());
+    }
+
+    /**
+     * Picks a random user access token to use for public Twitch API data, to spread requests across rate limit buckets.
+     *
+     * @param array $exclude User IDs that should not be picked.
+     *
+     * @return array|null `['id' => ..., 'token' => ...]` or null if there is no usable token.
+     */
+    public function randomPooledToken(array $exclude = [])
+    {
+        $size = Cache::remember('TWITCH_TOKEN_POOL_SIZE', 300, fn () => $this->tokenPoolQuery()->count());
+        if ($size < 1) {
+            return null;
+        }
+
+        // A few tries, since the picked user might be excluded, rejected recently or have an unreadable token.
+        for ($i = 0; $i < 3; $i++) {
+            $user = $this->tokenPoolQuery()
+                         ->orderBy('id')
+                         ->offset(random_int(0, $size - 1))
+                         ->first();
+
+            if (empty($user) || in_array($user->id, $exclude) || Cache::has(TwitchApiClient::POOL_INVALID_CACHE_PREFIX . $user->id)) {
+                continue;
+            }
+
+            try {
+                return [
+                    'id' => $user->id,
+                    'token' => Crypt::decrypt($user->access_token),
+                ];
+            } catch (\Exception $ex) {
+                Log::error('Failed to decrypt pooled token for user ID: ' . $user->id);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -33,10 +84,11 @@ class TwitchApiRepository
      * If the token is expired, it will be refreshed.
      *
      * @param \App\User|string $token
+     * @param boolean $allowFallback Allow the request to retry with other tokens if Twitch rejects this one (401).
      *
      * @return void
      */
-    public function setToken(User|string $token = '')
+    public function setToken(User|string $token = '', $allowFallback = false)
     {
         if ($token instanceof User) {
             $expires = new Carbon($token->expires);
@@ -57,7 +109,7 @@ class TwitchApiRepository
             $token = Crypt::decrypt($token->access_token);
         }
 
-        $this->client->setAuthToken($token);
+        $this->client->setAuthToken($token, $allowFallback);
     }
 
     /**
@@ -93,11 +145,15 @@ class TwitchApiRepository
         }
 
         try {
-            $this->setToken($user);
+            // Only used to avoid app token rate limits, so the request can fall back to other tokens.
+            $this->setToken($user, true);
         } catch (\Exception $ex) {
             // We intentionally fail silently, since this should fall back to the app access token.
             Log::error('Failed to set token by ID, falling back to app token.');
             Log::error($ex);
+
+            // Make sure a token set earlier (e.g. for another user) isn't reused for this request.
+            $this->client->setAuthToken(null);
         }
     }
 
@@ -845,7 +901,6 @@ class TwitchApiRepository
             return $cachedUser;
         }
 
-        $this->setTokenByUsername($username);
         $user = $this->userByUsername($username);
 
         if (empty($user)) {

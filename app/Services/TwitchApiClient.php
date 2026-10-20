@@ -58,11 +58,53 @@ class TwitchApiClient
     private $authToken = null;
 
     /**
+     * Whether a request can fall back to other tokens if `$authToken` is rejected (401).
+     * Only set this for tokens that were picked to avoid app token rate limits, never for tokens that a request depends on.
+     *
+     * @var boolean
+     */
+    private $allowTokenFallback = false;
+
+    /**
+     * Callable that returns a random user access token (`['id' => ..., 'token' => ...]`) or null.
+     * It receives an array of user IDs that should be skipped.
+     *
+     * @var callable|null
+     */
+    private $tokenPoolResolver = null;
+
+    /**
      * Indicates whether the current token is an app token.
      *
      * @var boolean
      */
     private $isAppToken = false;
+
+    /**
+     * Where the token of the current request came from: `app`, `user` (set via `setAuthToken()`) or `pool`.
+     *
+     * @var string
+     */
+    private $tokenSource = 'app';
+
+    /**
+     * Endpoints that only return public data, where any valid user access token can replace the app access token.
+     * Endpoints where the result depends on who the token belongs to (e.g. `/subscriptions`) must never be added here.
+     *
+     * @var array
+     */
+    const POOLED_ENDPOINTS = ['/streams', '/users', '/videos', '/channels', '/chat/emotes', '/teams'];
+
+    /**
+     * Cache key prefix for pooled user tokens that were rejected with a 401, followed by the user ID.
+     */
+    const POOL_INVALID_CACHE_PREFIX = 'TWITCH_POOL_TOKEN_INVALID_';
+
+    /**
+     * Maximum number of attempts for a single request when user tokens are rejected.
+     * The last attempt always uses the app token.
+     */
+    const MAX_ATTEMPTS = 3;
 
     /**
      * If Datadog metrics should be considered enabled.
@@ -178,13 +220,72 @@ class TwitchApiClient
     /**
      * Sets the relevant OAuth token for user authentication.
      *
-     * @param string $token
+     * @param string|null $token
+     * @param boolean $allowFallback Allow the request to retry with other tokens if this one is rejected (401).
      *
      * @return void
      */
-    public function setAuthToken($token)
+    public function setAuthToken($token, $allowFallback = false)
     {
         $this->authToken = $token;
+        $this->allowTokenFallback = $allowFallback;
+    }
+
+    /**
+     * Sets the callable used to pick a random user access token for public endpoints,
+     * instead of using the app access token.
+     *
+     * @param callable $resolver
+     *
+     * @return void
+     */
+    public function setTokenPoolResolver(callable $resolver)
+    {
+        $this->tokenPoolResolver = $resolver;
+    }
+
+    /**
+     * Decides which token to use for a request attempt.
+     * Sets `$isAppToken` and `$tokenSource` accordingly.
+     *
+     * @param string $url
+     * @param int $attempt
+     * @param boolean $skipAuthToken
+     * @param array $failedPoolIds
+     *
+     * @return array [token, pooled user ID or null]
+     */
+    private function resolveToken($url, $attempt, $skipAuthToken, $failedPoolIds)
+    {
+        $this->isAppToken = false;
+
+        if (!$skipAuthToken && !empty($this->authToken)) {
+            $this->tokenSource = 'user';
+            return [$this->authToken, null];
+        }
+
+        if ($attempt < self::MAX_ATTEMPTS && $this->tokenPoolResolver !== null && in_array($url, self::POOLED_ENDPOINTS, true)) {
+            try {
+                $pooled = ($this->tokenPoolResolver)($failedPoolIds);
+            }
+            catch (\Exception $ex)
+            {
+                // Never fail a request because the pool is unavailable, fall back to the app token instead.
+                Log::error('Unable to get a pooled user token.');
+                Log::error($ex);
+                $pooled = null;
+            }
+
+            if (!empty($pooled)) {
+                $this->tokenSource = 'pool';
+                return [$pooled['token'], $pooled['id']];
+            }
+        }
+
+        $this->isAppToken = true;
+        $this->tokenSource = 'app';
+
+        return [$this->getAppToken(), null];
     }
 
     /**
@@ -214,40 +315,80 @@ class TwitchApiClient
             'http_errors' => false,
         ];
 
-        // Override with token, regardless of what was previously input.
-        $token = $this->getAuthToken();
-        $this->isAppToken = false;
-
-        if (empty($token)) {
-            $token = $this->getAppToken();
-            $this->isAppToken = true;
-        }
-
-        $clientParams['headers']['Authorization'] = 'Bearer ' . $token;
         $clientParams['headers']['Client-ID'] = $this->twitchClientId;
 
-        if ($this->datadogEnabled === true)
-        {
-            try {
-                // Strip `/` at the beginning of path.
-                $endpoint = ltrim($url, '/');
-                // Replace all other `/` with `_`
-                $endpoint = str_replace('/', '_', $endpoint);
+        // Strip `/` at the beginning of path.
+        $endpoint = ltrim($url, '/');
+        // Replace all other `/` with `_`
+        $endpoint = str_replace('/', '_', $endpoint);
 
-                Datadog::increment('twitch.helix_' . $endpoint, ['parameters' => $parameters]);
-                Datadog::increment('twitch.helix_requests', 1.0, [
-                    'token_type' => $this->isAppToken ? 'app' : 'user',
-                    'endpoint' => $endpoint,
-                ]);
-            }
-            catch (\Exception $ex)
+        $failedPoolIds = [];
+        $skipAuthToken = false;
+        $attempt = 0;
+
+        do {
+            $attempt++;
+
+            // Override with token, regardless of what was previously input.
+            [$token, $poolId] = $this->resolveToken($url, $attempt, $skipAuthToken, $failedPoolIds);
+            $clientParams['headers']['Authorization'] = 'Bearer ' . $token;
+
+            if ($this->datadogEnabled === true)
             {
-                Log::error('Unable to submit Datadog metrics.');
-                Log::error($ex);
+                try {
+                    Datadog::increment('twitch.helix_' . $endpoint, ['parameters' => $parameters]);
+                    Datadog::increment('twitch.helix_requests', 1.0, [
+                        'token_type' => $this->tokenSource,
+                        'endpoint' => $endpoint,
+                    ]);
+                }
+                catch (\Exception $ex)
+                {
+                    Log::error('Unable to submit Datadog metrics.');
+                    Log::error($ex);
+                }
             }
-        }
 
-        $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
+            $response = $this->client->request('GET', $this->baseUrl . $url, $clientParams);
+
+            /**
+             * Log at most once per 10 seconds per token source, since a burst of 429s would otherwise flood the logs.
+             * Sources are throttled separately so that frequent app token 429s don't hide user token 429s.
+             * `Cache::add()` only succeeds if the key doesn't already exist.
+             */
+            if ($response->getStatusCode() === 429 && Cache::add('TWITCH_API_RATE_LIMIT_LOG_THROTTLE_' . $this->tokenSource, true, 10)) {
+                Log::warning(sprintf(
+                    'Twitch API rate limit hit: %s | token: %s | Ratelimit-Limit: %s | Ratelimit-Reset: %s',
+                    $url,
+                    $this->tokenSource,
+                    $response->getHeaderLine('Ratelimit-Limit'),
+                    $response->getHeaderLine('Ratelimit-Reset')
+                ));
+            }
+
+            /**
+             * A rejected user token (revoked, expired etc.) shouldn't fail the request when the token wasn't required.
+             * Pooled tokens are always replaceable, `$authToken` only if the caller allowed a fallback.
+             * Rejected pooled tokens are skipped for an hour. Invalid users are cleaned up by `twitch:authuservalidate`.
+             */
+            $rejected = $response->getStatusCode() === 401
+                && !$this->isAppToken
+                && $attempt < self::MAX_ATTEMPTS
+                && ($this->tokenSource === 'pool' || $this->allowTokenFallback);
+
+            if ($rejected) {
+                if ($this->tokenSource === 'pool') {
+                    $failedPoolIds[] = $poolId;
+                    Cache::put(self::POOL_INVALID_CACHE_PREFIX . $poolId, true, 3600);
+                    Log::info(sprintf('Pooled user token rejected by Twitch (401), user ID: %s | %s', $poolId, $url));
+                }
+                else {
+                    $skipAuthToken = true;
+                    Log::info(sprintf('User token rejected by Twitch (401), retrying with another token: %s', $url));
+                }
+            }
+        } while ($rejected);
+
         if ($this->datadogEnabled === true && $this->isAppToken) {
             $headers = $response->getHeaders();
             $rateLimit = $headers['Ratelimit-Remaining'] ?? null;
